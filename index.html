@@ -515,7 +515,6 @@ async function buildCards(){
         <div class="sector-group"><span class="sector-label">S3</span><span class="sector-val equal" id="s3-${dn}">—</span></div>
         <div class="mini-wrap">
           <div class="mini-sectors" id="mini-${dn}"></div>
-          <div class="tyre-badge" id="tyreBadge-${dn}"></div>
           <span id="pit-${dn}"></span>
         </div>
       </div>`;
@@ -646,7 +645,6 @@ async function tick(){
     }
 
     updateMiniSectors(dn,lastLap);
-    updateTyreBadge(dn,driverStints,lapNum);
     updateTyreCol(dn,driverStints,lapNum);
     updatePit(dn,pit);
   }
@@ -959,6 +957,7 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
 
     processedLaps.add(lapNum);
     const ts=lapNum;
+    if(lapNum>lastKnownLapNum)lastKnownLapNum=lapNum;
 
     // Get positions at this lap
     const posAtLap=new Map();
@@ -1034,11 +1033,20 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
       }
     }
 
-    // ── SECTOR ANOMALY — suppressed during SC/VSC/yellow ──
+    // ── SECTOR ANOMALY — suppressed during active SC/VSC/yellow only ──
+    // Check only recent RC messages (within last 5 laps) to avoid suppressing entire race
+    const recentRC=allRCMessages.filter(m=>{
+      const lapEst=m.lap_number||0;
+      return lapNum-lapEst<=5;
+    });
     const flagActive=activeYellowSectors.size>0||
-      allRCMessages.some(m=>{
+      recentRC.some(m=>{
         const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
-        return f==='SC'||f==='VSC'||msg.includes('SAFETY CAR')||msg.includes('VIRTUAL SAFETY');
+        // Only suppress if SC/VSC is currently deployed, not just mentioned historically
+        return(f==='SC'&&!msg.includes('DEPLOYED')?false:f==='SC')||
+          f==='VSC'||
+          (msg.includes('SAFETY CAR DEPLOYED'))||
+          (msg.includes('VIRTUAL SAFETY CAR DEPLOYED'));
       });
 
     if(!flagActive){
