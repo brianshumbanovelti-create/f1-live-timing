@@ -3,455 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>F1 Live Timing - OpenF1</title>
+    <title>F1 Live Timing - Compact</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #0a0a0a;
-            font-family: 'Teko', 'Formula1', 'Roboto Condensed', sans-serif;
+            background: #0a0a0a;
+            font-family: 'Teko', 'Formula1', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: #fff;
-            padding: 0 12px 40px 12px;
+            padding: 10px;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap');
-        
-        .session-bar {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-            border-left: 5px solid #e10600;
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin: 16px 0 20px 0;
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&display=swap');
+
+        /* Header */
+        .header {
+            background: #111;
+            border-left: 4px solid #e10600;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        .session-row {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
-        .controls { display: flex; flex-wrap: wrap; gap: 12px; }
+        .circuit { font-size: 1.3rem; font-weight: 600; }
+        .session-meta { font-size: 0.7rem; color: #888; }
         select {
-            background: #2a2a2a;
-            color: white;
-            border: 1px solid #444;
-            padding: 10px 14px;
-            border-radius: 8px;
+            background: #222;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px 12px;
+            border-radius: 6px;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
-        .race-control {
-            background: #111;
-            padding: 10px 16px;
-            border-radius: 40px;
-            font-size: 0.9rem;
-            border-left: 3px solid #e10600;
-            margin-bottom: 18px;
+        .race-msg {
+            background: #0a0a0a;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #ffd700;
+            border-left: 2px solid #e10600;
         }
-        .timing-wrapper {
-            overflow-x: auto;
-            border-radius: 16px;
-            background: #0e0e0e;
+        .refresh-badge {
+            font-size: 0.6rem;
+            background: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 20px;
         }
-        .timing-table {
-            min-width: 1000px;
-            width: 100%;
-            border-collapse: collapse;
+
+        /* Driver card grid - compact */
+        .drivers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .driver-card {
+            background: #0f0f0f;
+            border-radius: 10px;
+            padding: 8px 12px;
+            transition: background 0.1s;
+            cursor: pointer;
+            border: 1px solid #1c1c1c;
+        }
+        .driver-card:active { background: #1a1a1a; }
+
+        /* Main row: position, name, gap, laps */
+        .driver-main {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .pos {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e10600;
+            width: 35px;
+        }
+        .name {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .penalty { color: #ffaa00; margin-right: 4px; font-size: 0.9rem; }
+        .gap {
+            font-family: monospace;
             font-size: 0.85rem;
+            background: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 20px;
         }
-        .timing-table th {
-            text-align: left;
-            padding: 14px 8px;
-            background: #121212;
-            color: #aaa;
-            font-weight: 500;
-            border-bottom: 1px solid #2a2a2a;
-        }
-        .timing-table td {
-            padding: 12px 8px;
-            border-bottom: 1px solid #222;
-        }
-        .driver-row { cursor: pointer; }
-        .driver-row:hover { background: #1e1e1e; }
-        .pos { color: #e10600; font-weight: 700; }
-        .penalty-marker { color: #ffaa00; margin-right: 6px; }
-        .pit-status {
-            background: #e10600;
-            padding: 2px 6px;
-            border-radius: 12px;
+        .lap-times {
+            display: flex;
+            gap: 12px;
+            margin-left: auto;
             font-size: 0.7rem;
-            font-weight: bold;
-            display: inline-block;
         }
-        .purple { color: #b200ff; font-weight: bold; }
-        .green { color: #39b54a; }
-        .red { color: #ff4d4d; }
+        .last-lap, .best-lap {
+            font-family: monospace;
+        }
+        .best-lap.purple { color: #b200ff; font-weight: bold; }
+
+        /* Sector row - below driver name */
+        .sector-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-left: 35px;
+            font-size: 0.7rem;
+        }
+        .sector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sector-label {
+            color: #666;
+            font-size: 0.6rem;
+        }
+        .sector-value {
+            font-family: monospace;
+            font-weight: 500;
+            min-width: 55px;
+        }
+        .sector-value.green { color: #39b54a; }
+        .sector-value.red { color: #ff4d4d; }
+        .sector-value.white { color: #ccc; }
+
+        /* Mini sectors */
+        .mini-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .mini-dots {
+            display: flex;
+            gap: 4px;
+        }
         .mini-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 2px;
-            display: inline-block;
-            margin-right: 4px;
         }
-        .mini-dot-purple { background-color: #b200ff; }
-        .mini-dot-green { background-color: #39b54a; }
-        .mini-dot-yellow { background-color: #ffd700; }
-        .mini-dot-white { background-color: #888; }
+        .mini-dot-purple { background: #b200ff; }
+        .mini-dot-green { background: #39b54a; }
+        .mini-dot-yellow { background: #ffd700; }
+        .mini-dot-white { background: #555; }
+        .pit-badge {
+            background: #e10600;
+            padding: 1px 6px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1000;
             overflow-y: auto;
+            padding: 16px;
         }
-        .modal-content {
-            background: #121212;
-            max-width: 95%;
-            width: 900px;
-            margin: 30px auto;
-            border-radius: 20px;
+        .modal-card {
+            background: #111;
+            border-radius: 16px;
             padding: 20px;
-            border-top: 4px solid #e10600;
+            max-width: 600px;
+            margin: 20px auto;
+            border-top: 3px solid #e10600;
         }
-        .close-modal {
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+        }
+        .close {
             font-size: 28px;
             cursor: pointer;
-            float: right;
             background: none;
             border: none;
             color: white;
         }
-        .lap-history-table {
+        .lap-table {
             width: 100%;
+            font-size: 0.7rem;
             border-collapse: collapse;
-            font-size: 0.75rem;
         }
-        .lap-history-table td, .lap-history-table th {
-            padding: 8px 5px;
+        .lap-table td, .lap-table th {
+            padding: 6px 4px;
             border-bottom: 1px solid #222;
+            text-align: left;
         }
-        .refresh-status { font-size: 0.7rem; background: #1a1a1a; padding: 4px 10px; border-radius: 30px; }
-        footer { text-align: center; font-size: 0.7rem; margin-top: 24px; color: #555; }
+        .tyre-soft { color: #ff8c00; }
+        .tyre-medium { color: #f7e05e; }
+        .tyre-hard { color: #aaa; }
+        footer {
+            text-align: center;
+            font-size: 0.6rem;
+            color: #444;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div class="session-bar">
-    <div class="session-info">
-        <div class="circuit-name" id="circuitName">Select session</div>
-        <div class="session-meta">
-            <span id="sessionType">—</span>
-            <span id="sessionStatus">⚫ Offline</span>
+<div class="header">
+    <div class="session-row">
+        <div>
+            <div class="circuit" id="circuitName">Select GP</div>
+            <div class="session-meta" id="sessionInfo">—</div>
+        </div>
+        <div>
+            <select id="yearSelect">
+                <option value="2025">2025</option>
+                <option value="2024" selected>2024</option>
+                <option value="2023">2023</option>
+            </select>
+            <select id="raceSelect">
+                <option value="">-- Race --</option>
+            </select>
+            <span class="refresh-badge" id="statusText">⚫</span>
         </div>
     </div>
-    <div class="controls">
-        <select id="yearSelect">
-            <option value="2025">2025</option>
-            <option value="2024" selected>2024</option>
-            <option value="2023">2023</option>
-        </select>
-        <select id="sessionSelect">
-            <option value="">-- Choose weekend --</option>
-        </select>
-        <span class="refresh-status" id="refreshIndicator">⏳ Ready</span>
-    </div>
 </div>
 
-<div class="race-control" id="raceControlMsg">🏁 Select a Grand Prix to start</div>
+<div class="race-msg" id="raceMsg">🏁 Select a race</div>
 
-<div class="timing-wrapper">
-    <table class="timing-table" id="timingTable">
-        <thead>
-            <tr><th>POS</th><th>Driver</th><th>Gap</th><th>Last Lap</th><th>Best Lap</th><th>S1 Δ</th><th>S2 Δ</th><th>S3 Δ</th><th>Mini</th><th>Pit</th></tr>
-        </thead>
-        <tbody id="timingBody">
-            <tr><td colspan="10">Choose a race from the dropdown above</td></tr>
-        </tbody>
-    </table>
+<div id="driversGrid" class="drivers-grid">
+    <div style="text-align:center; padding:40px; color:#666;">Choose a Grand Prix from the dropdown</div>
 </div>
-<footer>Data via OpenF1.org | Updates every 2s | Click any driver</footer>
+<footer>OpenF1.org | Click driver for lap history | Updates every 2s</footer>
 
-<div id="driverModal" class="modal">
-    <div class="modal-content">
-        <button class="close-modal">&times;</button>
-        <h2 id="modalDriverName">Driver Details</h2>
-        <div id="modalLapsContainer">Loading...</div>
+<div id="modal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="modalTitle">Driver</h3>
+            <button class="close" id="closeModal">&times;</button>
+        </div>
+        <div id="modalBody">Loading...</div>
     </div>
 </div>
 
 <script>
-    let currentSessionKey = null;
-    let refreshInterval = null;
-    let leaderSectorTimes = { s1: null, s2: null, s3: null };
+    let currentSession = null;
+    let refreshTimer = null;
+    let driverDataCache = new Map(); // store DOM elements for updating
+    let leaderSectors = { s1: null, s2: null, s3: null };
     let activePenalties = new Set();
-    let pitStopFlash = new Map();
-    let driverList = [];
-    let isLoading = false;
+    let pitFlash = new Map();
 
-    async function fetchJSON(url) {
+    async function fetchAPI(url) {
         try {
             const res = await fetch(url);
             if (!res.ok) return [];
             return await res.json();
-        } catch (err) {
-            return [];
-        }
+        } catch(e) { return []; }
     }
 
-    function formatLapTime(seconds) {
-        if (!seconds || seconds <= 0) return '—';
-        const mins = Math.floor(seconds / 60);
-        const secs = (seconds % 60).toFixed(3);
-        return mins > 0 ? `${mins}:${secs.padStart(6, '0')}` : `${secs}`;
+    function formatTime(sec) {
+        if (!sec || sec <= 0) return '—';
+        const m = Math.floor(sec / 60);
+        const s = (sec % 60).toFixed(3);
+        return m > 0 ? `${m}:${s.padStart(6,'0')}` : `${s}`;
     }
 
-    function formatDelta(deltaSec) {
-        if (deltaSec === null || isNaN(deltaSec)) return '—';
-        return deltaSec > 0 ? `+${deltaSec.toFixed(3)}` : `${deltaSec.toFixed(3)}`;
+    function formatDelta(d) {
+        if (d === null || isNaN(d)) return '—';
+        return d > 0 ? `+${d.toFixed(3)}` : `${d.toFixed(3)}`;
     }
 
-    async function loadSessionsForYear(year) {
-        const sessions = await fetchJSON(`https://api.openf1.org/v1/sessions?year=${year}&session_name=Race`);
-        if (!sessions.length) return [];
-        const unique = new Map();
-        for (const s of sessions) {
-            if (!unique.has(s.circuit_key) && s.circuit_short_name) {
-                unique.set(s.circuit_key, { circuit: s.circuit_short_name, session_key: s.session_key });
-            }
-        }
-        return Array.from(unique.values());
-    }
-
-    async function updateWeekendSelect() {
+    async function loadRaces() {
         const year = document.getElementById('yearSelect').value;
-        const weekendSelect = document.getElementById('sessionSelect');
-        weekendSelect.innerHTML = '<option value="">Loading...</option>';
-        const weekends = await loadSessionsForYear(year);
-        if (!weekends.length) {
-            weekendSelect.innerHTML = '<option value="">No races found</option>';
-            return;
+        const races = await fetchAPI(`https://api.openf1.org/v1/sessions?year=${year}&session_name=Race`);
+        if (!races.length) return;
+        const unique = new Map();
+        for (const r of races) {
+            if (!unique.has(r.circuit_key) && r.circuit_short_name) {
+                unique.set(r.circuit_key, { name: r.circuit_short_name, key: r.session_key });
+            }
         }
-        weekendSelect.innerHTML = '<option value="">-- Select Grand Prix --</option>';
-        for (const w of weekends) {
-            const option = document.createElement('option');
-            option.value = w.session_key;
-            option.textContent = w.circuit;
-            weekendSelect.appendChild(option);
+        const select = document.getElementById('raceSelect');
+        select.innerHTML = '<option value="">-- Select GP --</option>';
+        for (const [, race] of unique) {
+            const opt = document.createElement('option');
+            opt.value = race.key;
+            opt.textContent = race.name;
+            select.appendChild(opt);
         }
     }
 
-    async function onWeekendSelected() {
-        const sessionKey = document.getElementById('sessionSelect').value;
+    async function onRaceSelect() {
+        const sessionKey = document.getElementById('raceSelect').value;
         if (!sessionKey) return;
+        if (refreshTimer) clearInterval(refreshTimer);
         
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
+        currentSession = parseInt(sessionKey);
+        const [sess] = await fetchAPI(`https://api.openf1.org/v1/sessions?session_key=${currentSession}`);
+        if (sess) {
+            document.getElementById('circuitName').innerHTML = sess.circuit_short_name || 'Circuit';
+            document.getElementById('sessionInfo').innerHTML = `${sess.session_name || 'Race'} | ${sess.date_start?.slice(0,10) || ''}`;
         }
         
-        currentSessionKey = parseInt(sessionKey);
+        await buildDriverGrid();
+        refreshTimer = setInterval(() => updateTiming(), 2000);
+        updateTiming();
+    }
+
+    async function buildDriverGrid() {
+        if (!currentSession) return;
+        const drivers = await fetchAPI(`https://api.openf1.org/v1/drivers?session_key=${currentSession}`);
+        if (!drivers.length) return;
         
-        const sessionInfo = await fetchJSON(`https://api.openf1.org/v1/sessions?session_key=${currentSessionKey}`);
-        if (sessionInfo && sessionInfo[0]) {
-            document.getElementById('circuitName').innerHTML = sessionInfo[0].circuit_short_name || 'Circuit';
-            document.getElementById('sessionType').innerHTML = sessionInfo[0].session_name || 'Race';
-            document.getElementById('sessionStatus').innerHTML = '🟢 Live';
+        drivers.sort((a,b) => (a.position || 99) - (b.position || 99));
+        const grid = document.getElementById('driversGrid');
+        grid.innerHTML = '';
+        driverDataCache.clear();
+        
+        for (let i = 0; i < drivers.length; i++) {
+            const d = drivers[i];
+            const card = document.createElement('div');
+            card.className = 'driver-card';
+            card.setAttribute('data-driver', d.driver_number);
+            card.onclick = () => showLapHistory(d.driver_number, d.full_name);
+            
+            card.innerHTML = `
+                <div class="driver-main">
+                    <span class="pos">${i+1}</span>
+                    <span class="name"><span class="penalty-icon" style="display:none;">⚠️</span>${d.name_acronym || d.full_name.split(' ').pop()}</span>
+                    <span class="gap" id="gap-${d.driver_number}">—</span>
+                    <div class="lap-times">
+                        <span class="last-lap" id="last-${d.driver_number}">—</span>
+                        <span class="best-lap" id="best-${d.driver_number}">—</span>
+                    </div>
+                </div>
+                <div class="sector-row">
+                    <div class="sector"><span class="sector-label">S1</span><span class="sector-value" id="s1-${d.driver_number}">—</span></div>
+                    <div class="sector"><span class="sector-label">S2</span><span class="sector-value" id="s2-${d.driver_number}">—</span></div>
+                    <div class="sector"><span class="sector-label">S3</span><span class="sector-value" id="s3-${d.driver_number}">—</span></div>
+                    <div class="mini-container">
+                        <div class="mini-dots" id="mini-${d.driver_number}"></div>
+                        <span class="pit-badge" id="pit-${d.driver_number}" style="display:none;">PIT</span>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+            driverDataCache.set(d.driver_number, { element: card, number: d.driver_number });
+        }
+    }
+
+    async function updateTiming() {
+        if (!currentSession) return;
+        document.getElementById('statusText').innerHTML = '🔄';
+        
+        const [intervals, laps, pitData, incidents, raceControl] = await Promise.all([
+            fetchAPI(`https://api.openf1.org/v1/intervals?session_key=${currentSession}`),
+            fetchAPI(`https://api.openf1.org/v1/laps?session_key=${currentSession}`),
+            fetchAPI(`https://api.openf1.org/v1/pit?session_key=${currentSession}`),
+            fetchAPI(`https://api.openf1.org/v1/incidents?session_key=${currentSession}`),
+            fetchAPI(`https://api.openf1.org/v1/race_control?session_key=${currentSession}`)
+        ]);
+        
+        if (raceControl.length) {
+            document.getElementById('raceMsg').innerHTML = `📢 ${raceControl[raceControl.length-1].message || 'Track clear'}`;
         }
         
-        await refreshTiming();
-        refreshInterval = setInterval(async () => {
-            await refreshTiming();
-        }, 2000);
-    }
-
-    async function fetchDrivers() {
-        if (!currentSessionKey) return [];
-        const drivers = await fetchJSON(`https://api.openf1.org/v1/drivers?session_key=${currentSessionKey}`);
-        driverList = drivers.sort((a,b) => a.position - b.position);
-        return driverList;
-    }
-
-    async function refreshTiming() {
-        if (!currentSessionKey || isLoading) return;
-        isLoading = true;
-        document.getElementById('refreshIndicator').innerHTML = '🔄 Updating...';
+        // Penalties
+        activePenalties.clear();
+        for (const inc of incidents) {
+            if (inc.category === 'Penalty' && inc.message && !inc.message.toLowerCase().includes('served')) {
+                activePenalties.add(String(inc.driver_number));
+            }
+        }
         
-        try {
-            const [intervals, allLaps, pitData, incidents, raceControl] = await Promise.all([
-                fetchJSON(`https://api.openf1.org/v1/intervals?session_key=${currentSessionKey}`),
-                fetchJSON(`https://api.openf1.org/v1/laps?session_key=${currentSessionKey}`),
-                fetchJSON(`https://api.openf1.org/v1/pit?session_key=${currentSessionKey}`),
-                fetchJSON(`https://api.openf1.org/v1/incidents?session_key=${currentSessionKey}`),
-                fetchJSON(`https://api.openf1.org/v1/race_control?session_key=${currentSessionKey}`)
-            ]);
+        // Process laps
+        const bestMap = new Map();
+        const lastMap = new Map();
+        const sectorMap = new Map();
+        for (const lap of laps) {
+            const dn = lap.driver_number;
+            if (!bestMap.has(dn) || lap.lap_duration < bestMap.get(dn).dur) {
+                bestMap.set(dn, { dur: lap.lap_duration });
+            }
+            if (!lastMap.has(dn) || lap.lap_number > (lastMap.get(dn).lap || 0)) {
+                lastMap.set(dn, { dur: lap.lap_duration, lap: lap.lap_number });
+            }
+            if (lap.duration_sector_1 && lap.duration_sector_2 && lap.duration_sector_3) {
+                sectorMap.set(dn, {
+                    s1: lap.duration_sector_1,
+                    s2: lap.duration_sector_2,
+                    s3: lap.duration_sector_3,
+                    seg1: lap.segments_sector_1 || [],
+                    seg2: lap.segments_sector_2 || [],
+                    seg3: lap.segments_sector_3 || []
+                });
+            }
+        }
+        
+        // Find leader
+        let leaderNum = null;
+        if (intervals.length) {
+            const lead = intervals.find(i => i.gap_to_leader === null || i.gap_to_leader === 0);
+            if (lead) leaderNum = lead.driver_number;
+        }
+        if (leaderNum && sectorMap.has(leaderNum)) {
+            const ls = sectorMap.get(leaderNum);
+            leaderSectors = { s1: ls.s1, s2: ls.s2, s3: ls.s3 };
+        }
+        
+        // Update each driver card
+        for (const [dn, cache] of driverDataCache) {
+            const driverNum = dn;
+            const gapObj = intervals.find(i => i.driver_number === driverNum);
+            let gapText = '—';
+            if (driverNum === leaderNum) gapText = 'LEADER';
+            else if (gapObj && gapObj.gap_to_leader !== null) gapText = `+${gapObj.gap_to_leader.toFixed(3)}`;
             
-            if (raceControl && raceControl.length) {
-                const latest = raceControl[raceControl.length-1];
-                document.getElementById('raceControlMsg').innerHTML = `📢 ${latest.message || 'Track clear'}`;
+            const gapSpan = document.getElementById(`gap-${driverNum}`);
+            if (gapSpan) gapSpan.textContent = gapText;
+            
+            const last = lastMap.get(driverNum);
+            const best = bestMap.get(driverNum);
+            const lastSpan = document.getElementById(`last-${driverNum}`);
+            const bestSpan = document.getElementById(`best-${driverNum}`);
+            if (lastSpan) lastSpan.textContent = last ? formatTime(last.dur) : '—';
+            if (bestSpan) {
+                bestSpan.textContent = best ? formatTime(best.dur) : '—';
+                bestSpan.className = 'best-lap';
+                // Check if purple (fastest overall in session)
+                if (best && laps.some(l => l.driver_number !== driverNum && l.lap_duration === best.dur)) {
+                    // not purple
+                } else if (best) {
+                    bestSpan.classList.add('purple');
+                }
             }
             
-            activePenalties.clear();
-            for (const inc of incidents) {
-                if (inc.category === 'Penalty' && inc.message && !inc.message.toLowerCase().includes('served')) {
-                    activePenalties.add(String(inc.driver_number));
+            // Penalty icon
+            const hasPenalty = activePenalties.has(String(driverNum));
+            const penaltySpan = cache.element.querySelector('.penalty-icon');
+            if (penaltySpan) penaltySpan.style.display = hasPenalty ? 'inline' : 'none';
+            
+            // Sector deltas
+            const sec = sectorMap.get(driverNum);
+            if (sec && leaderSectors.s1) {
+                const d1 = sec.s1 - leaderSectors.s1;
+                const d2 = sec.s2 - leaderSectors.s2;
+                const d3 = sec.s3 - leaderSectors.s3;
+                const s1Span = document.getElementById(`s1-${driverNum}`);
+                const s2Span = document.getElementById(`s2-${driverNum}`);
+                const s3Span = document.getElementById(`s3-${driverNum}`);
+                if (s1Span) {
+                    s1Span.textContent = formatDelta(d1);
+                    s1Span.className = `sector-value ${d1 < 0 ? 'green' : (d1 > 0 ? 'red' : 'white')}`;
+                }
+                if (s2Span) {
+                    s2Span.textContent = formatDelta(d2);
+                    s2Span.className = `sector-value ${d2 < 0 ? 'green' : (d2 > 0 ? 'red' : 'white')}`;
+                }
+                if (s3Span) {
+                    s3Span.textContent = formatDelta(d3);
+                    s3Span.className = `sector-value ${d3 < 0 ? 'green' : (d3 > 0 ? 'red' : 'white')}`;
                 }
             }
             
-            const bestLapMap = new Map();
-            const lastLapMap = new Map();
-            const sectorMap = new Map();
-            
-            for (const lap of allLaps) {
-                const dn = lap.driver_number;
-                if (!bestLapMap.has(dn) || lap.lap_duration < bestLapMap.get(dn).duration) {
-                    bestLapMap.set(dn, { duration: lap.lap_duration });
-                }
-                if (!lastLapMap.has(dn) || lap.lap_number > (lastLapMap.get(dn).lapNum || 0)) {
-                    lastLapMap.set(dn, { duration: lap.lap_duration, lapNum: lap.lap_number });
-                }
-                if (lap.duration_sector_1 && lap.duration_sector_2 && lap.duration_sector_3) {
-                    sectorMap.set(dn, {
-                        s1: lap.duration_sector_1,
-                        s2: lap.duration_sector_2,
-                        s3: lap.duration_sector_3,
-                        seg1: lap.segments_sector_1 || [],
-                        seg2: lap.segments_sector_2 || [],
-                        seg3: lap.segments_sector_3 || []
-                    });
-                }
-            }
-            
-            let leaderNumber = null;
-            if (intervals.length) {
-                const leaderInterval = intervals.find(i => i.gap_to_leader === null || i.gap_to_leader === 0);
-                if (leaderInterval) leaderNumber = leaderInterval.driver_number;
-                else if (intervals[0]) leaderNumber = intervals[0].driver_number;
-            }
-            
-            if (leaderNumber && sectorMap.has(leaderNumber)) {
-                const lsec = sectorMap.get(leaderNumber);
-                leaderSectorTimes = { s1: lsec.s1, s2: lsec.s2, s3: lsec.s3 };
-            }
-            
-            const drivers = await fetchDrivers();
-            const gapMap = new Map();
-            for (const i of intervals) gapMap.set(i.driver_number, { gap: i.gap_to_leader });
-            
-            const tbody = document.getElementById('timingBody');
-            tbody.innerHTML = '';
-            
-            for (let idx = 0; idx < drivers.length; idx++) {
-                const d = drivers[idx];
-                const dn = d.driver_number;
-                const gapObj = gapMap.get(dn);
-                let gapText = idx === 0 ? 'LEADER' : (gapObj && gapObj.gap !== null ? `+${gapObj.gap.toFixed(3)}` : '—');
-                
-                let pitHtml = '';
-                const latestPit = pitData.filter(p => p.driver_number === dn).sort((a,b) => new Date(b.pit_in_time) - new Date(a.pit_in_time))[0];
-                if (latestPit && latestPit.pit_in_time && !latestPit.pit_out_time) {
-                    pitHtml = '<span class="pit-status">PIT</span>';
-                } else if (latestPit && latestPit.pit_out_time && pitStopFlash.has(dn)) {
-                    pitHtml = `<span class="pit-status">${pitStopFlash.get(dn)}s</span>`;
-                } else if (latestPit && latestPit.stop_duration && !pitStopFlash.has(dn)) {
-                    const stopDur = latestPit.stop_duration.toFixed(1);
-                    pitHtml = `<span class="pit-status">${stopDur}s</span>`;
-                    pitStopFlash.set(dn, stopDur);
-                    setTimeout(() => {
-                        if (pitStopFlash.get(dn) === stopDur) pitStopFlash.delete(dn);
-                    }, 5000);
-                }
-                
-                const driverSectors = sectorMap.get(dn);
-                let s1Delta = null, s2Delta = null, s3Delta = null;
-                let s1Class = '', s2Class = '', s3Class = '';
-                if (driverSectors && leaderSectorTimes.s1) {
-                    s1Delta = driverSectors.s1 - leaderSectorTimes.s1;
-                    s2Delta = driverSectors.s2 - leaderSectorTimes.s2;
-                    s3Delta = driverSectors.s3 - leaderSectorTimes.s3;
-                    s1Class = s1Delta < 0 ? 'green' : (s1Delta > 0 ? 'red' : '');
-                    s2Class = s2Delta < 0 ? 'green' : (s2Delta > 0 ? 'red' : '');
-                    s3Class = s3Delta < 0 ? 'green' : (s3Delta > 0 ? 'red' : '');
-                }
-                
-                const segS1 = driverSectors?.seg1 || [];
-                const segS2 = driverSectors?.seg2 || [];
-                const segS3 = driverSectors?.seg3 || [];
-                const allSegments = [...segS1, ...segS2, ...segS3];
+            // Mini sectors
+            if (sec) {
+                const allSeg = [...(sec.seg1 || []), ...(sec.seg2 || []), ...(sec.seg3 || [])];
                 let miniHtml = '';
-                for (let i = 0; i < Math.min(allSegments.length, 9); i++) {
-                    const val = allSegments[i];
-                    if (val === 2049) miniHtml += '<div class="mini-dot mini-dot-green"></div>';
-                    else if (val === 2051) miniHtml += '<div class="mini-dot mini-dot-purple"></div>';
-                    else if (val === 2048) miniHtml += '<div class="mini-dot mini-dot-yellow"></div>';
+                for (let i = 0; i < Math.min(allSeg.length, 9); i++) {
+                    const v = allSeg[i];
+                    if (v === 2049) miniHtml += '<div class="mini-dot mini-dot-green"></div>';
+                    else if (v === 2051) miniHtml += '<div class="mini-dot mini-dot-purple"></div>';
+                    else if (v === 2048) miniHtml += '<div class="mini-dot mini-dot-yellow"></div>';
                     else miniHtml += '<div class="mini-dot mini-dot-white"></div>';
                 }
-                
-                const hasPenalty = activePenalties.has(String(dn));
-                const penaltySpan = hasPenalty ? '<span class="penalty-marker">⚠️</span>' : '';
-                const lastLap = lastLapMap.get(dn);
-                const bestLap = bestLapMap.get(dn);
-                const bestClass = bestLap && allLaps.some(l => l.lap_duration === bestLap.duration && l.driver_number !== dn) ? '' : 'purple';
-                
-                const row = tbody.insertRow();
-                row.className = 'driver-row';
-                row.onclick = () => showDriverDetails(dn, d.full_name);
-                row.insertCell(0).innerHTML = `<span class="pos">${idx+1}</span>`;
-                row.insertCell(1).innerHTML = `<span>${penaltySpan}${d.name_acronym || d.full_name.split(' ').pop()}</span>`;
-                row.insertCell(2).innerHTML = gapText;
-                row.insertCell(3).innerHTML = lastLap ? formatLapTime(lastLap.duration) : '—';
-                row.insertCell(4).innerHTML = bestLap ? `<span class="${bestClass}">${formatLapTime(bestLap.duration)}</span>` : '—';
-                row.insertCell(5).innerHTML = `<span class="${s1Class}">${formatDelta(s1Delta)}</span>`;
-                row.insertCell(6).innerHTML = `<span class="${s2Class}">${formatDelta(s2Delta)}</span>`;
-                row.insertCell(7).innerHTML = `<span class="${s3Class}">${formatDelta(s3Delta)}</span>`;
-                row.insertCell(8).innerHTML = miniHtml || '—';
-                row.insertCell(9).innerHTML = pitHtml;
+                const miniDiv = document.getElementById(`mini-${driverNum}`);
+                if (miniDiv) miniDiv.innerHTML = miniHtml || '—';
             }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            isLoading = false;
-            document.getElementById('refreshIndicator').innerHTML = '✅ Live 2s';
+            
+            // Pit status
+            const pitEntry = pitData.filter(p => p.driver_number === driverNum).sort((a,b) => new Date(b.pit_in_time) - new Date(a.pit_in_time))[0];
+            const pitSpan = document.getElementById(`pit-${driverNum}`);
+            if (pitSpan) {
+                if (pitEntry && pitEntry.pit_in_time && !pitEntry.pit_out_time) {
+                    pitSpan.style.display = 'inline';
+                    pitSpan.textContent = 'PIT';
+                } else if (pitEntry && pitEntry.pit_out_time && pitFlash.has(driverNum)) {
+                    pitSpan.style.display = 'inline';
+                    pitSpan.textContent = `${pitFlash.get(driverNum)}s`;
+                } else if (pitEntry && pitEntry.stop_duration && !pitFlash.has(driverNum)) {
+                    const dur = pitEntry.stop_duration.toFixed(1);
+                    pitSpan.style.display = 'inline';
+                    pitSpan.textContent = `${dur}s`;
+                    pitFlash.set(driverNum, dur);
+                    setTimeout(() => {
+                        if (pitFlash.get(driverNum) === dur) {
+                            pitFlash.delete(driverNum);
+                            const s = document.getElementById(`pit-${driverNum}`);
+                            if (s) s.style.display = 'none';
+                        }
+                    }, 5000);
+                } else {
+                    pitSpan.style.display = 'none';
+                }
+            }
         }
+        document.getElementById('statusText').innerHTML = '✅';
     }
     
-    async function showDriverDetails(driverNumber, driverName) {
-        if (!currentSessionKey) return;
+    async function showLapHistory(driverNum, name) {
+        if (!currentSession) return;
         const [laps, stints] = await Promise.all([
-            fetchJSON(`https://api.openf1.org/v1/laps?session_key=${currentSessionKey}&driver_number=${driverNumber}`),
-            fetchJSON(`https://api.openf1.org/v1/stints?session_key=${currentSessionKey}&driver_number=${driverNumber}`)
+            fetchAPI(`https://api.openf1.org/v1/laps?session_key=${currentSession}&driver_number=${driverNum}`),
+            fetchAPI(`https://api.openf1.org/v1/stints?session_key=${currentSession}&driver_number=${driverNum}`)
         ]);
-        const sortedLaps = laps.sort((a,b) => a.lap_number - b.lap_number);
-        document.getElementById('modalDriverName').innerHTML = `📊 ${driverName} — Lap History`;
-        let html = '<table class="lap-history-table"><tr><th>Lap</th><th>Time</th><th>S1</th><th>S2</th><th>S3</th><th>Tyre</th></tr>';
-        for (const lap of sortedLaps.slice(0, 70)) {
-            let tyreCompound = '—';
-            if (stints.length) {
-                const stint = stints.find(s => lap.lap_number >= s.lap_start && lap.lap_number <= s.lap_end);
-                if (stint) tyreCompound = stint.compound;
+        const sorted = laps.sort((a,b) => a.lap_number - b.lap_number);
+        document.getElementById('modalTitle').innerHTML = `${name} — Lap Times`;
+        let html = '<table class="lap-table"><tr><th>Lap</th><th>Time</th><th>S1</th><th>S2</th><th>S3</th><th>Tyre</th></tr>';
+        for (const lap of sorted.slice(0, 60)) {
+            let tyre = '—';
+            let tyreClass = '';
+            for (const s of stints) {
+                if (lap.lap_number >= s.lap_start && lap.lap_number <= s.lap_end) {
+                    tyre = s.compound;
+                    if (tyre === 'SOFT') tyreClass = 'tyre-soft';
+                    else if (tyre === 'MEDIUM') tyreClass = 'tyre-medium';
+                    else if (tyre === 'HARD') tyreClass = 'tyre-hard';
+                    break;
+                }
             }
-            let tyreColor = '';
-            if (tyreCompound === 'SOFT') tyreColor = '🟠 SOFT';
-            else if (tyreCompound === 'MEDIUM') tyreColor = '🟡 MEDIUM';
-            else if (tyreCompound === 'HARD') tyreColor = '⚪ HARD';
-            else tyreColor = '—';
+            const tyreDisplay = tyre === 'SOFT' ? '🟠 SOFT' : (tyre === 'MEDIUM' ? '🟡 MEDIUM' : (tyre === 'HARD' ? '⚪ HARD' : '—'));
             html += `<tr>
                         <td>${lap.lap_number}</td>
-                        <td>${formatLapTime(lap.lap_duration)}</td>
+                        <td>${formatTime(lap.lap_duration)}</td>
                         <td>${lap.duration_sector_1 ? lap.duration_sector_1.toFixed(3) : '—'}</td>
                         <td>${lap.duration_sector_2 ? lap.duration_sector_2.toFixed(3) : '—'}</td>
                         <td>${lap.duration_sector_3 ? lap.duration_sector_3.toFixed(3) : '—'}</td>
-                        <td>${tyreColor}</td>
+                        <td class="${tyreClass}">${tyreDisplay}</td>
                      </tr>`;
         }
         html += '</table>';
-        document.getElementById('modalLapsContainer').innerHTML = html;
-        document.getElementById('driverModal').style.display = 'flex';
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('modal').style.display = 'flex';
     }
     
-    document.getElementById('yearSelect').addEventListener('change', () => updateWeekendSelect());
-    document.getElementById('sessionSelect').addEventListener('change', onWeekendSelected);
-    document.querySelector('.close-modal').onclick = () => document.getElementById('driverModal').style.display = 'none';
-    window.onclick = (e) => { if (e.target === document.getElementById('driverModal')) document.getElementById('driverModal').style.display = 'none'; };
+    document.getElementById('yearSelect').addEventListener('change', () => loadRaces());
+    document.getElementById('raceSelect').addEventListener('change', onRaceSelect);
+    document.getElementById('closeModal').onclick = () => document.getElementById('modal').style.display = 'none';
+    window.onclick = (e) => { if (e.target === document.getElementById('modal')) document.getElementById('modal').style.display = 'none'; };
     
-    updateWeekendSelect();
+    loadRaces();
 </script>
 </body>
     </html>
