@@ -33,7 +33,7 @@ select.status-red{border-color:var(--red)!important}
 select.status-sc{border-color:var(--yellow)!important}
 select.status-done{border-color:var(--muted)!important}
 #yearSelect{flex:0 0 58px;min-width:58px}
-.session-timer{font-family:var(--mono);font-size:9px;color:var(--dim);white-space:nowrap;flex-shrink:0}
+.session-timer{font-family:var(--mono);font-size:9px;color:var(--dim);white-space:nowrap;padding:3px 12px 0;display:block}
 .session-timer.live{color:var(--green)}
 .session-timer.soon{color:var(--yellow)}
 .session-timer.done{color:var(--muted)}
@@ -63,14 +63,14 @@ select.status-done{border-color:var(--muted)!important}
 
 /* ── TIMING PANEL ── */
 .timing-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
-.col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 62px 68px;padding:5px 10px 5px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;gap:4px;align-items:center;position:sticky;top:0;background:var(--bg1);z-index:5}
+.col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:5px 10px 5px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;gap:4px;align-items:center;position:sticky;top:0;background:var(--bg1);z-index:5}
 
 /* ── DRIVER ROWS ── */
 .driver-row{border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s;user-select:none}
 .driver-row:hover{background:var(--bg1)}
 .driver-row.eliminated{opacity:0.45}
 .driver-row.elim-danger .team-bar{box-shadow:0 0 0 1px var(--red)}
-.row-main{display:grid;grid-template-columns:32px 48px 1fr 72px 62px 68px;padding:7px 10px 3px 12px;gap:4px;align-items:center}
+.row-main{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:7px 10px 3px 12px;gap:4px;align-items:center}
 .pos-block{display:flex;flex-direction:column;align-items:center;gap:1px}
 .pos{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);line-height:1}
 .pos.p1{color:var(--yellow)}.pos.p2{color:#ccc}.pos.p3{color:#cd7f32}
@@ -94,9 +94,9 @@ select.status-done{border-color:var(--muted)!important}
 .mini-sectors{display:flex;gap:2px;align-items:center}
 .seg{width:6px;height:6px;border-radius:1px;flex-shrink:0}
 .seg-yellow{background:var(--yellow)}.seg-green{background:var(--green)}.seg-purple{background:var(--purple)}.seg-grey{background:var(--bg3);border:1px solid var(--line)}.seg-pit{background:var(--red)}
-.tyre-badge{display:flex;align-items:center;gap:2px;margin-left:3px}
-.tyre-icon{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:700;flex-shrink:0;border:2px solid currentColor}
-.tyre-age{font-family:var(--mono);font-size:9px;font-weight:700}
+.tyre-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tyre-icon{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:7px;font-weight:700;flex-shrink:0;border:2px solid currentColor}
+.tyre-age-col{font-family:var(--mono);font-size:8px;font-weight:700;text-align:center}
 .chip{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 4px;border-radius:3px;letter-spacing:0.5px;margin-left:3px}
 .chip-pit{background:var(--red);color:#fff}.chip-out{background:#1a3a1a;color:var(--green);border:1px solid var(--green)}
 .elim-divider{display:none;padding:3px 12px;background:#1a0000;border-bottom:1px solid #3a0000;border-top:1px solid #3a0000;font-family:var(--mono);font-size:9px;color:#f87171;letter-spacing:1px}
@@ -164,8 +164,8 @@ canvas#trackerFull{display:block}
       <select id="meetingSelect"><option value="">— GP —</option></select>
       <select id="sessionSelect"><option value="">— Session —</option></select>
     </div>
-    <span class="session-timer" id="sessionTimer"></span>
   </div>
+  <span class="session-timer" id="sessionTimer"></span>
 </header>
 
 <div class="weather-strip" id="weatherStrip"></div>
@@ -182,7 +182,7 @@ canvas#trackerFull{display:block}
   <div class="tab-panel active" id="panelTiming">
     <div class="timing-scroll">
       <div class="col-header">
-        <span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span>
+        <span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:center">TYR</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span>
       </div>
       <div id="driverList"><div class="placeholder">SELECT A GRAND PRIX TO BEGIN</div></div>
     </div>
@@ -505,6 +505,7 @@ async function buildCards(){
           <span class="gap-leader" id="gap-${dn}">—</span>
           <span class="gap-ahead" id="ahead-${dn}"></span>
         </div>
+        <div class="tyre-col" id="tyreCol-${dn}"></div>
         <span class="lap-cell" id="last-${dn}">—</span>
         <span class="lap-cell" id="best-${dn}">—</span>
       </div>
@@ -646,6 +647,7 @@ async function tick(){
 
     updateMiniSectors(dn,lastLap);
     updateTyreBadge(dn,driverStints,lapNum);
+    updateTyreCol(dn,driverStints,lapNum);
     updatePit(dn,pit);
   }
 
@@ -727,6 +729,17 @@ function updateTyreBadge(dn,stints,lapNum){
   const letter=tyreLetter(compound);
   const ageStr=String(age).padStart(2,'0');
   const newHtml=`<div class="tyre-icon" style="color:${col};background:${col}22">${letter}</div><span class="tyre-age" style="color:${col}">${ageStr}</span>`;
+  if(el.innerHTML!==newHtml)el.innerHTML=newHtml;
+}
+
+function updateTyreCol(dn,stints,lapNum){
+  const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;
+  const{compound,age}=getCurrentTyre(stints,lapNum);
+  if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}
+  const col=tyreColor(compound);
+  const letter=tyreLetter(compound);
+  const ageStr=String(age).padStart(2,'0');
+  const newHtml=`<div class="tyre-icon" style="color:${col};background:${col}22">${letter}</div><span class="tyre-age-col" style="color:${col}">${ageStr}</span>`;
   if(el.innerHTML!==newHtml)el.innerHTML=newHtml;
 }
 
@@ -1021,30 +1034,46 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
       }
     }
 
-    // ── SECTOR ANOMALY ──
-    for(const lap of lapDrivers){
-      const dn=lap.driver_number;
-      if(!lap.duration_sector_1&&!lap.duration_sector_2&&!lap.duration_sector_3)continue;
-      const history=lastLapTimes.get(dn)||[];
-      const sectors=['duration_sector_1','duration_sector_2','duration_sector_3'];
-      for(let si=0;si<3;si++){
-        const val=lap[sectors[si]];
-        if(!val)continue;
-        const prevVals=history.map(h=>h[si]).filter(Boolean);
-        if(prevVals.length>=3){
-          const avg=prevVals.reduce((a,b)=>a+b,0)/prevVals.length;
-          const loss=val-avg;
-          if(loss>0.4){
-            const severity=loss>1.0?'major incident':loss>0.5?'significant loss':'moment';
-            newEntries.push({lap:lapNum,category:'c-incident',text:`${driverTag(dn)} — ${severity} in S${si+1}. Lost <b>${loss.toFixed(2)}s</b> vs personal average.`,ts});
+    // ── SECTOR ANOMALY — suppressed during SC/VSC/yellow ──
+    const flagActive=activeYellowSectors.size>0||
+      allRCMessages.some(m=>{
+        const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
+        return f==='SC'||f==='VSC'||msg.includes('SAFETY CAR')||msg.includes('VIRTUAL SAFETY');
+      });
+
+    if(!flagActive){
+      for(const lap of lapDrivers){
+        const dn=lap.driver_number;
+        if(!lap.duration_sector_1&&!lap.duration_sector_2&&!lap.duration_sector_3)continue;
+        const history=lastLapTimes.get(dn)||[];
+        const sectors=['duration_sector_1','duration_sector_2','duration_sector_3'];
+        for(let si=0;si<3;si++){
+          const val=lap[sectors[si]];
+          if(!val)continue;
+          const prevVals=history.map(h=>h[si]).filter(Boolean);
+          if(prevVals.length>=3){
+            const avg=prevVals.reduce((a,b)=>a+b,0)/prevVals.length;
+            const loss=val-avg;
+            if(loss>0.4){
+              const severity=loss>1.0?'major incident':loss>0.5?'significant loss':'moment';
+              newEntries.push({lap:lapNum,category:'c-incident',text:`${driverTag(dn)} — ${severity} in S${si+1}. Lost <b>${loss.toFixed(2)}s</b> vs personal average.`,ts:lapNum});
+            }
           }
         }
+        const entry=[lap.duration_sector_1,lap.duration_sector_2,lap.duration_sector_3];
+        history.push(entry);
+        if(history.length>5)history.shift();
+        lastLapTimes.set(dn,history);
       }
-      // Update rolling history (keep last 5)
-      const entry=[lap.duration_sector_1,lap.duration_sector_2,lap.duration_sector_3];
-      history.push(entry);
-      if(history.length>5)history.shift();
-      lastLapTimes.set(dn,history);
+    } else {
+      // Still update rolling history even when suppressed so baselines stay current
+      for(const lap of lapDrivers){
+        const dn=lap.driver_number;
+        const history=lastLapTimes.get(dn)||[];
+        history.push([lap.duration_sector_1,lap.duration_sector_2,lap.duration_sector_3]);
+        if(history.length>5)history.shift();
+        lastLapTimes.set(dn,history);
+      }
     }
   }
 
@@ -1058,9 +1087,12 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
     let cat='c-info';
     if(f==='RED'||msg.includes('RED FLAG'))cat='c-incident';
     else if(f==='SC'||msg.includes('SAFETY CAR'))cat='c-sc';
+    else if(f==='VSC'||msg.includes('VIRTUAL SAFETY'))cat='c-sc';
     else if(f==='YELLOW'||msg.includes('YELLOW'))cat='c-strategy';
     else if(f==='CHEQUERED'||msg.includes('CHEQUERED'))cat='c-fastest';
-    newEntries.push({lap:lastKnownLapNum||'—',category:cat,text:`<b>RC:</b> ${m.message||''}`,ts:m.date,rcKey:key});
+    // Use a numeric ts for sorting: parse date or fallback to 0
+    const rcTs=m.date?new Date(m.date).getTime():0;
+    newEntries.push({lap:lastKnownLapNum||0,category:cat,text:`<b>RC:</b> ${m.message||''}`,ts:rcTs,rcKey:key});
   }
 
   if(!newEntries.length)return;
@@ -1081,7 +1113,13 @@ function renderFeed(){
     return;
   }
   // Render newest first
-  const sorted=[...feedEntries].sort((a,b)=>b.ts-a.ts||(b.lap-a.lap));
+  const sorted=[...feedEntries].sort((a,b)=>{
+    // Primary: lap number descending
+    const lapDiff=(b.lap||0)-(a.lap||0);
+    if(lapDiff!==0)return lapDiff;
+    // Secondary: ts descending (numeric)
+    return(b.ts||0)-(a.ts||0);
+  });
   scroll.innerHTML=sorted.map(e=>`
     <div class="feed-entry ${e.category}">
       <span class="feed-lap">L${e.lap}</span>
