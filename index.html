@@ -1010,15 +1010,32 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
     }
 
     // ── PIT STOPS ──
+    // Track pits using pit_in lap and pit_out lap separately
     for(const[dn,pit]of latestPit){
-      if(pit.lap_number===lapNum&&pit.pit_out_time){
-        const dur=pit.pit_duration??pit.stop_duration;
-        const pos=posAtLap.get(dn)??'?';
-        const stints=stintMap.get(dn)||[];
-        const{compound}=getCurrentTyre(stints,lapNum);
-        const tyreStr=compound?` onto <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span>`:'';
-        const durStr=dur?` (${parseFloat(dur).toFixed(1)}s stop)`:'';
-        newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} pits from P${pos}${tyreStr}${durStr}.`,ts});
+      const pitInLap=pit.lap_number;
+      const pitKey=`pit-${dn}-${pitInLap}`;
+      // Pit entry — report when driver pits (pit_in lap matches)
+      if(pitInLap===lapNum&&!pit.pit_out_time){
+        if(!processedLaps.has(pitKey+'in')){
+          processedLaps.add(pitKey+'in');
+          const posIn=posAtLap.get(dn)??'?';
+          newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} pits from P${posIn}.`,ts});
+        }
+      }
+      // Pit exit — report rejoin with compound and position
+      if(pit.pit_out_time&&!processedLaps.has(pitKey+'out')){
+        // Estimate rejoin lap as pit_in lap + 1
+        const rejoinLap=pitInLap+1;
+        if(lapNum>=rejoinLap){
+          processedLaps.add(pitKey+'out');
+          const dur=pit.pit_duration??pit.stop_duration;
+          const posOut=posAtLap.get(dn)??'?';
+          const stints=stintMap.get(dn)||[];
+          const{compound}=getCurrentTyre(stints,lapNum);
+          const tyreStr=compound?` on <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span>`:'';
+          const durStr=dur?` — ${parseFloat(dur).toFixed(1)}s stop`:'';
+          newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} rejoins P${posOut}${tyreStr}${durStr}.`,ts});
+        }
       }
     }
 
@@ -1062,9 +1079,10 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
           if(prevVals.length>=3){
             const avg=prevVals.reduce((a,b)=>a+b,0)/prevVals.length;
             const loss=val-avg;
-            if(loss>0.4){
-              const severity=loss>1.0?'major incident':loss>0.5?'significant loss':'moment';
-              newEntries.push({lap:lapNum,category:'c-incident',text:`${driverTag(dn)} — ${severity} in S${si+1}. Lost <b>${loss.toFixed(2)}s</b> vs personal average.`,ts:lapNum});
+            if(loss>=0.5){
+              const severity=loss>=5.0?'🔴 Critical stop or safety delay':loss>=2.0?'major incident':loss>=1.0?'significant time loss':'moment';
+              const cat=loss>=2.0?'c-incident':'c-incident';
+              newEntries.push({lap:lapNum,category:cat,text:`${driverTag(dn)} — ${severity} in S${si+1}. Lost <b>${loss.toFixed(2)}s</b> vs personal average.`,ts:lapNum});
             }
           }
         }
@@ -1083,24 +1101,6 @@ function generateFeed(laps,latestPos,latestIv,latestPit,stintMap,raceControl){
         lastLapTimes.set(dn,history);
       }
     }
-  }
-
-  // ── RACE CONTROL EVENTS → FEED ──
-  const rcProcessed=new Set(feedEntries.filter(e=>e.rcKey).map(e=>e.rcKey));
-  for(const m of raceControl){
-    const key=m.date+'|'+m.message;
-    if(rcProcessed.has(key))continue;
-    const f=(m.flag||'').toUpperCase();
-    const msg=(m.message||'').toUpperCase();
-    let cat='c-info';
-    if(f==='RED'||msg.includes('RED FLAG'))cat='c-incident';
-    else if(f==='SC'||msg.includes('SAFETY CAR'))cat='c-sc';
-    else if(f==='VSC'||msg.includes('VIRTUAL SAFETY'))cat='c-sc';
-    else if(f==='YELLOW'||msg.includes('YELLOW'))cat='c-strategy';
-    else if(f==='CHEQUERED'||msg.includes('CHEQUERED'))cat='c-fastest';
-    // Use a numeric ts for sorting: parse date or fallback to 0
-    const rcTs=m.date?new Date(m.date).getTime():0;
-    newEntries.push({lap:lastKnownLapNum||0,category:cat,text:`<b>RC:</b> ${m.message||''}`,ts:rcTs,rcKey:key});
   }
 
   if(!newEntries.length)return;
