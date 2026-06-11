@@ -18,6 +18,7 @@
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg0);color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column}
 
+/* ── HEADER ── */
 header{background:var(--bg1);border-bottom:1px solid var(--line);padding:8px 12px;flex-shrink:0;z-index:20}
 .header-top{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
 .brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);letter-spacing:1px;flex-shrink:0}
@@ -25,7 +26,7 @@ header{background:var(--bg1);border-bottom:1px solid var(--line);padding:8px 12p
 .tab-btn{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.5px;padding:4px 9px;border:none;background:none;color:var(--dim);cursor:pointer;border-radius:3px;transition:all 0.15s;white-space:nowrap}
 .tab-btn.active{background:var(--bg1);color:var(--text);border:1px solid var(--line)}
 .selectors{display:flex;align-items:center;gap:5px;flex:1;flex-wrap:nowrap;overflow:hidden}
-select{background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:4px 20px 4px 7px;border-radius:4px;font-family:var(--sans);font-size:10px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;transition:border-color 0.2s;min-width:0;flex:1}
+select{background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:4px 20px 4px 7px;border-radius:4px;font-family:var(--sans);font-size:10px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;transition:border-color 0.2s;min-width:0;flex:1}
 select:focus{border-color:var(--red)}
 select.status-live{border-color:var(--green)!important}
 select.status-red{border-color:var(--red)!important}
@@ -37,25 +38,34 @@ select.status-done{border-color:var(--muted)!important}
 .session-timer.soon{color:var(--yellow)}
 .session-timer.done{color:var(--muted)}
 
+/* ── WEATHER STRIP ── */
 .weather-strip{background:var(--bg0);border-bottom:1px solid var(--line);padding:4px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:24px;overflow-x:auto}
 .wx-item{font-family:var(--mono);font-size:9px;color:var(--muted);display:flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0}
 .wx-item span{color:var(--dim)}
 .wx-rain{color:var(--blue)!important}
 
+/* ── RACE CONTROL BAR ── */
 .rc-bar{background:var(--bg1);border-bottom:1px solid var(--line);padding:4px 12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:7px;min-height:26px}
 .rc-flag{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .rc-text{font-family:var(--mono);font-size:9px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .rc-tap{font-size:8px;color:var(--muted);flex-shrink:0}
+
+/* ── CHEQUERED BANNER ── */
 .chequered-banner{display:none;align-items:center;justify-content:center;gap:8px;padding:5px 12px;background:repeating-linear-gradient(45deg,#111 0,#111 8px,#222 8px,#222 16px);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:#fff;flex-shrink:0}
 .chequered-banner.show{display:flex}
 
+/* ── MAIN AREA ── */
 .main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TAB PANELS ── */
 .tab-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
 .tab-panel.active{display:flex}
 
+/* ── TIMING PANEL ── */
 .timing-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
 .col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:5px 10px 5px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;gap:4px;align-items:center;position:sticky;top:0;background:var(--bg1);z-index:5}
 
+/* ── DRIVER ROWS ── */
 .driver-row{border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.1s;user-select:none}
 .driver-row:hover{background:var(--bg1)}
 .driver-row.eliminated{opacity:0.45}
@@ -74,6 +84,7 @@ select.status-done{border-color:var(--muted)!important}
 .lap-cell{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:right;white-space:nowrap}
 .lap-cell.purple{color:var(--purple);font-weight:600}
 
+/* ── SECTORS ROW ── */
 .row-sectors{display:flex;align-items:center;gap:7px;padding:0 10px 6px 42px;flex-wrap:wrap}
 .sector-group{display:flex;align-items:center;gap:2px}
 .sector-label{font-family:var(--mono);font-size:9px;color:var(--muted)}
@@ -91,9 +102,11 @@ select.status-done{border-color:var(--muted)!important}
 .elim-divider{display:none;padding:3px 12px;background:#1a0000;border-bottom:1px solid #3a0000;border-top:1px solid #3a0000;font-family:var(--mono);font-size:9px;color:#f87171;letter-spacing:1px}
 .elim-divider.show{display:block}
 
+/* ── TRACKER TAB ── */
 .tracker-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg0);overflow:hidden}
 canvas#trackerFull{display:block}
 
+/* ── FEED TAB ── */
 .feed-scroll{flex:1;overflow-y:auto;padding:8px 0}
 .feed-entry{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);animation:fadeIn 0.3s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
@@ -109,8 +122,11 @@ canvas#trackerFull{display:block}
 .feed-entry.c-info .feed-bar{background:var(--blue)}
 .feed-entry.c-sc .feed-bar{background:var(--orange)}
 .feed-placeholder{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px}
+
+/* ── PLACEHOLDER ── */
 .placeholder{padding:50px 20px;text-align:center;color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:1px}
 
+/* ── MODAL ── */
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:100;overflow-y:auto;padding:16px;backdrop-filter:blur(4px)}
 .modal-backdrop.open{display:flex;align-items:flex-start;justify-content:center}
 .modal-box{background:var(--bg1);border:1px solid var(--line);border-top:2px solid var(--red);border-radius:10px;width:100%;max-width:560px;margin-top:16px}
@@ -161,6 +177,8 @@ canvas#trackerFull{display:block}
 <div class="chequered-banner" id="chequeredBanner">🏁 SESSION ENDED 🏁</div>
 
 <div class="main-area">
+
+  <!-- TIMING TAB -->
   <div class="tab-panel active" id="panelTiming">
     <div class="timing-scroll">
       <div class="col-header">
@@ -169,18 +187,24 @@ canvas#trackerFull{display:block}
       <div id="driverList"><div class="placeholder">SELECT A GRAND PRIX TO BEGIN</div></div>
     </div>
   </div>
+
+  <!-- TRACKER TAB -->
   <div class="tab-panel" id="panelTracker">
     <div class="tracker-wrap">
       <canvas id="trackerFull"></canvas>
     </div>
   </div>
+
+  <!-- FEED TAB -->
   <div class="tab-panel" id="panelFeed">
     <div class="feed-scroll" id="feedScroll">
       <div class="feed-placeholder" id="feedPlaceholder">FEED WILL POPULATE WHEN SESSION IS SELECTED</div>
     </div>
   </div>
+
 </div>
 
+<!-- RC Modal -->
 <div class="modal-backdrop" id="rcModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -190,6 +214,8 @@ canvas#trackerFull{display:block}
     <div class="modal-body" id="rcModalBody"></div>
   </div>
 </div>
+
+<!-- Lap History Modal -->
 <div class="modal-backdrop" id="lapModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -201,7 +227,9 @@ canvas#trackerFull{display:block}
 </div>
 
 <script>
-// ========== STATE ==========
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
 let sessionKey=null,sessionType='',pollTimer=null,timerInterval=null;
 let sessionEnd=null,sessionStart=null,activeTab='timing';
 let driverMeta=new Map(),positionOrder=[];
@@ -210,14 +238,14 @@ let pitFlash=new Map(),allRCMessages=[];
 let locationData=new Map(),scLocation=null,activeYellowSectors=new Set();
 let currentAudio=null;
 
-let feedEntries=[];
-let lastKnownPositions=new Map();
-let lastKnownLapNum=0;
-let processedLaps=new Set();
-let stintHistory=new Map();
-let lastLapTimes=new Map();
-let currentFastestLap=null;
-const processedPits=new Set();
+// Feed state
+let feedEntries=[];           // [{lap,category,text,ts}]
+let lastKnownPositions=new Map(); // dn→pos (for detecting changes)
+let lastKnownLapNum=0;        // highest lap number seen
+let processedLaps=new Set();  // lap numbers already narrated
+let stintHistory=new Map();   // dn→last compound seen
+let lastLapTimes=new Map();   // dn→[last 5 lap times] for rolling avg
+let currentFastestLap=null;   // {dn, duration, lap}
 
 const SEG={YELLOW:2048,GREEN:2049,PB:2050,PURPLE:2051,PIT:2052};
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
@@ -236,17 +264,26 @@ function tyreLetter(c){if(!c)return'?';const u=c.toUpperCase();if(u.includes('SO
 function tyreClass(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
 function flagColor(f){if(!f)return'#555';const u=f.toUpperCase();if(u==='RED')return'#e10600';if(u.includes('YELLOW')||u==='SC'||u==='VSC')return'#eab308';if(u==='GREEN')return'#22c55e';if(u==='CHEQUERED')return'#fff';if(u==='BLUE')return'#60a5fa';return'#555'}
 
+// ═══════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════
 async function api(endpoint){
   try{const r=await fetch(`https://api.openf1.org/v1/${endpoint}`);if(!r.ok)return[];return await r.json()}
   catch{return[]}
 }
 
+// ═══════════════════════════════════════
+// FORMAT
+// ═══════════════════════════════════════
 function fmtTime(s){if(!s||s<=0)return'—';const m=Math.floor(s/60),sec=(s%60).toFixed(3).padStart(6,'0');return m>0?`${m}:${sec}`:`${s.toFixed(3)}`}
 function fmtDelta(d){if(d===null||d===undefined||isNaN(d))return'—';if(d===0)return'0.000';return(d>0?'+':'')+d.toFixed(3)}
 function fmtCountdown(ms){if(ms<=0)return'FINISHED';const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);if(h>0)return`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
 function fmtTimeLabel(iso){if(!iso)return'';try{const d=new Date(iso);return d.toTimeString().slice(0,5)}catch{return''}}
 function driverTag(dn){const m=driverMeta.get(dn);return m?`<b style="color:${m.teamColor}">${m.acronym}</b>`:`<b>#${dn}</b>`}
 
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
 function switchTab(tab){
   activeTab=tab;
   ['timing','tracker','feed'].forEach(t=>{
@@ -257,6 +294,9 @@ function switchTab(tab){
   if(tab==='feed')renderFeed();
 }
 
+// ═══════════════════════════════════════
+// AUTO-LOAD: find next/live session
+// ═══════════════════════════════════════
 async function autoLoadCurrent(){
   const year=document.getElementById('yearSelect').value;
   const [meetings,sessions]=await Promise.all([
@@ -268,11 +308,16 @@ async function autoLoadCurrent(){
   const now=new Date();
   sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
 
+  // Find live session first
   let target=sessions.find(s=>new Date(s.date_start)<=now&&new Date(s.date_end||'9999')>=now);
+  // Else find next upcoming
   if(!target)target=sessions.find(s=>new Date(s.date_start)>now);
+  // Else find most recent finished
   if(!target)target=sessions[sessions.length-1];
+
   if(!target)return;
 
+  // Populate meetings dropdown
   meetings.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
   const mSel=document.getElementById('meetingSelect');
   mSel.innerHTML='<option value="">— GP —</option>';
@@ -284,6 +329,7 @@ async function autoLoadCurrent(){
     mSel.appendChild(o);
   }
 
+  // Populate sessions for this meeting
   const meetingSessions=sessions.filter(s=>s.meeting_key===target.meeting_key);
   meetingSessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
   const sSel=document.getElementById('sessionSelect');
@@ -296,12 +342,15 @@ async function autoLoadCurrent(){
     sSel.appendChild(o);
   }
 
+  // If future session, show countdown only (don't poll)
   if(new Date(target.date_start)>now){
     sessionStart=new Date(target.date_start);
     sessionEnd=new Date(target.date_end||target.date_start);
     startCountdownOnly();
     return;
   }
+
+  // Load it
   await onSessionSelected(target.session_key);
 }
 
@@ -311,7 +360,12 @@ async function loadMeetings(){
   meetings.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
   const sel=document.getElementById('meetingSelect');
   sel.innerHTML='<option value="">— GP —</option>';
-  for(const m of meetings)sel.appendChild(new Option(m.meeting_name||m.circuit_short_name||`Meeting ${m.meeting_key}`,m.meeting_key));
+  for(const m of meetings){
+    const o=document.createElement('option');
+    o.value=m.meeting_key;
+    o.textContent=m.meeting_name||m.circuit_short_name||`Meeting ${m.meeting_key}`;
+    sel.appendChild(o);
+  }
   document.getElementById('sessionSelect').innerHTML='<option value="">— Session —</option>';
 }
 
@@ -322,9 +376,17 @@ async function loadSessions(){
   sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
   const sel=document.getElementById('sessionSelect');
   sel.innerHTML='<option value="">— Session —</option>';
-  for(const s of sessions)sel.appendChild(new Option(s.session_name||`Session ${s.session_key}`,s.session_key));
+  for(const s of sessions){
+    const o=document.createElement('option');
+    o.value=s.session_key;
+    o.textContent=s.session_name||`Session ${s.session_key}`;
+    sel.appendChild(o);
+  }
 }
 
+// ═══════════════════════════════════════
+// SESSION INIT
+// ═══════════════════════════════════════
 async function onSessionSelected(forceKey){
   const val=forceKey||document.getElementById('sessionSelect').value;
   if(!val)return;
@@ -371,6 +433,9 @@ async function onSessionSelected(forceKey){
   pollTimer=setInterval(tick,5000);
 }
 
+// ═══════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════
 function startCountdownOnly(){
   const el=document.getElementById('sessionTimer');
   if(timerInterval)clearInterval(timerInterval);
@@ -401,8 +466,14 @@ function startTimer(){
   },1000);
 }
 
-function setSelectStatus(s){const sel=document.getElementById('sessionSelect');sel.className='';if(s)sel.classList.add('status-'+s);}
+function setSelectStatus(s){
+  const sel=document.getElementById('sessionSelect');
+  sel.className='';if(s)sel.classList.add('status-'+s);
+}
 
+// ═══════════════════════════════════════
+// BUILD CARDS
+// ═══════════════════════════════════════
 async function buildCards(){
   const positions=await api(`position?session_key=${sessionKey}`);
   const latestPos=new Map();
@@ -425,9 +496,15 @@ async function buildCards(){
     row.innerHTML=`
       <div class="row-main">
         <div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div>
-        <div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div>
+        <div class="name-block">
+          <div class="team-bar" style="background:${meta.teamColor}"></div>
+          <span class="acronym">${meta.acronym}</span>
+        </div>
         <span></span>
-        <div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span><span class="gap-ahead" id="ahead-${dn}"></span></div>
+        <div class="gap-block">
+          <span class="gap-leader" id="gap-${dn}">—</span>
+          <span class="gap-ahead" id="ahead-${dn}"></span>
+        </div>
         <div class="tyre-col" id="tyreCol-${dn}"></div>
         <span class="lap-cell" id="last-${dn}">—</span>
         <span class="lap-cell" id="best-${dn}">—</span>
@@ -436,12 +513,18 @@ async function buildCards(){
         <div class="sector-group"><span class="sector-label">S1</span><span class="sector-val equal" id="s1-${dn}">—</span></div>
         <div class="sector-group"><span class="sector-label">S2</span><span class="sector-val equal" id="s2-${dn}">—</span></div>
         <div class="sector-group"><span class="sector-label">S3</span><span class="sector-val equal" id="s3-${dn}">—</span></div>
-        <div class="mini-wrap"><div class="mini-sectors" id="mini-${dn}"></div><span id="pit-${dn}"></span></div>
+        <div class="mini-wrap">
+          <div class="mini-sectors" id="mini-${dn}"></div>
+          <span id="pit-${dn}"></span>
+        </div>
       </div>`;
     list.appendChild(row);
   }
 }
 
+// ═══════════════════════════════════════
+// MAIN TICK
+// ═══════════════════════════════════════
 async function tick(){
   if(!sessionKey)return;
   setSelectStatus('loading');
@@ -508,6 +591,7 @@ async function tick(){
     if(!latestPit.has(dn)||new Date(p.pit_in_time)>new Date(latestPit.get(dn).pit_in_time))latestPit.set(dn,p);
   }
 
+  // Reorder DOM
   const container=document.getElementById('driverList');
   const sorted=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
   for(const dn of sorted){const el=document.getElementById(`row-${dn}`);if(el)container.appendChild(el)}
@@ -529,22 +613,45 @@ async function tick(){
       row.classList.toggle('elim-danger',pos>=elimThreshold&&pos<elimThreshold+5);
     }
 
-    const posEl=document.getElementById(`pos-${dn}`);if(posEl){posEl.textContent=pos??'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`}
-    const gapEl=document.getElementById(`gap-${dn}`);if(gapEl){if(dn===leaderDn){gapEl.textContent='LEADER';gapEl.className='gap-leader leader'}else if(iv?.gap_to_leader!=null){const g=iv.gap_to_leader;gapEl.textContent=typeof g==='number'?`+${g.toFixed(3)}`:String(g);gapEl.className='gap-leader'}else{gapEl.textContent='—';}}
-    const aheadEl=document.getElementById(`ahead-${dn}`);if(aheadEl){if(iv?.interval!=null&&dn!==leaderDn){const g=iv.interval;aheadEl.textContent=`△ ${typeof g==='number'?g.toFixed(3):String(g)}`}else aheadEl.textContent='';}
-    const lastEl=document.getElementById(`last-${dn}`);if(lastEl)lastEl.textContent=lastLap?fmtTime(lastLap.duration):'—';
-    const bestEl=document.getElementById(`best-${dn}`);if(bestEl){bestEl.textContent=bestLap?fmtTime(bestLap.duration):'—';bestEl.className=dn===overallBestDriver?'lap-cell purple':'lap-cell';}
+    const posEl=document.getElementById(`pos-${dn}`);
+    if(posEl){posEl.textContent=pos??'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`}
+
+    const gapEl=document.getElementById(`gap-${dn}`);
+    if(gapEl){
+      if(dn===leaderDn){gapEl.textContent='LEADER';gapEl.className='gap-leader leader'}
+      else if(iv?.gap_to_leader!=null){const g=iv.gap_to_leader;gapEl.textContent=typeof g==='number'?`+${g.toFixed(3)}`:String(g);gapEl.className='gap-leader'}
+      else{gapEl.textContent='—';gapEl.className='gap-leader'}
+    }
+
+    const aheadEl=document.getElementById(`ahead-${dn}`);
+    if(aheadEl){
+      if(iv?.interval!=null&&dn!==leaderDn){const g=iv.interval;aheadEl.textContent=`△ ${typeof g==='number'?g.toFixed(3):String(g)}`}
+      else aheadEl.textContent='';
+    }
+
+    const lastEl=document.getElementById(`last-${dn}`);
+    if(lastEl)lastEl.textContent=lastLap?fmtTime(lastLap.duration):'—';
+
+    const bestEl=document.getElementById(`best-${dn}`);
+    if(bestEl){
+      bestEl.textContent=bestLap?fmtTime(bestLap.duration):'—';
+      bestEl.className=dn===overallBestDriver?'lap-cell purple':'lap-cell';
+    }
+
     if(lastLap){
       setSector(`s1-${dn}`,lastLap.s1,bestS1);
       setSector(`s2-${dn}`,lastLap.s2,bestS2);
       setSector(`s3-${dn}`,lastLap.s3,bestS3);
     }
+
     updateMiniSectors(dn,lastLap);
     updateTyreCol(dn,driverStints,lapNum);
     updatePit(dn,pit);
   }
+
   updateElimDivider(sorted,elimThreshold);
 
+  // Feed generation — pass raw pitStops array (not latestPit map)
   generateFeed(laps,latestPos,latestIv,pitStops,stintMap,raceControl);
 
   if(activeTab==='tracker')drawTracker();
@@ -554,6 +661,9 @@ async function tick(){
   else if(sessionStart&&now>=sessionStart)setSelectStatus('live');
 }
 
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
 function getCurrentTyre(stints,lapNum){
   if(!stints.length||!lapNum)return{compound:null,age:0};
   let current=null;
@@ -562,20 +672,264 @@ function getCurrentTyre(stints,lapNum){
   return{compound:current.compound||null,age:Math.max(1,lapNum-current.lap_start+1)};
 }
 
-function getElimThreshold(){if(!sessionType)return null;if(sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual'))return 16;return null;}
-function updateElimDivider(sorted,threshold){let existing=document.getElementById('elimDivider');if(!threshold){if(existing)existing.classList.remove('show');return}if(!existing){existing=document.createElement('div');existing.id='elimDivider';existing.className='elim-divider';existing.textContent='── ELIMINATION ZONE ──';document.getElementById('driverList').appendChild(existing);}existing.classList.add('show');const container=document.getElementById('driverList');const firstElim=sorted.find(dn=>{const r=document.getElementById(`row-${dn}`);return r&&r.classList.contains('eliminated')});if(firstElim){const el=document.getElementById(`row-${firstElim}`);if(el)container.insertBefore(existing,el)}}
-function setSector(id,val,bestVal){const el=document.getElementById(id);if(!el)return;if(!val||!isFinite(bestVal)){el.textContent='—';el.className='sector-val equal';return;}const d=val-bestVal;if(d===0){el.textContent=fmtTime(val);el.className='sector-val pb'}else if(d<0){el.textContent=fmtDelta(d);el.className='sector-val ahead'}else{el.textContent=fmtDelta(d);el.className='sector-val behind'}}
-function updateMiniSectors(dn,lastLap){const el=document.getElementById(`mini-${dn}`);if(!el)return;if(!lastLap){el.innerHTML='';return}const allSegs=[...(lastLap.seg1||[]),...(lastLap.seg2||[]),...(lastLap.seg3||[])];if(!allSegs.length){el.innerHTML='';return}const frags=allSegs.map(v=>{if(v===SEG.PURPLE)return'<div class="seg seg-purple"></div>';if(v===SEG.PB||v===SEG.GREEN)return'<div class="seg seg-green"></div>';if(v===SEG.YELLOW)return'<div class="seg seg-yellow"></div>';if(v===SEG.PIT)return'<div class="seg seg-pit"></div>';return'<div class="seg seg-grey"></div>';}).join('');if(el.innerHTML!==frags)el.innerHTML=frags;}
-function updateTyreCol(dn,stints,lapNum){const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;const{compound,age}=getCurrentTyre(stints,lapNum);if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}const col=tyreColor(compound);el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;}
-function updatePit(dn,pit){const el=document.getElementById(`pit-${dn}`);if(!el)return;if(!pit){el.innerHTML='';return}const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}else if(outTime&&dur!=null){const key=`${dn}-${inTime}`;if(!pitFlash.has(key)){el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);pitFlash.set(key,tid);}} else el.innerHTML='';}
-function updateWeather(data){if(!data.length){document.getElementById('weatherStrip').innerHTML='';return}const w=data[data.length-1];const rain=w.rainfall&&parseFloat(w.rainfall)>0;document.getElementById('weatherStrip').innerHTML=`<div class="wx-item">🌡 Track <span>${w.track_temperature??'—'}°C</span></div><div class="wx-item">💨 Air <span>${w.air_temperature??'—'}°C</span></div><div class="wx-item">💧 <span>${w.humidity??'—'}%</span></div><div class="wx-item">🌬 <span>${w.wind_speed??'—'} km/h</span></div>${rain?'<div class="wx-item wx-rain">🌧 RAIN</div>':''}`;}
-function updateRaceControl(data){allRCMessages=data;activeYellowSectors.clear();let scActive=false;for(const m of data){const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;if(f==='GREEN')activeYellowSectors.clear();}if(scActive)setSelectStatus('sc');if(!data.length)return;const last=data[data.length-1];if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');document.getElementById('rcFlagDot').style.background=flagColor(last.flag);document.getElementById('rcText').textContent=last.message||'';}
-function updateLocations(data){for(const p of data){const dn=p.driver_number;if(dn===0){scLocation={x:p.x,y:p.y,date:p.date};continue}if(!locationData.has(dn)||new Date(p.date)>new Date(locationData.get(dn).date))locationData.set(dn,{x:p.x,y:p.y,date:p.date});}}
-function drawTracker(){const canvas=document.getElementById('trackerFull');if(!canvas)return;const parent=canvas.parentElement;const size=Math.min(parent.clientWidth,parent.clientHeight)-24;if(size<50)return;canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,size,size);const cx=size/2,cy=size/2,R=size*0.40;ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle='#2a2a2a';ctx.lineWidth=size*0.055;ctx.stroke();const sectorAngles=[[-Math.PI/2,Math.PI/6],[Math.PI/6,Math.PI*5/6],[Math.PI*5/6,Math.PI*3/2]];for(let i=0;i<3;i++){if(activeYellowSectors.has(i+1)){const[sa,ea]=sectorAngles[i];ctx.beginPath();ctx.arc(cx,cy,R,sa,ea);ctx.strokeStyle='rgba(234,179,8,0.45)';ctx.lineWidth=size*0.06;ctx.stroke();}}ctx.beginPath();ctx.moveTo(cx,cy-R+size*0.025);ctx.lineTo(cx,cy-R-size*0.025);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();const allLocs=[...locationData.entries()];if(!allLocs.length){ctx.fillStyle='#555';ctx.font=`${size*0.04}px JetBrains Mono`;ctx.textAlign='center';ctx.fillText('AWAITING DATA',cx,cy);return;}let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;for(const[,l]of allLocs){minX=Math.min(minX,l.x);maxX=Math.max(maxX,l.x);minY=Math.min(minY,l.y);maxY=Math.max(maxY,l.y)}const locToAngle=(x,y)=>{const nx=(x-minX)/(maxX-minX||1)*2-1;const ny=(y-minY)/(maxY-minY||1)*2-1;return Math.atan2(ny,nx)+Math.PI/2;};const now=new Date();const onTrack=[];for(const[dn,loc]of allLocs){const age=(now-new Date(loc.date))/1000;if(age<=30)onTrack.push([dn,loc]);}for(const[dn,loc]of onTrack){const meta=driverMeta.get(dn);if(!meta)continue;const angle=locToAngle(loc.x,loc.y);const dx=cx+Math.sin(angle)*R,dy=cy-Math.cos(angle)*R;ctx.beginPath();ctx.arc(dx,dy,size*0.028,0,Math.PI*2);ctx.fillStyle=meta.teamColor;ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.stroke();ctx.font=`bold ${size*0.024}px JetBrains Mono`;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(meta.acronym,dx,dy);}}
-function renderFeed(){const scroll=document.getElementById('feedScroll');if(!feedEntries.length){scroll.innerHTML='<div class="feed-placeholder">NO FEED DATA YET</div>';return;}const sorted=[...feedEntries].sort((a,b)=>{const lapDiff=(b.lap||0)-(a.lap||0);if(lapDiff!==0)return lapDiff;return(b.ts||0)-(a.ts||0);});scroll.innerHTML=sorted.map(e=>`<div class="feed-entry ${e.category}"><span class="feed-lap">L${e.lap}</span><div class="feed-bar"></div><span class="feed-text">${e.text}</span></div>`).join('');}
-function openRCModal(){const body=document.getElementById('rcModalBody');let html='<div class="modal-section">RACE CONTROL</div>';const msgs=[...allRCMessages].reverse();if(!msgs.length)html+='<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:10px 0">No messages</div>';for(const m of msgs){html+=`<div class="rc-entry"><span class="rc-time">${fmtTimeLabel(m.date)}</span><div class="rc-dot" style="background:${flagColor(m.flag)}"></div><span class="rc-message">${m.message||''}</span></div>`;}body.innerHTML=html;document.getElementById('rcModal').classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-async function showLapHistory(dn){if(!sessionKey)return;const meta=driverMeta.get(dn);if(!meta)return;document.getElementById('lapModalTitle').textContent=`${meta.acronym} · ${meta.fullName}`;document.getElementById('lapModalBody').innerHTML='<div class="placeholder" style="padding:20px">LOADING...</div>';document.getElementById('lapModal').classList.add('open');const[laps,stints]=await Promise.all([api(`laps?session_key=${sessionKey}&driver_number=${dn}`),api(`stints?session_key=${sessionKey}&driver_number=${dn}`)]);laps.sort((a,b)=>a.lap_number-b.lap_number);let driverBest=Infinity;for(const l of laps)if(l.lap_duration&&l.lap_duration<driverBest)driverBest=l.lap_duration;let rows='';for(const lap of laps){const stint=stints.find(s=>lap.lap_number>=s.lap_start&&lap.lap_number<=(s.lap_end||999));const compound=stint?.compound||'';const isOB=lap.lap_duration===overallBestLap;const isPB=lap.lap_duration===driverBest&&!isOB;const lapCls=isOB?'ob':isPB?'pb':'lt';rows+=`<tr><td>${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}<\/td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}<\/td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}<\/td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}<\/td><td class="${tyreClass(compound)}">${tyreLetter(compound)}<\/td><\/tr>`;}document.getElementById('lapModalBody').innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th><th>C</th><\/tr><\/thead><tbody>${rows||'<tr><td colspan="6" style="color:var(--muted);padding:10px 0">No data<\/tr>'}<\/tbody><\/table>`;}
+function getElimThreshold(){
+  if(!sessionType)return null;
+  if(sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual'))return 16;
+  return null;
+}
+
+function updateElimDivider(sorted,threshold){
+  let existing=document.getElementById('elimDivider');
+  if(!threshold){if(existing)existing.classList.remove('show');return}
+  if(!existing){
+    existing=document.createElement('div');
+    existing.id='elimDivider';existing.className='elim-divider';
+    existing.textContent='── ELIMINATION ZONE ──';
+    document.getElementById('driverList').appendChild(existing);
+  }
+  existing.classList.add('show');
+  const container=document.getElementById('driverList');
+  const firstElim=sorted.find(dn=>{const r=document.getElementById(`row-${dn}`);return r&&r.classList.contains('eliminated')});
+  if(firstElim){const el=document.getElementById(`row-${firstElim}`);if(el)container.insertBefore(existing,el)}
+}
+
+function setSector(id,val,bestVal){
+  const el=document.getElementById(id);if(!el)return;
+  if(!val||!isFinite(bestVal)){el.textContent='—';el.className='sector-val equal';return}
+  const delta=val-bestVal;
+  if(delta===0){el.textContent=fmtTime(val);el.className='sector-val pb'}
+  else if(delta<0){el.textContent=fmtDelta(delta);el.className='sector-val ahead'}
+  else{el.textContent=fmtDelta(delta);el.className='sector-val behind'}
+}
+
+function updateMiniSectors(dn,lastLap){
+  const el=document.getElementById(`mini-${dn}`);if(!el)return;
+  if(!lastLap){el.innerHTML='';return}
+  const allSegs=[...(lastLap.seg1||[]),...(lastLap.seg2||[]),...(lastLap.seg3||[])];
+  if(!allSegs.length){el.innerHTML='';return}
+  const frags=allSegs.map(v=>{
+    let c;
+    if(v===SEG.PURPLE)c='seg-purple';
+    else if(v===SEG.PB||v===SEG.GREEN)c='seg-green';
+    else if(v===SEG.YELLOW)c='seg-yellow';
+    else if(v===SEG.PIT)c='seg-pit';
+    else c='seg-grey';
+    return`<div class="seg ${c}"></div>`;
+  }).join('');
+  if(el.innerHTML!==frags)el.innerHTML=frags;
+}
+
+function updateTyreBadge(dn,stints,lapNum){
+  const el=document.getElementById(`tyreBadge-${dn}`);if(!el)return;
+  const{compound,age}=getCurrentTyre(stints,lapNum);
+  if(!compound){el.innerHTML='';return}
+  const col=tyreColor(compound);
+  const letter=tyreLetter(compound);
+  const ageStr=String(age).padStart(2,'0');
+  const newHtml=`<div class="tyre-icon" style="color:${col};background:${col}22">${letter}</div><span class="tyre-age" style="color:${col}">${ageStr}</span>`;
+  if(el.innerHTML!==newHtml)el.innerHTML=newHtml;
+}
+
+function updateTyreCol(dn,stints,lapNum){
+  const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;
+  const{compound,age}=getCurrentTyre(stints,lapNum);
+  if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}
+  const col=tyreColor(compound);
+  const letter=tyreLetter(compound);
+  const ageStr=String(age).padStart(2,'0');
+  const newHtml=`<div class="tyre-icon" style="color:${col};background:${col}22">${letter}</div><span class="tyre-age-col" style="color:${col}">${ageStr}</span>`;
+  if(el.innerHTML!==newHtml)el.innerHTML=newHtml;
+}
+
+function updatePit(dn,pit){
+  const el=document.getElementById(`pit-${dn}`);if(!el)return;
+  if(!pit){el.innerHTML='';return}
+  const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;
+  if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}
+  else if(outTime&&dur!=null){
+    const key=`${dn}-${inTime}`;
+    if(!pitFlash.has(key)){
+      el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;
+      const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);
+      pitFlash.set(key,tid);
+    }
+  } else el.innerHTML='';
+}
+
+// ═══════════════════════════════════════
+// WEATHER
+// ═══════════════════════════════════════
+function updateWeather(data){
+  if(!data.length){document.getElementById('weatherStrip').innerHTML='';return}
+  const w=data[data.length-1];
+  const rain=w.rainfall&&parseFloat(w.rainfall)>0;
+  document.getElementById('weatherStrip').innerHTML=`
+    <div class="wx-item">🌡 Track <span>${w.track_temperature??'—'}°C</span></div>
+    <div class="wx-item">💨 Air <span>${w.air_temperature??'—'}°C</span></div>
+    <div class="wx-item">💧 <span>${w.humidity??'—'}%</span></div>
+    <div class="wx-item">🌬 <span>${w.wind_speed??'—'} km/h</span></div>
+    ${rain?'<div class="wx-item wx-rain">🌧 RAIN</div>':''}`;
+}
+
+// ═══════════════════════════════════════
+// RACE CONTROL
+// ═══════════════════════════════════════
+function updateRaceControl(data){
+  allRCMessages=data;
+  activeYellowSectors.clear();
+  let scActive=false;
+  for(const m of data){
+    const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
+    if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);
+    if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;
+    if(f==='GREEN')activeYellowSectors.clear();
+  }
+  if(scActive)setSelectStatus('sc');
+  if(!data.length)return;
+  const last=data[data.length-1];
+  if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');
+  document.getElementById('rcFlagDot').style.background=flagColor(last.flag);
+  document.getElementById('rcText').textContent=last.message||'';
+}
+
+// ═══════════════════════════════════════
+// LOCATION
+// ═══════════════════════════════════════
+function updateLocations(data){
+  for(const p of data){
+    const dn=p.driver_number;
+    if(dn===0){scLocation={x:p.x,y:p.y,date:p.date};continue}
+    if(!locationData.has(dn)||new Date(p.date)>new Date(locationData.get(dn).date))locationData.set(dn,{x:p.x,y:p.y,date:p.date});
+  }
+}
+
+// ═══════════════════════════════════════
+// TRACKER
+// ═══════════════════════════════════════
+function drawTracker(){
+  const canvas=document.getElementById('trackerFull');if(!canvas)return;
+  const parent=canvas.parentElement;
+  const size=Math.min(parent.clientWidth,parent.clientHeight)-24;
+  if(size<50)return;
+  canvas.width=size;canvas.height=size;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,size,size);
+  const cx=size/2,cy=size/2,R=size*0.40;
+
+  // Ring
+  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.strokeStyle='#2a2a2a';ctx.lineWidth=size*0.055;ctx.stroke();
+
+  // Sector flag arcs
+  const sectorAngles=[[-Math.PI/2,Math.PI/6],[Math.PI/6,Math.PI*5/6],[Math.PI*5/6,Math.PI*3/2]];
+  for(let i=0;i<3;i++){
+    if(activeYellowSectors.has(i+1)){
+      const[sa,ea]=sectorAngles[i];
+      ctx.beginPath();ctx.arc(cx,cy,R,sa,ea);
+      ctx.strokeStyle='rgba(234,179,8,0.45)';ctx.lineWidth=size*0.06;ctx.stroke();
+    }
+  }
+
+  // S/F line
+  ctx.beginPath();ctx.moveTo(cx,cy-R+size*0.025);ctx.lineTo(cx,cy-R-size*0.025);
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+
+  const allLocs=[...locationData.entries()];
+  if(!allLocs.length){
+    ctx.fillStyle='#555';ctx.font=`${size*0.04}px JetBrains Mono`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('AWAITING DATA',cx,cy);
+    return;
+  }
+
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(const[,l]of allLocs){minX=Math.min(minX,l.x);maxX=Math.max(maxX,l.x);minY=Math.min(minY,l.y);maxY=Math.max(maxY,l.y)}
+
+  function locToAngle(x,y){
+    const nx=(x-minX)/(maxX-minX||1)*2-1;
+    const ny=(y-minY)/(maxY-minY||1)*2-1;
+    return Math.atan2(ny,nx)+Math.PI/2;
+  }
+
+  const now=new Date();
+  const pitted=[],onTrack=[];
+  for(const[dn,loc]of allLocs){
+    const age=(now-new Date(loc.date))/1000;
+    if(age>30)pitted.push(dn);
+    else onTrack.push([dn,loc]);
+  }
+
+  // On-track dots
+  for(const[dn,loc]of onTrack){
+    const meta=driverMeta.get(dn);if(!meta)continue;
+    const angle=locToAngle(loc.x,loc.y);
+    const dx=cx+Math.sin(angle)*R,dy=cy-Math.cos(angle)*R;
+    const dotR=size*0.03;
+    ctx.beginPath();ctx.arc(dx,dy,dotR,0,Math.PI*2);
+    ctx.fillStyle=meta.teamColor;ctx.fill();
+    ctx.strokeStyle='#000';ctx.lineWidth=1;ctx.stroke();
+    const labelDist=R+size*0.062;
+    ctx.font=`bold ${size*0.028}px JetBrains Mono`;
+    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(meta.acronym,cx+Math.sin(angle)*labelDist,cy-Math.cos(angle)*labelDist);
+  }
+
+  // SC dot
+  if(scLocation){
+    const age=(now-new Date(scLocation.date))/1000;
+    if(age<30){
+      const angle=locToAngle(scLocation.x,scLocation.y);
+      const dx=cx+Math.sin(angle)*R,dy=cy-Math.cos(angle)*R;
+      ctx.beginPath();ctx.arc(dx,dy,size*0.033,0,Math.PI*2);
+      ctx.fillStyle='#eab308';ctx.fill();ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.font=`bold ${size*0.026}px JetBrains Mono`;
+      ctx.fillStyle='#000';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('SC',dx,dy);
+    }
+  }
+
+  // Pitted box — grid layout 6 per row
+  if(pitted.length){
+    const cols=6,itemW=size*0.07,itemH=size*0.045,gap=3;
+    const rows=Math.ceil(pitted.length/cols);
+    const boxW=cols*itemW+(cols-1)*gap+12;
+    const boxH=rows*itemH+(rows-1)*gap+22;
+    const bx=cx-boxW/2,by=cy-boxH/2;
+
+    ctx.fillStyle='rgba(12,12,12,0.92)';ctx.strokeStyle='#333';ctx.lineWidth=1;
+    roundRect(ctx,bx,by,boxW,boxH,5);ctx.fill();ctx.stroke();
+
+    ctx.font=`${size*0.022}px JetBrains Mono`;ctx.fillStyle='#444';ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText('IN PIT',cx,by+5);
+
+    // Sort pitted by last known race position
+    pitted.sort((a,b)=>{
+      const pa=lastKnownPositions.get(a)??99;
+      const pb=lastKnownPositions.get(b)??99;
+      return pa-pb;
+    });
+
+    for(let i=0;i<pitted.length;i++){
+      const dn=pitted[i];const meta=driverMeta.get(dn);if(!meta)continue;
+      const col=i%cols,row=Math.floor(i/cols);
+      const px=bx+6+col*(itemW+gap)+itemW/2;
+      const py=by+18+row*(itemH+gap);
+      ctx.font=`bold ${size*0.026}px JetBrains Mono`;
+      ctx.fillStyle=meta.teamColor;ctx.textAlign='center';ctx.textBaseline='top';
+      ctx.fillText(meta.acronym,px,py);
+    }
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+
+// ═══════════════════════════════════════
+// FEED ENGINE
+// ═══════════════════════════════════════
+const processedPits=new Set();
 
 function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
   const isRace=sessionType.toLowerCase().includes('race');
@@ -601,32 +955,6 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
 
   const lapNums=[...lapsByNumber.keys()].sort((a,b)=>a-b);
 
-  // ========== PIT STOPS — PROCESSED FIRST ==========
-  for(const pit of allPitStops){
-    const dn=pit.driver_number;
-    const pitKey=`pit-${dn}-${pit.pit_in_time}`;
-
-    if(pit.pit_in_time&&!processedPits.has(pitKey+'in')){
-      processedPits.add(pitKey+'in');
-      const pos=lastKnownPositions.get(dn)??'?';
-      const lapIn=pit.lap_number||lastKnownLapNum||0;
-      newEntries.push({lap:lapIn,category:'c-strategy',text:`${driverTag(dn)} pits from P${pos}.`,ts:lapIn});
-    }
-
-    if(pit.pit_out_time&&!processedPits.has(pitKey+'out')){
-      processedPits.add(pitKey+'out');
-      const dur=pit.pit_duration??pit.stop_duration;
-      const lapOut=(pit.lap_number||0)+1;
-      const pos=lastKnownPositions.get(dn)??'?';
-      const ds=stintMap.get(dn)||[];
-      const{compound}=getCurrentTyre(ds,lapOut);
-      const tyreStr=compound?` on <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span>`:'';
-      const durStr=dur?` — ${parseFloat(dur).toFixed(1)}s stop`:'';
-      newEntries.push({lap:lapOut,category:'c-strategy',text:`${driverTag(dn)} rejoins P${pos}${tyreStr}${durStr}.`,ts:lapOut});
-    }
-  }
-
-  // ========== LAP LOOP ==========
   for(const lapNum of lapNums){
     if(processedLaps.has(lapNum))continue;
     const lapDrivers=lapsByNumber.get(lapNum);
@@ -639,10 +967,12 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     const posAtLap=new Map();
     for(const[dn]of latestPos)posAtLap.set(dn,latestPos.get(dn)?.position??99);
 
+    // ── LAP SUMMARY ──
     if(isRace){
       const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
       const top5=sortedPos.slice(0,5).map(([dn])=>driverTag(dn)).join(', ');
 
+      // Lead change
       const leaderNow=sortedPos[0]?.[0];
       const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
       if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
@@ -659,6 +989,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       }
       newEntries.push({lap:lapNum,category:'c-lap',text,ts});
 
+      // Final lap
       const totalLaps=lapNums[lapNums.length-1];
       if(lapNum===totalLaps){
         const leaderNowFinal=sortedPos[0]?.[0];
@@ -668,6 +999,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         newEntries.push({lap:lapNum,category:'c-fastest',text:`🏁 FINAL LAP. ${driverTag(leaderNowFinal)}${gapStr}.`,ts:ts+0.1});
       }
 
+      // Overtakes (position swap vs previous lap, top 10 only)
       for(const[dn,pos]of posAtLap){
         const prev=lastKnownPositions.get(dn);
         if(!prev||pos>=prev||pos>10)continue;
@@ -678,6 +1010,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
 
     for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
 
+    // ── FASTEST LAP ──
     for(const lap of lapDrivers){
       if(lap.lap_duration&&lap.lap_duration>0){
         if(!currentFastestLap||lap.lap_duration<currentFastestLap.duration){
@@ -687,6 +1020,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       }
     }
 
+    // ── SECTOR ANOMALY ──
     const recentRC=allRCMessages.filter(m=>(m.lap_number||0)>=lapNum-5);
     const flagActive=activeYellowSectors.size>0||
       recentRC.some(m=>{
@@ -731,6 +1065,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     }
 
     if(isRace){
+      // ── 4-LAP DEGRADATION TREND ──
       for(const[dn,driverLaps]of allLapsByDriver){
         const recent=driverLaps.filter(l=>l.lap_duration&&l.lap_number>lapNum-5&&l.lap_number<=lapNum).sort((a,b)=>a.lap_number-b.lap_number);
         if(recent.length<4)continue;
@@ -748,6 +1083,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} lap times dropping 4 consecutive laps (+${totalDrop.toFixed(2)}s)${ti}. Possible tyre degradation.`,ts:lapNum+0.6});
       }
 
+      // ── RATE OF CHANGE vs CAR AHEAD ──
       for(const[dn]of latestIv){
         const iv=latestIv.get(dn);if(!iv||iv.interval==null)continue;
         const ivKey='iv:'+dn;
@@ -768,6 +1104,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         else newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} losing ${perLap.toFixed(2)}s per lap for 3 laps${ti}.`,ts:lapNum+0.7});
       }
 
+      // ── TEAMMATE BATTLE ──
       const teamsChecked=new Set();
       for(const[dn,meta]of driverMeta){
         if(teamsChecked.has(meta.teamName))continue;
@@ -793,6 +1130,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(faster)} ${diff.toFixed(2)}s faster than ${driverTag(slower)} for 3 laps. ${t1s} vs ${t2s}.`,ts:lapNum+0.8});
       }
 
+      // ── STRANGE STAT: slower compound matching pace ──
       const cRank={'SOFT':1,'MEDIUM':2,'HARD':3,'INTERMEDIATE':1,'WET':1};
       const dnList=[...driverMeta.keys()];
       for(let i=0;i<dnList.length;i++){
@@ -821,27 +1159,138 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     }
   }
 
-  // ========== RETIREMENT DETECTION ==========
-  for(const[dn]of driverMeta){
-    const driverLaps=allLapsByDriver.get(dn)||[];
-    if(!driverLaps.length)continue;
-    const maxDriverLap=Math.max(...driverLaps.map(l=>l.lap_number));
-    if(maxDriverLap<5)continue;
-    if(lastKnownLapNum-maxDriverLap<3)continue;
-    const key=`ret-${dn}`;
-    if(processedPits.has(key))continue;
-    processedPits.add(key);
-    const pos=lastKnownPositions.get(dn)??'?';
-    newEntries.push({lap:maxDriverLap,category:'c-incident',text:`${driverTag(dn)} retired from P${pos}. No data since lap ${maxDriverLap}.`,ts:maxDriverLap});
+  // ── PIT STOPS — all stops, timestamp-based, independent of lap loop ──
+  // Build a lap→positions snapshot from lastKnownPositions for position lookup
+  for(const pit of allPitStops){
+    const dn=pit.driver_number;
+    const pitKey=`pit-${dn}-${pit.pit_in_time}`;
+    const lapIn=pit.lap_number||lastKnownLapNum||0;
+    const lapOut=lapIn+1;
+
+    if(pit.pit_in_time&&!processedPits.has(pitKey+'in')){
+      const pos=lastKnownPositions.get(dn)??'?';
+      // Only mark processed if we have real position data
+      if(pos!=='?'||lastKnownLapNum>0){
+        processedPits.add(pitKey+'in');
+        newEntries.push({lap:lapIn,category:'c-strategy',text:`${driverTag(dn)} pits from P${pos}.`,ts:lapIn});
+      }
+    }
+
+    if(pit.pit_out_time&&!processedPits.has(pitKey+'out')){
+      const dur=pit.pit_duration??pit.stop_duration;
+      const pos=lastKnownPositions.get(dn)??'?';
+      const ds=stintMap.get(dn)||[];
+      const{compound}=getCurrentTyre(ds,lapOut);
+      const tyreStr=compound?` on <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span>`:'';
+      const durStr=dur?` — ${parseFloat(dur).toFixed(1)}s stop`:'';
+      if(pos!=='?'||lastKnownLapNum>0){
+        processedPits.add(pitKey+'out');
+        newEntries.push({lap:lapOut,category:'c-strategy',text:`${driverTag(dn)} rejoins P${pos}${tyreStr}${durStr}.`,ts:lapOut+0.5});
+      }
+    }
   }
 
-  // ========== FINAL MERGE - GUARD AT VERY BOTTOM ==========
+  // ── RETIREMENT DETECTION ──
+  if(isRace&&lastKnownLapNum>3){
+    for(const[dn]of driverMeta){
+      const driverLaps=allLapsByDriver.get(dn)||[];
+      if(!driverLaps.length)continue;
+      const maxDriverLap=Math.max(...driverLaps.map(l=>l.lap_number));
+      if(maxDriverLap<5)continue;
+      if(lastKnownLapNum-maxDriverLap<3)continue;
+      const key=`ret-${dn}`;
+      if(processedPits.has(key))continue;
+      processedPits.add(key);
+      const pos=lastKnownPositions.get(dn)??'?';
+      newEntries.push({lap:maxDriverLap,category:'c-incident',text:`${driverTag(dn)} retired from P${pos}. No data since lap ${maxDriverLap}.`,ts:maxDriverLap});
+    }
+  }
+
   if(!newEntries.length)return;
   newEntries.sort((a,b)=>((a.lap||0)-(b.lap||0))||((a.ts||0)-(b.ts||0)));
   feedEntries=[...newEntries,...feedEntries];
   if(activeTab==='feed')renderFeed();
 }
 
+function renderFeed(){
+  const scroll=document.getElementById('feedScroll');
+  if(!feedEntries.length){
+    scroll.innerHTML='<div class="feed-placeholder">NO FEED DATA YET</div>';
+    return;
+  }
+  // Render newest first
+  const sorted=[...feedEntries].sort((a,b)=>{
+    // Primary: lap number descending
+    const lapDiff=(b.lap||0)-(a.lap||0);
+    if(lapDiff!==0)return lapDiff;
+    // Secondary: ts descending (numeric)
+    return(b.ts||0)-(a.ts||0);
+  });
+  scroll.innerHTML=sorted.map(e=>`
+    <div class="feed-entry ${e.category}">
+      <span class="feed-lap">L${e.lap}</span>
+      <div class="feed-bar"></div>
+      <span class="feed-text">${e.text}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// RC MODAL
+// ═══════════════════════════════════════
+function openRCModal(){
+  const body=document.getElementById('rcModalBody');
+  let html='<div class="modal-section">RACE CONTROL</div>';
+  const msgs=[...allRCMessages].reverse();
+  if(!msgs.length)html+='<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:10px 0">No messages</div>';
+  for(const m of msgs){
+    html+=`<div class="rc-entry">
+      <span class="rc-time">${fmtTimeLabel(m.date)}</span>
+      <div class="rc-dot" style="background:${flagColor(m.flag)}"></div>
+      <span class="rc-message">${m.message||''}</span>
+    </div>`;
+  }
+  body.innerHTML=html;
+  document.getElementById('rcModal').classList.add('open');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// ═══════════════════════════════════════
+// LAP HISTORY MODAL
+// ═══════════════════════════════════════
+async function showLapHistory(dn){
+  if(!sessionKey)return;
+  const meta=driverMeta.get(dn);if(!meta)return;
+  document.getElementById('lapModalTitle').textContent=`${meta.acronym} · ${meta.fullName}`;
+  document.getElementById('lapModalBody').innerHTML='<div class="placeholder" style="padding:20px">LOADING...</div>';
+  document.getElementById('lapModal').classList.add('open');
+
+  const[laps,stints]=await Promise.all([
+    api(`laps?session_key=${sessionKey}&driver_number=${dn}`),
+    api(`stints?session_key=${sessionKey}&driver_number=${dn}`)
+  ]);
+  laps.sort((a,b)=>a.lap_number-b.lap_number);
+  let driverBest=Infinity;
+  for(const l of laps)if(l.lap_duration&&l.lap_duration<driverBest)driverBest=l.lap_duration;
+
+  function getStint(n){return stints.find(s=>n>=s.lap_start&&n<=(s.lap_end||999))}
+  function tc(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
+
+  let rows='';
+  for(const lap of laps){
+    const stint=getStint(lap.lap_number);
+    const compound=stint?.compound||'';
+    const isOB=lap.lap_duration===overallBestLap;
+    const isPB=lap.lap_duration===driverBest&&!isOB;
+    const lapCls=isOB?'ob':isPB?'pb':'lt';
+    rows+=`<tr><td>${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}</td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}</td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}</td><td class="${tc(compound)}">${tyreLetter(compound)}</td></tr>`;
+  }
+  document.getElementById('lapModalBody').innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th><th>C</th></tr></thead><tbody>${rows||'<tr><td colspan="6" style="color:var(--muted);padding:10px 0">No data</td></tr>'}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════
 document.getElementById('yearSelect').addEventListener('change',loadMeetings);
 document.getElementById('meetingSelect').addEventListener('change',loadSessions);
 document.getElementById('sessionSelect').addEventListener('change',()=>onSessionSelected());
@@ -849,6 +1298,9 @@ document.getElementById('rcModal').addEventListener('click',e=>{if(e.target===do
 document.getElementById('lapModal').addEventListener('click',e=>{if(e.target===document.getElementById('lapModal'))closeModal('lapModal')});
 window.addEventListener('resize',()=>{if(activeTab==='tracker')drawTracker()});
 
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
 autoLoadCurrent();
 </script>
 </body>
