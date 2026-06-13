@@ -41,12 +41,13 @@ select:focus{border-color:var(--red)}
 .rc-text{font-family:var(--mono);font-size:9px;color:var(--yellow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .chequered-banner{display:none;align-items:center;justify-content:center;gap:8px;padding:5px 12px;background:repeating-linear-gradient(45deg,#111 0,#111 8px,#222 8px,#222 16px);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;color:#fff;flex-shrink:0}
 .chequered-banner.show{display:flex}
+.loading-overlay{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--red);border-radius:8px;padding:8px 16px;font-family:var(--mono);font-size:10px;color:var(--yellow);z-index:200;display:none;backdrop-filter:blur(8px)}
+.loading-overlay.show{display:block}
 
 .main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
 .tab-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
 .tab-panel.active{display:flex}
 
-/* feed sub-tabs */
 .feed-subtabs{display:flex;gap:2px;background:var(--bg2);border-bottom:1px solid var(--line);padding:5px 12px}
 .feed-subtab{font-family:var(--mono);font-size:9px;font-weight:600;padding:4px 10px;border:none;background:var(--bg3);color:var(--dim);cursor:pointer;border-radius:3px;white-space:nowrap}
 .feed-subtab.active{background:var(--red);color:#fff}
@@ -65,7 +66,6 @@ select:focus{border-color:var(--red)}
 .feed-entry.c-sc .feed-bar{background:var(--orange)}
 .feed-placeholder{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px}
 
-/* timing panel (condensed) */
 .timing-scroll{flex:1;overflow-y:auto}
 .col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:5px 10px 5px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);position:sticky;top:0;background:var(--bg1);z-index:5}
 .driver-row{border-bottom:1px solid var(--line);cursor:pointer}
@@ -76,7 +76,9 @@ select:focus{border-color:var(--red)}
 .team-bar{width:3px;height:16px;border-radius:2px}
 .acronym{font-family:var(--mono);font-size:13px;font-weight:700}
 .gap-leader{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.gap-leader.leader{color:var(--yellow);font-weight:600}
 .lap-cell{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:right}
+.lap-cell.purple{color:var(--purple);font-weight:600}
 .tyre-col{display:flex;flex-direction:column;align-items:center}
 .tyre-icon{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;border:2px solid currentColor}
 .tyre-age-col{font-family:var(--mono);font-size:8px}
@@ -89,6 +91,11 @@ select:focus{border-color:var(--red)}
 .rc-entry{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #111;font-family:var(--mono);font-size:10px}
 .rc-time{color:var(--muted);min-width:48px}
 .rc-dot{width:7px;height:7px;border-radius:50%;margin-top:3px}
+.lap-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px}
+.lap-table th{color:var(--muted);font-size:8px;padding:4px;border-bottom:1px solid var(--line);text-align:left}
+.lap-table td{padding:4px;border-bottom:1px solid #111;color:var(--dim)}
+.lap-table td.ob{color:var(--purple);font-weight:700}
+.lap-table td.pb{color:var(--green)}
 </style>
 </head>
 <body>
@@ -115,11 +122,12 @@ select:focus{border-color:var(--red)}
   <span class="rc-text" id="rcText">No messages</span>
 </div>
 <div class="chequered-banner" id="chequeredBanner">🏁 SESSION ENDED 🏁</div>
+<div class="loading-overlay" id="loadingOverlay">🔄 LOADING NEXT SESSION...</div>
 
 <div class="main-area">
   <div class="tab-panel active" id="panelTiming">
     <div class="timing-scroll">
-      <div class="col-header"><span>POS</span><span>DRV</span><span></span><span>GAP</span><span style="text-align:center">TYR</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span></div>
+      <div class="col-header"><span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:center">TYR</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span></div>
       <div id="driverList"><div class="placeholder">SELECT A GP</div></div>
     </div>
   </div>
@@ -134,46 +142,66 @@ select:focus{border-color:var(--red)}
   </div>
 </div>
 
-<!-- RC Modal -->
+<!-- Modals -->
 <div class="modal-backdrop" id="rcModal"><div class="modal-box"><div class="modal-head"><span class="modal-title">RACE CONTROL</span><button class="modal-close" onclick="closeModal('rcModal')">✕</button></div><div class="modal-body" id="rcModalBody"></div></div></div>
-<!-- Lap Modal -->
 <div class="modal-backdrop" id="lapModal"><div class="modal-box"><div class="modal-head"><span class="modal-title" id="lapModalTitle">Lap History</span><button class="modal-close" onclick="closeModal('lapModal')">✕</button></div><div class="modal-body" id="lapModalBody"></div></div></div>
 
 <script>
-// ---------- STATE ----------
-let sessionKey=null, sessionType='', pollTimer=null, timerInterval=null, sessionEnd=null, sessionStart=null;
-let driverMeta=new Map(), positionOrder=[];
+// ========== STATE ==========
+let sessionKey=null, sessionType='', pollTimer=null, timerInterval=null, advanceCheckInterval=null;
+let sessionEnd=null, sessionStart=null, activeTab='timing';
+let driverMeta=new Map();
 let overallBestLap=Infinity, overallBestDriver=null;
-let allRCMessages=[], activeYellowSectors=new Set();
+let allRCMessages=[];
 let lastTickTime=null;
 let cachedLaps=new Map();
 let pollInterval=5000;
 let latestPos=new Map(), latestIv=new Map();
 
 // Feed state
-let rawFeedEvents=[];       // {timestamp, text, category, source}  source: 'track' or 'racectrl'
+let rawFeedEvents=[];       // {timestamp, text, category, source}
 let lastKnownPositions=new Map();
 let lastKnownLapNum=0;
 let processedLaps=new Set();
 let processedPits=new Set();
-let lastLapTimes=new Map();
 let currentFastestLap=null;
 let currentFeedSubtab='all';
 
-// Helper functions
+// ========== HELPERS ==========
 async function api(endpoint){
   try{const r=await fetch(`https://api.openf1.org/v1/${endpoint}`);if(!r.ok)return[];return await r.json();}catch{return[];}
 }
 function fmtTime(s){if(!s||s<=0)return'—';const m=Math.floor(s/60),sec=(s%60).toFixed(3);return m>0?`${m}:${sec.padStart(6,'0')}`:`${s.toFixed(3)}`;}
+function fmtDelta(d){if(d===null||d===undefined||isNaN(d))return'—';if(d===0)return'0.000';return(d>0?'+':'')+d.toFixed(3);}
 function fmtTimeLabel(iso){if(!iso)return'';try{return new Date(iso).toTimeString().slice(0,5);}catch{return'';}}
 function driverTag(dn){const m=driverMeta.get(dn);return m?`<b style="color:${m.teamColor}">${m.acronym}</b>`:`<b>#${dn}</b>`;}
+
 function tyreLetter(c){if(!c)return'?';const u=c.toUpperCase();if(u.includes('SOFT'))return'S';if(u.includes('MED'))return'M';if(u.includes('HARD'))return'H';if(u.includes('INTER'))return'I';if(u.includes('WET'))return'W';return c[0];}
-function tyreClass(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';return'';}
+function tyreColor(c){if(!c)return'#888';const u=c.toUpperCase();if(u.includes('SOFT'))return'#f97316';if(u.includes('MED'))return'#eab308';if(u.includes('HARD'))return'#d4d4d4';if(u.includes('INTER'))return'#22c55e';if(u.includes('WET'))return'#60a5fa';return'#888';}
 function flagColor(f){if(!f)return'#555';const u=f.toUpperCase();if(u==='RED')return'#e10600';if(u.includes('YELLOW')||u==='SC')return'#eab308';if(u==='GREEN')return'#22c55e';return'#555';}
-const TEAM_COLORS={'Red Bull':'#3671C6','Mercedes':'#27F4D2','Ferrari':'#e8002d','McLaren':'#FF8000','Aston Martin':'#229971','Alpine':'#0093CC','Williams':'#64C4FF','Haas':'#B6BABD'};
+
+const TEAM_COLORS={'Red Bull':'#3671C6','Mercedes':'#27F4D2','Ferrari':'#e8002d','McLaren':'#FF8000','Aston Martin':'#229971','Alpine':'#0093CC','Williams':'#64C4FF','Haas':'#B6BABD','Kick Sauber':'#52E252','Sauber':'#52E252','RB':'#6692FF','Visa Cash App RB':'#6692FF'};
 function teamColor(n){if(!n)return'#444';for(const[k,v]of Object.entries(TEAM_COLORS))if(n.includes(k))return v;return'#444';}
 
+function getCurrentTyre(stints,lapNum){
+  if(!stints.length||!lapNum)return{compound:null,age:0};
+  let current=null;
+  for(const s of stints)if(lapNum>=s.lap_start&&lapNum<=(s.lap_end||9999)){current=s;break;}
+  if(!current)current=stints.reduce((a,b)=>a.lap_start>b.lap_start?a:b);
+  return{compound:current.compound||null,age:Math.max(1,lapNum-current.lap_start+1)};
+}
+
+function getSessionDisplayName(){
+  const meeting=document.getElementById('meetingSelect');
+  const session=document.getElementById('sessionSelect');
+  const mText=meeting.options[meeting.selectedIndex]?.text||'';
+  const sText=session.options[session.selectedIndex]?.text||'';
+  if(mText&&mText!=='— GP —'&&sText&&sText!=='— Session —') return `${mText} ${sText}`;
+  return '';
+}
+
 function switchTab(tab){
+  activeTab=tab;
   document.getElementById('tabTiming').classList.toggle('active',tab==='timing');
   document.getElementById('tabFeed').classList.toggle('active',tab==='feed');
   document.getElementById('panelTiming').classList.toggle('active',tab==='timing');
@@ -181,26 +209,97 @@ function switchTab(tab){
   if(tab==='feed') renderFeed();
 }
 
-function getCurrentTyre(stints,lapNum){
-  if(!stints.length||!lapNum) return {compound:null,age:0};
-  let current=null;
-  for(const s of stints) if(lapNum>=s.lap_start && lapNum<=(s.lap_end||9999)) {current=s;break;}
-  if(!current) current=stints.reduce((a,b)=>a.lap_start>b.lap_start?a:b);
-  return {compound:current.compound||null, age:Math.max(1,lapNum-current.lap_start+1)};
-}
-
-// ----- feed event add (chronological, timestamped) -----
 function addFeedEvent(timestamp, text, category, source){
   if(!text) return;
-  const existing = rawFeedEvents.find(e => e.text === text && Math.abs(e.timestamp - timestamp) < 2000);
+  const existing = rawFeedEvents.find(e => e.text === text && Math.abs(e.timestamp - timestamp) < 3000);
   if(existing) return;
   rawFeedEvents.push({timestamp, text, category, source});
   rawFeedEvents.sort((a,b)=>a.timestamp - b.timestamp);
+  if(rawFeedEvents.length > 500) rawFeedEvents = rawFeedEvents.slice(-400);
   if(activeTab==='feed') renderFeed();
 }
 
-// ----- generate streamlined feed (tightened) -----
-function generateFeed(laps, latestPos, latestIv, allPitStops, stintMap, raceControl, nowDate){
+function showLoading(show){
+  const el = document.getElementById('loadingOverlay');
+  if(show) el.classList.add('show');
+  else el.classList.remove('show');
+}
+
+// ========== AUTO ADVANCE TO NEXT SESSION ==========
+async function checkAndAdvanceToNextSession(){
+  if(!sessionEnd) return;
+  const now = new Date();
+  if(now <= sessionEnd) return;
+  
+  console.log("Session ended, looking for next session...");
+  showLoading(true);
+  
+  const year = document.getElementById('yearSelect').value;
+  const sessions = await api(`sessions?year=${year}`);
+  if(!sessions.length){ showLoading(false); return; }
+  
+  sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  const nextSession = sessions.find(s => new Date(s.date_start) > now);
+  
+  if(!nextSession){
+    console.log("No upcoming sessions found");
+    showLoading(false);
+    return;
+  }
+  
+  console.log("Advancing to next session:", nextSession.session_name);
+  
+  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  
+  const meetings = await api(`meetings?year=${year}`);
+  const mSel = document.getElementById('meetingSelect');
+  for(const m of meetings){
+    if(m.meeting_key === nextSession.meeting_key){
+      mSel.value = m.meeting_key;
+      break;
+    }
+  }
+  
+  const meetingSessions = sessions.filter(s=>s.meeting_key === nextSession.meeting_key);
+  const sSel = document.getElementById('sessionSelect');
+  for(const s of meetingSessions){
+    if(s.session_key === nextSession.session_key){
+      sSel.value = s.session_key;
+      break;
+    }
+  }
+  
+  await onSessionSelected(nextSession.session_key);
+  showLoading(false);
+}
+
+// ========== TIMER ==========
+function startTimer(){
+  const el = document.getElementById('sessionTimer');
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    if(!sessionEnd){ el.textContent=''; return; }
+    const now = new Date();
+    const remaining = sessionEnd - now;
+    const sessionName = getSessionDisplayName();
+    const prefix = sessionName ? `${sessionName} · ` : '';
+    if(remaining <= 0){
+      el.textContent = `${prefix}FINISHED`;
+      el.className = 'session-timer done';
+      document.getElementById('chequeredBanner').classList.add('show');
+      if(timerInterval) clearInterval(timerInterval);
+    } else {
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      el.textContent = `${prefix}${mins}:${String(secs).padStart(2,'0')}`;
+      el.className = 'session-timer live';
+    }
+  }, 1000);
+}
+
+// ========== GENERATE FEED (tightened) ==========
+async function generateFeed(laps, latestPos, latestIv, allPitStops, stintMap, raceControl, nowDate){
   const isRace = sessionType.toLowerCase().includes('race');
   const isFP = sessionType.toLowerCase().includes('practice');
   const isQual = sessionType.toLowerCase().includes('qualif');
@@ -212,22 +311,19 @@ function generateFeed(laps, latestPos, latestIv, allPitStops, stintMap, raceCont
   for(const lap of laps){ const dn=lap.driver_number; if(!allLapsByDriver.has(dn)) allLapsByDriver.set(dn,[]); allLapsByDriver.get(dn).push(lap); }
   const lapNums = [...lapsByNumber.keys()].sort((a,b)=>a-b);
 
-  // ---- LAP START announcement (tight order, only once per lap) ----
+  // LAP START announcement
   for(const lapNum of lapNums){
     if(processedLaps.has(lapNum)) continue;
-    const lapDrivers = lapsByNumber.get(lapNum);
-    if(lapDrivers.length < 3) continue;
     processedLaps.add(lapNum);
     if(lapNum > lastKnownLapNum) lastKnownLapNum = lapNum;
-    // build position order at start of lap (using latestPos snapshot)
     const posMap = new Map();
     for(const [dn,p] of latestPos) posMap.set(dn, p?.position ?? 99);
     const order = [...posMap.entries()].sort((a,b)=>a[1]-b[1]).slice(0,10).map(([dn])=>driverTag(dn)).join(', ');
     const timestamp = nowDate ? nowDate.getTime() - (lastKnownLapNum - lapNum)*60000 + 5000 : Date.now();
-    addFeedEvent(timestamp, `🏁 START OF LAP ${lapNum} — Order: ${order}`, 'c-lap', 'track');
+    addFeedEvent(timestamp, `🏁 LAP ${lapNum} — Order: ${order}`, 'c-lap', 'track');
   }
 
-  // ---- RACE CONTROL messages (source: racectrl) ----
+  // RACE CONTROL messages
   for(const msg of raceControl){
     const ts = new Date(msg.date).getTime();
     const msgText = msg.message || '';
@@ -236,34 +332,31 @@ function generateFeed(laps, latestPos, latestIv, allPitStops, stintMap, raceCont
     addFeedEvent(ts, `${flagEmoji} ${msgText}`, 'c-info', 'racectrl');
   }
 
-  // ---- OVERTAKES / POSITION CHANGES (only meaningful, not every lap) ----
+  // OVERTAKES (simplified)
   if(isRace){
-    for(const lapNum of lapNums.slice(-3)){ // check recent laps
-      const posNow = new Map();
-      for(const [dn,p] of latestPos) posNow.set(dn, p?.position ?? 99);
-      for(const [dn, newPos] of posNow){
-        const oldPos = lastKnownPositions.get(dn);
-        if(oldPos && newPos < oldPos && newPos <=10){
-          const gained = oldPos - newPos;
-          addFeedEvent(nowDate?.getTime() || Date.now(), `${driverTag(dn)} +${gained} to P${newPos}`, 'c-info', 'track');
-        }
+    const posNow = new Map();
+    for(const [dn,p] of latestPos) posNow.set(dn, p?.position ?? 99);
+    for(const [dn, newPos] of posNow){
+      const oldPos = lastKnownPositions.get(dn);
+      if(oldPos && newPos < oldPos && newPos <= 10){
+        addFeedEvent(nowDate?.getTime() || Date.now(), `${driverTag(dn)} up to P${newPos}`, 'c-info', 'track');
       }
-      for(const [dn,pos] of posNow) lastKnownPositions.set(dn, pos);
     }
+    for(const [dn,pos] of posNow) lastKnownPositions.set(dn, pos);
   }
 
-  // ---- FASTEST LAP (only new record) ----
+  // FASTEST LAP
   for(const lap of laps){
     if(lap.lap_duration && lap.lap_duration>0){
       if(!currentFastestLap || lap.lap_duration < currentFastestLap.duration){
         currentFastestLap = {dn:lap.driver_number, duration:lap.lap_duration, lap:lap.lap_number};
         const ts = new Date(lap.date).getTime() || Date.now();
-        addFeedEvent(ts, `⚡ FASTEST LAP — ${driverTag(lap.driver_number)} ${fmtTime(lap.lap_duration)} (Lap ${lap.lap_number})`, 'c-fastest', 'track');
+        addFeedEvent(ts, `⚡ FASTEST — ${driverTag(lap.driver_number)} ${fmtTime(lap.lap_duration)} (L${lap.lap_number})`, 'c-fastest', 'track');
       }
     }
   }
 
-  // ---- PIT STOPS (tightened) ----
+  // PIT STOPS
   for(const pit of allPitStops){
     const dn = pit.driver_number;
     const pitKey = `pit-${dn}-${pit.pit_in_time}`;
@@ -276,72 +369,19 @@ function generateFeed(laps, latestPos, latestIv, allPitStops, stintMap, raceCont
     }
   }
 
-  // ---- TYRE DEGRADATION / STRATEGY (tight, only significant) ----
-  if(isRace){
-    for(const [dn, driverLaps] of allLapsByDriver){
-      const recent = driverLaps.filter(l=>l.lap_duration && l.lap_number > lastKnownLapNum-5).sort((a,b)=>a.lap_number-b.lap_number);
-      if(recent.length>=4){
-        let rising=true;
-        for(let i=1;i<recent.length;i++) if(recent[i].lap_duration <= recent[i-1].lap_duration) rising=false;
-        if(rising){
-          const drop = (recent[recent.length-1].lap_duration - recent[0].lap_duration).toFixed(2);
-          if(drop>0.5){
-            const ds = stintMap.get(dn)||[];
-            const {compound,age}=getCurrentTyre(ds, recent[recent.length-1].lap_number);
-            const tyreNote = compound ? ` on ${tyreLetter(compound)} (${age}L)` : '';
-            addFeedEvent(Date.now(), `${driverTag(dn)} degrading${tyreNote} — +${drop}s over 4 laps`, 'c-strategy', 'track');
-          }
-        }
-      }
-    }
-  }
-
-  // ---- FREE PRACTICE: long run summary (one per stint, avoid spam) ----
-  if(isFP){
-    const stintMapFull = new Map();
-    const stints = await api(`stints?session_key=${sessionKey}`); // fetch fresh but rate limited
-    for(const s of stints){ const dn=s.driver_number; if(!stintMapFull.has(dn)) stintMapFull.set(dn,[]); stintMapFull.get(dn).push(s); }
-    for(const [dn, stintsArr] of stintMapFull){
-      for(const stint of stintsArr){
-        if(stint.lap_end && stint.lap_end - stint.lap_start >= 6){
-          const key = `long-${dn}-${stint.lap_start}`;
-          if(processedPits.has(key)) continue;
-          const driverLaps = (allLapsByDriver.get(dn)||[]).filter(l=>l.lap_duration && l.lap_number>=stint.lap_start && l.lap_number<=stint.lap_end);
-          if(driverLaps.length>=5){
-            const avg = driverLaps.reduce((a,b)=>a+b.lap_duration,0)/driverLaps.length;
-            addFeedEvent(Date.now(), `${driverTag(dn)} long run on ${tyreLetter(stint.compound)} — avg ${fmtTime(avg)} (${driverLaps.length} laps)`, 'c-strategy', 'track');
-            processedPits.add(key);
-          }
-        }
-      }
-    }
-  }
-
-  // ---- QUALIFYING: elimination / pole (tight) ----
-  if(isQual){
-    const bestPerDriver = new Map();
-    for(const lap of laps) if(lap.lap_duration) bestPerDriver.set(lap.driver_number, Math.min(bestPerDriver.get(lap.driver_number)||Infinity, lap.lap_duration));
-    const sorted = [...bestPerDriver.entries()].sort((a,b)=>a[1]-b[1]);
-    if(sorted.length && overallBestDriver && sorted[0][0] === overallBestDriver && !processedPits.has('pole-msg')){
-      addFeedEvent(Date.now(), `🏆 POLE — ${driverTag(overallBestDriver)} ${fmtTime(overallBestLap)}`, 'c-fastest', 'track');
-      processedPits.add('pole-msg');
-    }
-    const elimThreshold = 16;
-    const positionsNow = [...latestPos.values()].filter(p=>p.position).sort((a,b)=>a.position-b.position);
-    for(const p of positionsNow){
-      if(p.position === elimThreshold && !processedPits.has(`elim-${sessionKey}`)){
-        addFeedEvent(Date.now(), `⚠️ ELIMINATION ZONE — P${p.position} on the bubble`, 'c-incident', 'track');
-        processedPits.add(`elim-${sessionKey}`);
-      }
-    }
+  // POLE for qualy
+  if(isQual && overallBestDriver && !processedPits.has('pole-msg')){
+    addFeedEvent(Date.now(), `🏆 POLE — ${driverTag(overallBestDriver)} ${fmtTime(overallBestLap)}`, 'c-fastest', 'track');
+    processedPits.add('pole-msg');
   }
 }
 
-// ----- TICK (polling) -----
+// ========== MAIN TICK ==========
 async function tick(){
   if(!sessionKey) return;
   const now = new Date();
   const dateFilter = lastTickTime ? `&date>${lastTickTime}` : '';
+  
   const [newLaps, intervals, positions, pitStops, raceControl, stints, weather] = await Promise.all([
     api(`laps?session_key=${sessionKey}${lastTickTime ? `&lap_number>=${Math.max(1,lastKnownLapNum-1)}` : ''}`),
     api(`intervals?session_key=${sessionKey}${dateFilter}`),
@@ -351,12 +391,19 @@ async function tick(){
     api(`stints?session_key=${sessionKey}`),
     api(`weather?session_key=${sessionKey}${dateFilter}`)
   ]);
+  
   lastTickTime = new Date(now.getTime()-2000).toISOString().replace('Z','+00:00');
   for(const lap of newLaps) cachedLaps.set(`${lap.driver_number}:${lap.lap_number}`, lap);
   const laps = [...cachedLaps.values()].sort((a,b)=>a.lap_number-b.lap_number);
-  if(weather.length) document.getElementById('weatherStrip').innerHTML = `<div class="wx-item">🌡 Track ${weather[0].track_temperature??'—'}°C</div><div class="wx-item">💨 Air ${weather[0].air_temperature??'—'}°C</div>`;
+  
+  // Weather
+  if(weather.length) document.getElementById('weatherStrip').innerHTML = `<div class="wx-item">🌡 Track ${weather[0].track_temperature??'—'}°C</div><div class="wx-item">💨 Air ${weather[0].air_temperature??'—'}°C</div><div class="wx-item">💧 ${weather[0].humidity??'—'}%</div><div class="wx-item">🌬 ${weather[0].wind_speed??'—'} km/h</div>`;
+  
+  // Race Control
   allRCMessages = raceControl;
   if(raceControl.length) { const last=raceControl[raceControl.length-1]; document.getElementById('rcFlagDot').style.background=flagColor(last.flag); document.getElementById('rcText').textContent=last.message||''; }
+  
+  // Best laps
   const bestLapMap = new Map(), lastLapMap = new Map();
   overallBestLap=Infinity; overallBestDriver=null;
   for(const lap of laps){
@@ -366,12 +413,20 @@ async function tick(){
     }
     lastLapMap.set(lap.driver_number,{duration:lap.lap_duration,lapNum:lap.lap_number});
   }
+  
+  // Stints
   const stintMap = new Map();
   for(const s of stints){ const dn=s.driver_number; if(!stintMap.has(dn)) stintMap.set(dn,[]); stintMap.get(dn).push(s); }
+  
+  // Merge positions
   for(const p of positions) if(!latestPos.has(p.driver_number) || new Date(p.date)>new Date(latestPos.get(p.driver_number).date)) latestPos.set(p.driver_number,p);
   for(const iv of intervals) if(!latestIv.has(iv.driver_number) || new Date(iv.date)>new Date(latestIv.get(iv.driver_number).date)) latestIv.set(iv.driver_number,iv);
-  const leaderDn = [...latestIv.entries()].find(([,iv])=>iv.gap_to_leader===0||iv.gap_to_leader===null)?.[0] || [...latestPos.entries()].find(([,p])=>p.position===1)?.[0];
-  // update timing UI (condensed)
+  
+  let leaderDn = null;
+  for(const [dn,iv] of latestIv) if(iv.gap_to_leader===0 || iv.gap_to_leader===null || iv.gap_to_leader==='0'){ leaderDn=dn; break; }
+  if(!leaderDn) for(const [dn,p] of latestPos) if(p.position===1){ leaderDn=dn; break; }
+  
+  // Update UI
   for(const dn of driverMeta.keys()){
     const pos = latestPos.get(dn)?.position;
     const iv = latestIv.get(dn);
@@ -379,46 +434,116 @@ async function tick(){
     const last = lastLapMap.get(dn);
     const st = stintMap.get(dn)||[];
     const {compound,age}=getCurrentTyre(st, last?.lapNum||0);
-    document.getElementById(`pos-${dn}`)?.setAttribute?.('data-content',''); // simplified
-    if(document.getElementById(`pos-${dn}`)) document.getElementById(`pos-${dn}`).textContent = pos??'—';
-    if(document.getElementById(`gap-${dn}`)) document.getElementById(`gap-${dn}`).textContent = dn===leaderDn ? 'LEADER' : (iv?.gap_to_leader ? `+${iv.gap_to_leader}` : '—');
-    if(document.getElementById(`last-${dn}`)) document.getElementById(`last-${dn}`).textContent = last?.duration ? fmtTime(last.duration) : '—';
-    if(document.getElementById(`best-${dn}`)) document.getElementById(`best-${dn}`).textContent = best?.duration ? fmtTime(best.duration) : '—';
-    const tyreHtml = compound ? `<div class="tyre-icon" style="color:${tyreLetter(compound)==='S'?'#f97316':tyreLetter(compound)==='M'?'#eab308':'#ccc'}">${tyreLetter(compound)}</div><span class="tyre-age-col">${String(age).padStart(2,'0')}</span>` : '<span>—</span>';
-    if(document.getElementById(`tyreCol-${dn}`)) document.getElementById(`tyreCol-${dn}`).innerHTML = tyreHtml;
+    
+    const posEl = document.getElementById(`pos-${dn}`);
+    if(posEl){ posEl.textContent = pos??'—'; posEl.className = `pos ${pos===1?'p1':''}`; }
+    
+    const gapEl = document.getElementById(`gap-${dn}`);
+    if(gapEl){
+      if(dn===leaderDn){ gapEl.textContent='LEADER'; gapEl.className='gap-leader leader'; }
+      else if(iv?.gap_to_leader!=null){ const g=iv.gap_to_leader; gapEl.textContent=typeof g==='number'?fmtDelta(g):String(g); gapEl.className='gap-leader'; }
+      else{ gapEl.textContent='—'; gapEl.className='gap-leader'; }
+    }
+    
+    const aheadEl = document.getElementById(`ahead-${dn}`);
+    if(aheadEl && iv?.interval!=null && dn!==leaderDn){
+      const g=iv.interval; aheadEl.textContent=`△ ${typeof g==='number'?fmtDelta(g):String(g)}`;
+    } else if(aheadEl) aheadEl.textContent='';
+    
+    const lastEl = document.getElementById(`last-${dn}`);
+    if(lastEl) lastEl.textContent = last?.duration ? fmtTime(last.duration) : '—';
+    
+    const bestEl = document.getElementById(`best-${dn}`);
+    if(bestEl){
+      bestEl.textContent = best?.duration ? fmtTime(best.duration) : '—';
+      bestEl.className = dn===overallBestDriver?'lap-cell purple':'lap-cell';
+    }
+    
+    const tyreColorVal = tyreColor(compound);
+    const tyreHtml = compound ? `<div class="tyre-icon" style="color:${tyreColorVal};background:${tyreColorVal}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${tyreColorVal}">${String(age).padStart(2,'0')}</span>` : '<span style="color:var(--muted)">—</span>';
+    const tyreCol = document.getElementById(`tyreCol-${dn}`);
+    if(tyreCol) tyreCol.innerHTML = tyreHtml;
   }
+  
   await generateFeed(laps, latestPos, latestIv, pitStops, stintMap, raceControl, now);
   if(activeTab==='feed') renderFeed();
+  
+  await checkAndAdvanceToNextSession();
 }
 
+// ========== SESSION LOAD ==========
 async function onSessionSelected(forceKey){
-  const val=forceKey||document.getElementById('sessionSelect').value;
+  const val = forceKey || document.getElementById('sessionSelect').value;
   if(!val) return;
-  if(pollTimer) clearInterval(pollTimer);
-  sessionKey=parseInt(val);
-  driverMeta.clear(); latestPos.clear(); latestIv.clear(); cachedLaps.clear(); rawFeedEvents=[]; processedLaps.clear(); processedPits.clear();
-  const [sessionInfo,drivers] = await Promise.all([api(`sessions?session_key=${sessionKey}`), api(`drivers?session_key=${sessionKey}`)]);
-  if(sessionInfo[0]){ sessionType=sessionInfo[0].session_name||''; sessionStart=sessionInfo[0].date_start?new Date(sessionInfo[0].date_start):null; sessionEnd=sessionInfo[0].date_end?new Date(sessionInfo[0].date_end):null; }
-  for(const d of drivers) driverMeta.set(d.driver_number,{acronym:d.name_acronym||String(d.driver_number), fullName:d.full_name||'', teamColor:teamColor(d.team_name), teamName:d.team_name||''});
-  const positions=await api(`position?session_key=${sessionKey}`);
-  const orderDiv=document.getElementById('driverList');
-  orderDiv.innerHTML='';
-  for(const dn of [...driverMeta.keys()]){
-    const meta=driverMeta.get(dn);
-    const row=document.createElement('div'); row.className='driver-row'; row.onclick=()=>showLapHistory(dn);
-    row.innerHTML=`<div class="row-main"><div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div><div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div><span></span><div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span></div><div class="tyre-col" id="tyreCol-${dn}"></div><span class="lap-cell" id="last-${dn}">—</span><span class="lap-cell" id="best-${dn}">—</span></div>`;
-    orderDiv.appendChild(row);
+  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  
+  sessionKey = parseInt(val);
+  driverMeta.clear(); latestPos.clear(); latestIv.clear(); cachedLaps.clear(); rawFeedEvents=[]; processedLaps.clear(); processedPits.clear(); lastKnownPositions.clear();
+  lastKnownLapNum=0; currentFastestLap=null; overallBestLap=Infinity; overallBestDriver=null;
+  
+  document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
+  document.getElementById('chequeredBanner').classList.remove('show');
+  document.getElementById('feedScroll').innerHTML='<div class="feed-placeholder">LOADING FEED...</div>';
+  
+  const [sessionInfo, drivers] = await Promise.all([api(`sessions?session_key=${sessionKey}`), api(`drivers?session_key=${sessionKey}`)]);
+  
+  if(sessionInfo[0]){
+    sessionType = sessionInfo[0].session_name||'';
+    sessionStart = sessionInfo[0].date_start ? new Date(sessionInfo[0].date_start) : null;
+    sessionEnd = sessionInfo[0].date_end ? new Date(sessionInfo[0].date_end) : null;
+    startTimer();
   }
+  
+  for(const d of drivers){
+    driverMeta.set(d.driver_number,{
+      acronym: d.name_acronym || String(d.driver_number),
+      fullName: d.full_name || '',
+      teamColor: teamColor(d.team_name),
+      teamName: d.team_name || ''
+    });
+  }
+  
+  // Build driver rows
+  const container = document.getElementById('driverList');
+  container.innerHTML = '';
+  const sortedDns = [...driverMeta.keys()].sort();
+  for(const dn of sortedDns){
+    const meta = driverMeta.get(dn);
+    const row = document.createElement('div');
+    row.className = 'driver-row';
+    row.onclick = () => showLapHistory(dn);
+    row.innerHTML = `<div class="row-main">
+      <div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div>
+      <div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div>
+      <span></span>
+      <div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span><span class="gap-ahead" id="ahead-${dn}"></span></div>
+      <div class="tyre-col" id="tyreCol-${dn}"></div>
+      <span class="lap-cell" id="last-${dn}">—</span>
+      <span class="lap-cell" id="best-${dn}">—</span>
+    </div>`;
+    container.appendChild(row);
+  }
+  
   await tick();
-  pollTimer=setInterval(tick,5000);
+  pollTimer = setInterval(tick, 5000);
 }
 
 async function showLapHistory(dn){
-  const laps=await api(`laps?session_key=${sessionKey}&driver_number=${dn}`);
+  const laps = await api(`laps?session_key=${sessionKey}&driver_number=${dn}`);
   laps.sort((a,b)=>a.lap_number-b.lap_number);
-  let rows='';
-  for(const lap of laps) rows+=`<tr><td>${lap.lap_number}</td><td>${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?.toFixed(3)||'—'}</td><td>${lap.duration_sector_2?.toFixed(3)||'—'}</td><td>${lap.duration_sector_3?.toFixed(3)||'—'}</td></tr>`;
-  document.getElementById('lapModalBody').innerHTML=`<table class="lap-table"><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th></tr>${rows||'<tr><td colspan="5">No data</td></tr>'}</table>`;
+  const meta = driverMeta.get(dn);
+  document.getElementById('lapModalTitle').textContent = `${meta?.acronym||dn} · ${meta?.fullName||''}`;
+  let driverBest = Infinity;
+  for(const l of laps) if(l.lap_duration && l.lap_duration<driverBest) driverBest=l.lap_duration;
+  let rows = '';
+  for(const lap of laps){
+    const isOB = lap.lap_duration === overallBestLap;
+    const isPB = lap.lap_duration === driverBest && !isOB;
+    const lapCls = isOB?'ob':isPB?'pb':'';
+    rows += `<tr><td>${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?.toFixed(3)||'—'}</td><td>${lap.duration_sector_2?.toFixed(3)||'—'}</td><td>${lap.duration_sector_3?.toFixed(3)||'—'}</td></tr>`;
+  }
+  document.getElementById('lapModalBody').innerHTML = `<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No data</td></tr>'}</tbody></table>`;
   document.getElementById('lapModal').classList.add('open');
 }
 
@@ -428,7 +553,7 @@ function renderFeed(){
   if(currentFeedSubtab === 'track') filtered = filtered.filter(e => e.source === 'track');
   else if(currentFeedSubtab === 'racectrl') filtered = filtered.filter(e => e.source === 'racectrl');
   if(!filtered.length){ container.innerHTML='<div class="feed-placeholder">No entries</div>'; return; }
-  const html = filtered.map(e => `<div class="feed-entry ${e.category}"><span class="feed-time">${new Date(e.timestamp).toTimeString().slice(0,5)}</span><div class="feed-bar"></div><span class="feed-text">${e.text}</span></div>`).join('');
+  const html = filtered.slice(-200).map(e => `<div class="feed-entry ${e.category}"><span class="feed-time">${new Date(e.timestamp).toTimeString().slice(0,5)}</span><div class="feed-bar"></div><span class="feed-text">${e.text}</span></div>`).join('');
   container.innerHTML = `<div class="feed-inner">${html}</div>`;
   container.scrollTop = container.scrollHeight;
 }
@@ -439,35 +564,52 @@ function switchFeedSubtab(sub){
   renderFeed();
 }
 
-async function autoLoadCurrent(){
-  const year=document.getElementById('yearSelect').value;
-  const sessions=await api(`sessions?year=${year}`);
-  if(!sessions.length) return;
-  const now=new Date();
-  let target=sessions.find(s=>new Date(s.date_start)<=now && new Date(s.date_end||'9999')>=now) || sessions.find(s=>new Date(s.date_start)>now) || sessions[sessions.length-1];
-  const meetings=await api(`meetings?year=${year}`);
-  const mSel=document.getElementById('meetingSelect');
-  mSel.innerHTML='<option value="">— GP —</option>';
-  for(const m of meetings){ const o=document.createElement('option'); o.value=m.meeting_key; o.textContent=m.meeting_name; if(m.meeting_key===target.meeting_key) o.selected=true; mSel.appendChild(o); }
-  const sSel=document.getElementById('sessionSelect');
-  sSel.innerHTML='<option value="">— Session —</option>';
-  const meetingSessions=sessions.filter(s=>s.meeting_key===target.meeting_key);
-  for(const s of meetingSessions){ const o=document.createElement('option'); o.value=s.session_key; o.textContent=s.session_name; if(s.session_key===target.session_key) o.selected=true; sSel.appendChild(o); }
-  await onSessionSelected(target.session_key);
-}
-
 function openRCModal(){
-  const body=document.getElementById('rcModalBody');
+  const body = document.getElementById('rcModalBody');
   body.innerHTML = allRCMessages.slice().reverse().map(m=>`<div class="rc-entry"><span class="rc-time">${fmtTimeLabel(m.date)}</span><div class="rc-dot" style="background:${flagColor(m.flag)}"></div><span>${m.message||''}</span></div>`).join('') || '<div>No messages</div>';
   document.getElementById('rcModal').classList.add('open');
 }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-document.getElementById('yearSelect').addEventListener('change',()=>autoLoadCurrent());
-document.getElementById('meetingSelect').addEventListener('change',async()=>{ const mk=document.getElementById('meetingSelect').value; if(!mk) return; const sessions=await api(`sessions?meeting_key=${mk}`); const sSel=document.getElementById('sessionSelect'); sSel.innerHTML='<option value="">— Session —</option>'; for(const s of sessions){ const o=document.createElement('option'); o.value=s.session_key; o.textContent=s.session_name; sSel.appendChild(o); } });
-document.getElementById('sessionSelect').addEventListener('change',()=>onSessionSelected());
+// ========== AUTO LOAD INITIAL ==========
+async function autoLoadCurrent(){
+  const year = document.getElementById('yearSelect').value;
+  const sessions = await api(`sessions?year=${year}`);
+  if(!sessions.length) return;
+  const now = new Date();
+  sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  let target = sessions.find(s=>new Date(s.date_start)<=now && new Date(s.date_end||'9999')>=now) || sessions.find(s=>new Date(s.date_start)>now) || sessions[sessions.length-1];
+  
+  const meetings = await api(`meetings?year=${year}`);
+  const mSel = document.getElementById('meetingSelect');
+  mSel.innerHTML = '<option value="">— GP —</option>';
+  for(const m of meetings){ const o=document.createElement('option'); o.value=m.meeting_key; o.textContent=m.meeting_name||m.circuit_short_name; if(m.meeting_key===target.meeting_key) o.selected=true; mSel.appendChild(o); }
+  
+  const sSel = document.getElementById('sessionSelect');
+  sSel.innerHTML = '<option value="">— Session —</option>';
+  const meetingSessions = sessions.filter(s=>s.meeting_key===target.meeting_key);
+  for(const s of meetingSessions){ const o=document.createElement('option'); o.value=s.session_key; o.textContent=s.session_name; if(s.session_key===target.session_key) o.selected=true; sSel.appendChild(o); }
+  
+  await onSessionSelected(target.session_key);
+}
+
+// ========== EVENT LISTENERS ==========
+document.getElementById('yearSelect').addEventListener('change', () => autoLoadCurrent());
+document.getElementById('meetingSelect').addEventListener('change', async()=>{ 
+  const mk = document.getElementById('meetingSelect').value; 
+  if(!mk) return; 
+  const sessions = await api(`sessions?meeting_key=${mk}`); 
+  const sSel = document.getElementById('sessionSelect'); 
+  sSel.innerHTML = '<option value="">— Session —</option>'; 
+  for(const s of sessions){ const o=document.createElement('option'); o.value=s.session_key; o.textContent=s.session_name; sSel.appendChild(o); } 
+});
+document.getElementById('sessionSelect').addEventListener('change', () => onSessionSelected());
 document.querySelectorAll('.feed-subtab').forEach(btn=>btn.addEventListener('click',()=>switchFeedSubtab(btn.getAttribute('data-feed'))));
-window.addEventListener('load',()=>autoLoadCurrent());
+document.getElementById('rcModal').addEventListener('click', e=>{ if(e.target===document.getElementById('rcModal')) closeModal('rcModal'); });
+document.getElementById('lapModal').addEventListener('click', e=>{ if(e.target===document.getElementById('lapModal')) closeModal('lapModal'); });
+
+setInterval(() => checkAndAdvanceToNextSession(), 30000);
+autoLoadCurrent();
 </script>
 </body>
 </html>
