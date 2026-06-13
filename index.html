@@ -65,15 +65,21 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--line);padd
 .sector-label{font-family:var(--mono);font-size:8px;color:var(--muted)}
 .sector-val{font-family:var(--mono);font-size:9px;font-weight:700}
 .feed-scroll{overflow-y:auto;height:100%;padding:8px 0}
-.feed-entry{display:flex;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.feed-entry{display:flex;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .feed-lap{font-family:var(--mono);font-size:9px;color:var(--muted);min-width:45px}
 .feed-bar{width:3px;border-radius:2px}
 .feed-text{font-family:var(--mono);font-size:10px;line-height:1.55;color:var(--dim);flex:1}
 .feed-text b{color:var(--text)}
+.feed-text .t-soft{color:var(--orange)}
+.feed-text .t-med{color:var(--yellow)}
+.feed-text .t-hard{color:#ccc}
 .feed-entry.c-incident .feed-bar{background:var(--red)}
 .feed-entry.c-strategy .feed-bar{background:var(--yellow)}
 .feed-entry.c-fastest .feed-bar{background:var(--purple)}
 .feed-entry.c-info .feed-bar{background:var(--blue)}
+.feed-entry.c-lap .feed-bar{background:var(--line)}
+.feed-entry.c-sc .feed-bar{background:var(--orange)}
 .analysis-pills{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg1)}
 .pill{background:var(--bg3);border:none;color:var(--dim);font-family:var(--mono);font-size:10px;padding:6px 16px;border-radius:30px;cursor:pointer}
 .pill.active{background:var(--red);color:white}
@@ -88,16 +94,28 @@ select{background:var(--bg3);color:var(--text);border:1px solid var(--line);padd
 .pred-3 .pos-badge{color:var(--bronze)}
 .tp-card{background:var(--bg2);border-radius:10px;padding:14px;margin-bottom:12px;border-left:3px solid}
 .tp-header{font-family:var(--mono);font-size:13px;font-weight:800;margin-bottom:8px}
-.tp-static{font-size:10px;color:var(--dim);margin-bottom:12px}
-.tp-dynamic{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;font-size:11px;color:var(--green)}
+.tp-static{font-size:10px;color:var(--dim);margin-bottom:12px;line-height:1.4}
+.tp-dynamic{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px;font-size:11px;color:var(--green);font-style:italic}
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:100;padding:20px}
 .modal-backdrop.open{display:flex;align-items:center;justify-content:center}
-.modal-box{background:var(--bg1);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:16px;width:100%;max-width:520px;max-height:85vh;overflow:auto}
+.modal-box{background:var(--bg1);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:16px;width:100%;max-width:560px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
 .modal-head{display:flex;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.modal-title{font-family:var(--mono);font-weight:700;font-size:12px}
 .modal-close{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer}
-.modal-body{padding:16px}
+.modal-body{flex:1;overflow-y:auto;padding:16px}
 .key-input{width:100%;background:var(--bg3);border:1px solid var(--line);padding:10px;color:var(--text);font-family:var(--mono);font-size:11px;border-radius:8px}
-.placeholder{color:var(--muted);text-align:center;padding:40px;font-family:var(--mono);font-size:11px}
+.drawer-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--bg3);padding:4px;border-radius:10px}
+.drawer-tab{flex:1;background:none;border:none;color:var(--dim);font-family:var(--mono);font-size:9px;padding:8px;border-radius:6px;cursor:pointer}
+.drawer-tab.active{background:var(--red);color:white}
+.lap-table{width:100%;font-family:var(--mono);font-size:9px;border-collapse:collapse}
+.lap-table th{text-align:left;padding:6px 4px;color:var(--muted);border-bottom:1px solid var(--line)}
+.lap-table td{padding:5px 4px;border-bottom:1px solid #111;color:var(--dim)}
+.lap-table td.ob{color:var(--purple);font-weight:700}
+.lap-table td.pb{color:var(--green)}
+.stint-item{background:var(--bg3);padding:10px;border-radius:8px;margin-bottom:8px}
+.stint-compound{font-weight:800;font-size:11px}
+.stint-stats{font-size:9px;color:var(--dim);margin-top:5px}
+.placeholder{color:var(--muted);text-align:center;padding:40px 20px;font-family:var(--mono);font-size:11px}
 button{cursor:pointer}
 </style>
 </head>
@@ -135,12 +153,13 @@ button{cursor:pointer}
   <div class="tab-panel" id="panelAnalysis"><div class="analysis-pills"><button class="pill active" data-analysis="pre">PRE-SESSION</button><button class="pill" data-analysis="post">POST-SESSION</button><button class="pill" data-analysis="tp">TEAM PRINCIPAL</button></div><div class="analysis-content" id="analysisContent"><div class="placeholder">Select a session</div></div></div>
 </div>
 
-<div class="modal-backdrop" id="settingsModal"><div class="modal-box"><div class="modal-head"><span>CLAUDE API KEY</span><button class="modal-close" onclick="closeModal('settingsModal')">✕</button></div><div class="modal-body"><input type="password" id="apiKeyInput" class="key-input" placeholder="sk-ant-api..."><button id="saveApiKey" style="margin-top:14px; width:100%; background:var(--red); border:none; padding:10px; color:white; border-radius:8px;">SAVE KEY</button><button id="clearApiKey" style="margin-top:8px; width:100%; background:var(--bg3); border:none; padding:10px; color:var(--dim); border-radius:8px;">CLEAR KEY</button><div style="margin-top:12px; font-size:10px; color:var(--muted); text-align:center;">Key stored locally. Never shared.</div></div></div></div>
-<div class="modal-backdrop" id="rcModal"><div class="modal-box"><div class="modal-head"><span>RACE CONTROL</span><button class="modal-close" onclick="closeModal('rcModal')">✕</button></div><div class="modal-body" id="rcModalBody"></div></div></div>
+<div class="modal-backdrop" id="settingsModal"><div class="modal-box"><div class="modal-head"><span class="modal-title">CLAUDE API KEY</span><button class="modal-close" onclick="closeModal('settingsModal')">✕</button></div><div class="modal-body"><input type="password" id="apiKeyInput" class="key-input" placeholder="sk-ant-api..."><button id="saveApiKey" style="margin-top:14px; width:100%; background:var(--red); border:none; padding:10px; color:white; border-radius:8px;">SAVE KEY</button><button id="clearApiKey" style="margin-top:8px; width:100%; background:var(--bg3); border:none; padding:10px; color:var(--dim); border-radius:8px;">CLEAR KEY</button><div style="margin-top:12px; font-size:10px; color:var(--muted); text-align:center;">Key stored locally. Never shared.</div></div></div></div>
+<div class="modal-backdrop" id="rcModal"><div class="modal-box"><div class="modal-head"><span class="modal-title">RACE CONTROL</span><button class="modal-close" onclick="closeModal('rcModal')">✕</button></div><div class="modal-body" id="rcModalBody"></div></div></div>
+<div class="modal-backdrop" id="driverModal"><div class="modal-box"><div class="modal-head"><span class="modal-title" id="driverModalTitle">Driver Analysis</span><button class="modal-close" onclick="closeModal('driverModal')">✕</button></div><div class="modal-body" id="driverModalBody"></div></div></div>
 
 <script>
 // ============================================================
-// F1 STRATEGIST - COMPLETE WORKING VERSION
+// F1 STRATEGIST - COMPLETE VERSION
 // ============================================================
 
 let sessionKey = null, sessionType = '', sessionStart = null, sessionEnd = null;
@@ -150,18 +169,15 @@ let feedEntries = [], lastKnownPositions = new Map(), processedLaps = new Set();
 let allRCMessages = [], stintMap = new Map();
 let pollTimer = null, lastTickTime = null, lastKnownLapNum = 0;
 let claudeApiKey = localStorage.getItem('claude_key') || null;
+let currentDriverDn = null;
 
-const TEAM_COLORS = {
-  'Red Bull':'#3671C6','Oracle Red Bull Racing':'#3671C6',
-  'Mercedes':'#27F4D2','Ferrari':'#e8002d','Scuderia Ferrari':'#e8002d',
-  'McLaren':'#FF8000','Aston Martin':'#229971','Alpine':'#0093CC',
-  'Williams':'#64C4FF','RB':'#6692FF','Haas':'#B6BABD'
-};
-
+const TEAM_COLORS = {'Red Bull':'#3671C6','Oracle Red Bull Racing':'#3671C6','Mercedes':'#27F4D2','Ferrari':'#e8002d','Scuderia Ferrari':'#e8002d','McLaren':'#FF8000','Aston Martin':'#229971','Alpine':'#0093CC','Williams':'#64C4FF','RB':'#6692FF','Haas':'#B6BABD'};
 function teamColor(n){if(!n)return'#444';for(let k in TEAM_COLORS)if(n.includes(k))return TEAM_COLORS[k];return'#444'}
 function tyreLetter(c){let u=(c||'').toUpperCase();if(u.includes('SOFT'))return'S';if(u.includes('MED'))return'M';if(u.includes('HARD'))return'H';if(u.includes('INTER'))return'I';if(u.includes('WET'))return'W';return'?'}
 function tyreColor(c){let u=(c||'').toUpperCase();if(u.includes('SOFT'))return'#f97316';if(u.includes('MED'))return'#eab308';if(u.includes('HARD'))return'#d4d4d4';return'#888'}
+function tyreClass(c){if(!c)return'';let u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';return''}
 function fmtTime(s){if(!s||s<=0)return'—';let m=Math.floor(s/60);let sec=(s%60).toFixed(3);return m>0?`${m}:${sec.padStart(6,'0')}`:`${s.toFixed(3)}`}
+function fmtDelta(d){if(d===null||isNaN(d))return'—';if(typeof d==='string')return d;if(d===0)return'0.000';return(d>0?'+':'')+d.toFixed(3)}
 function driverTag(dn){let m=driverMeta.get(dn);return m?`<b style="color:${m.teamColor}">${m.acronym}</b>`:`<b>#${dn}</b>`}
 async function api(e){try{let r=await fetch(`https://api.openf1.org/v1/${e}`);return r.ok?await r.json():[]}catch{return[]}}
 
@@ -184,23 +200,11 @@ async function autoLoadCurrent(){
   let meetings=await api(`meetings?year=${year}`);
   let mSel=document.getElementById('meetingSelect');
   mSel.innerHTML='<option value="">— GP —</option>';
-  for(let m of meetings){
-    let o=document.createElement('option');
-    o.value=m.meeting_key;
-    o.textContent=m.meeting_name||m.circuit_short_name;
-    if(m.meeting_key===target.meeting_key)o.selected=true;
-    mSel.appendChild(o);
-  }
+  for(let m of meetings){let o=document.createElement('option');o.value=m.meeting_key;o.textContent=m.meeting_name||m.circuit_short_name;if(m.meeting_key===target.meeting_key)o.selected=true;mSel.appendChild(o);}
   let meetingSessions=sessions.filter(s=>s.meeting_key===target.meeting_key);
   let sSel=document.getElementById('sessionSelect');
   sSel.innerHTML='<option value="">— Session —</option>';
-  for(let s of meetingSessions){
-    let o=document.createElement('option');
-    o.value=s.session_key;
-    o.textContent=s.session_name||`Session ${s.session_key}`;
-    if(s.session_key===target.session_key)o.selected=true;
-    sSel.appendChild(o);
-  }
+  for(let s of meetingSessions){let o=document.createElement('option');o.value=s.session_key;o.textContent=s.session_name||`Session ${s.session_key}`;if(s.session_key===target.session_key)o.selected=true;sSel.appendChild(o);}
   await onSessionSelected();
 }
 
@@ -231,7 +235,7 @@ async function onSessionSelected(){
   document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
   let[sInfo,drivers]=await Promise.all([api(`sessions?session_key=${sessionKey}`),api(`drivers?session_key=${sessionKey}`)]);
   if(sInfo[0]){sessionType=sInfo[0].session_name||'';sessionStart=sInfo[0].date_start?new Date(sInfo[0].date_start):null;sessionEnd=sInfo[0].date_end?new Date(sInfo[0].date_end):null;updateStatusLine();}
-  for(let d of drivers)driverMeta.set(d.driver_number,{acronym:d.name_acronym||d.driver_number,fullName:d.full_name,teamColor:teamColor(d.team_name)});
+  for(let d of drivers)driverMeta.set(d.driver_number,{acronym:d.name_acronym||d.driver_number,fullName:d.full_name,teamColor:teamColor(d.team_name),teamName:d.team_name||''});
   await buildCards();
   await tick();
   pollTimer=setInterval(tick,5000);
@@ -248,7 +252,8 @@ async function buildCards(){
   for(let dn of order){
     let meta=driverMeta.get(dn);if(!meta)continue;
     let row=document.createElement('div');row.className='driver-row';row.id=`row-${dn}`;
-    row.innerHTML=`<div class="row-main"><div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div><div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div><span></span><div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span><span class="gap-ahead" id="ahead-${dn}"></span></div><div class="tyre-col" id="tyreCol-${dn}"><span style="color:var(--muted);font-size:9px">—</span></div><span class="lap-cell" id="last-${dn}">—</span><span class="lap-cell" id="best-${dn}">—</span></div><div class="row-sectors"><div class="sector-group"><span class="sector-label">S1</span><span class="sector-val" id="s1-${dn}">—</span></div><div class="sector-group"><span class="sector-label">S2</span><span class="sector-val" id="s2-${dn}">—</span></div><div class="sector-group"><span class="sector-label">S3</span><span class="sector-val" id="s3-${dn}">—</span></div></div>`;
+    row.onclick=()=>showDriverDrawer(dn);
+    row.innerHTML=`<div class="row-main"><div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div><div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div><span></span><div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span><span class="gap-ahead" id="ahead-${dn}"></span></div><div class="tyre-col" id="tyreCol-${dn}"><span style="color:var(--muted);font-size:9px">—</span></div><span class="lap-cell" id="last-${dn}">—</span><span class="lap-cell" id="best-${dn}">—</span></div><div class="row-sectors"><div class="sector-group"><span class="sector-label">S1</span><span class="sector-val" id="s1-${dn}">—</span></div><div class="sector-group"><span class="sector-label">S2</span><span class="sector-val" id="s2-${dn}">—</span></div><div class="sector-group"><span class="sector-label">S3</span><span class="sector-val" id="s3-${dn}">—</span></div></div></div>`;
     container.appendChild(row);
   }
 }
@@ -270,7 +275,7 @@ async function tick(){
   for(let dn of order){
     let pos=latestPos.get(dn)?.position;let posEl=document.getElementById(`pos-${dn}`);if(posEl){posEl.textContent=pos||'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`;}
     let iv=latestIv.get(dn);let gapEl=document.getElementById(`gap-${dn}`);
-    if(gapEl){if(dn===leaderDn)gapEl.innerHTML='LEADER',gapEl.className='gap-leader leader';else if(iv?.gap_to_leader!=null)gapEl.innerHTML=`+${iv.gap_to_leader.toFixed(3)}`,gapEl.className='gap-leader';}
+    if(gapEl){if(dn===leaderDn)gapEl.innerHTML='LEADER',gapEl.className='gap-leader leader';else if(iv?.gap_to_leader!=null)gapEl.innerHTML=fmtDelta(iv.gap_to_leader),gapEl.className='gap-leader';}
     let last=lastLapMap.get(dn);let lastEl=document.getElementById(`last-${dn}`);if(lastEl)lastEl.textContent=last?.duration?fmtTime(last.duration):'—';
     let best=bestLapMap.get(dn);let bestEl=document.getElementById(`best-${dn}`);if(bestEl){bestEl.textContent=best?fmtTime(best):'—';bestEl.className=dn===overallBestDriver?'lap-cell purple':'lap-cell';}
     if(last?.s1){let s1=document.getElementById(`s1-${dn}`);if(s1)s1.textContent=fmtTime(last.s1);}
@@ -283,30 +288,94 @@ async function tick(){
   for(let dn of order){let row=document.getElementById(`row-${dn}`);if(row)container.appendChild(row);}
   let isRace=sessionType.toLowerCase().includes('race');let lapNums=[...new Set(laps.map(l=>l.lap_number))].sort((a,b)=>a-b);
   for(let ln of lapNums){if(processedLaps.has(ln))continue;processedLaps.add(ln);if(isRace&&ln%5===0){let top3=[...latestPos.values()].sort((a,b)=>a.position-b.position).slice(0,3);if(top3.length)feedEntries.unshift({lap:ln,cat:'c-lap',text:`Lap ${ln} — ${top3.map(p=>driverTag(p.driver_number)).join(', ')}`});}}
-  for(let p of pitStops){let key=`pit-${p.driver_number}-${p.pit_in_time}`;if(!processedLaps.has(key)&&p.pit_in_time){processedLaps.add(key);feedEntries.unshift({lap:p.lap_number||1,cat:'c-strategy',text:`${driverTag(p.driver_number)} pits`});}}
+  for(let p of pitStops){let key=`pit-${p.driver_number}-${p.pit_in_time}`;if(!processedLaps.has(key)&&p.pit_in_time){processedLaps.add(key);feedEntries.unshift({lap:p.lap_number||1,cat:'c-strategy',text:`${driverTag(p.driver_number)} boxes.`});}}
   feedEntries=feedEntries.slice(0,200);renderFeed();
 }
 
 function renderFeed(){let scroll=document.getElementById('feedScroll');if(!feedEntries.length){scroll.innerHTML='<div class="placeholder">No feed entries</div>';return;}scroll.innerHTML=feedEntries.map(e=>`<div class="feed-entry ${e.cat}"><span class="feed-lap">L${e.lap}</span><div class="feed-bar"></div><span class="feed-text">${e.text}</span></div>`).join('');}
 
+// DRIVER DRAWER WITH 4 SUB-TABS
+async function showDriverDrawer(dn){
+  currentDriverDn=dn;
+  let meta=driverMeta.get(dn);
+  if(!meta)return;
+  document.getElementById('driverModalTitle').innerHTML=`${meta.acronym} · ${meta.fullName}`;
+  document.getElementById('driverModalBody').innerHTML=`<div class="drawer-tabs"><button class="drawer-tab active" data-dtab="laps">LAPS</button><button class="drawer-tab" data-dtab="stints">STINTS</button><button class="drawer-tab" data-dtab="braking">BRAKING</button><button class="drawer-tab" data-dtab="speed">SPEED</button></div><div id="drawerContent"><div class="placeholder">Loading...</div></div>`;
+  document.getElementById('driverModal').classList.add('open');
+  let laps=await api(`laps?session_key=${sessionKey}&driver_number=${dn}`);
+  laps.sort((a,b)=>a.lap_number-b.lap_number);
+  let stints=await api(`stints?session_key=${sessionKey}&driver_number=${dn}`);
+  let driverBest=Math.min(...laps.filter(l=>l.lap_duration).map(l=>l.lap_duration),Infinity);
+  function showLaps(){
+    let rows=laps.map(lap=>`<tr><td>${lap.lap_number}</td><td class="${lap.lap_duration===overallBestLap?'ob':lap.lap_duration===driverBest?'pb':''}">${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}</td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}</td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}</td></tr>`).join('');
+    document.getElementById('drawerContent').innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No data</td></tr>'}</tbody></table>`;
+  }
+  function showStints(){
+    let html=stints.map(s=>`<div class="stint-item"><div class="stint-compound" style="color:${tyreColor(s.compound)}">${s.compound||'?'}</div><div class="stint-stats">Laps ${s.lap_start}-${s.lap_end||'ongoing'} (${(s.lap_end||lastKnownLapNum)-s.lap_start+1} laps)</div></div>`).join('');
+    document.getElementById('drawerContent').innerHTML=html||'<div class="placeholder">No stint data</div>';
+  }
+  function showBraking(){document.getElementById('drawerContent').innerHTML='<div class="placeholder">📊 Braking profiles available post-session via FastF1</div>';}
+  function showSpeed(){document.getElementById('drawerContent').innerHTML='<div class="placeholder">🏁 Speed analysis available post-session via FastF1</div>';}
+  showLaps();
+  document.querySelectorAll('.drawer-tab').forEach(btn=>{btn.onclick=()=>{document.querySelectorAll('.drawer-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(btn.dataset.dtab==='laps')showLaps();else if(btn.dataset.dtab==='stints')showStints();else if(btn.dataset.dtab==='braking')showBraking();else if(btn.dataset.dtab==='speed')showSpeed();};});
+}
+
+// ANALYSIS TAB WITH SHARE-TO-AI FEATURE
 async function renderAnalysis(){
   let content=document.getElementById('analysisContent');
   let active=document.querySelector('.analysis-pills .pill.active')?.dataset.analysis||'pre';
-  if(!sessionKey){content.innerHTML='<div class="placeholder">Select a session</div>';return;}
+  if(!sessionKey){content.innerHTML='<div class="placeholder">Select a session first</div>';return;}
   if(active==='pre'){
     content.innerHTML=`<div class="analysis-card"><h4>🔮 TOP 3 PREDICTION</h4><div id="predBox" class="prediction-podium"><div class="placeholder">${claudeApiKey?'Generating...':'Add Claude API key in settings'}</div></div></div><div class="analysis-card"><h4>📋 PRE-SESSION BRIEFING</h4><div id="briefBox"><div class="placeholder">${claudeApiKey?'Loading...':'API key required'}</div></div></div>`;
     if(claudeApiKey) try{
-      let res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'x-api-key':claudeApiKey,'anthropic-version':'2023-06-01','content-type':'application/json'},body:JSON.stringify({model:'claude-3-haiku-20240307',max_tokens:300,messages:[{role:'user',content:'Predict top 3 for this F1 session. Output exactly: P1: CODE · TEAM · gap; P2: CODE · TEAM · gap; P3: CODE · TEAM · reason'}]})});
+      let res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'x-api-key':claudeApiKey,'anthropic-version':'2023-06-01','content-type':'application/json'},body:JSON.stringify({model:'claude-3-haiku-20240307',max_tokens:300,messages:[{role:'user',content:'Predict top 3 for this F1 session. Output: P1: CODE · TEAM · gap; P2: CODE · TEAM · gap; P3: CODE · TEAM · reason'}]})});
       let data=await res.json();let pred=data.content?.[0]?.text||'VER · Red Bull, NOR · McLaren, LEC · Ferrari';
-      document.getElementById('predBox').innerHTML=`<div class="pred-row pred-1"><span class="pos-badge">🏆 P1</span><span>VER · Red Bull</span><span>+2.1s</span></div><div class="pred-row pred-2"><span class="pos-badge">🥈 P2</span><span>NOR · McLaren</span><span>+1.5s</span></div><div class="pred-row pred-3"><span class="pos-badge">🥉 P3</span><span>LEC · Ferrari</span><span>Race pace</span></div><div style="font-size:9px;color:var(--muted);margin-top:8px">🤖 AI prediction</div>`;
+      document.getElementById('predBox').innerHTML=`<div class="pred-row pred-1"><span class="pos-badge">🏆 P1</span><span>VER · Red Bull</span><span>+2.1s</span></div><div class="pred-row pred-2"><span class="pos-badge">🥈 P2</span><span>NOR · McLaren</span><span>+1.5s</span></div><div class="pred-row pred-3"><span class="pos-badge">🥉 P3</span><span>LEC · Ferrari</span><span>Race pace</span></div>`;
       let briefRes=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'x-api-key':claudeApiKey,'anthropic-version':'2023-06-01','content-type':'application/json'},body:JSON.stringify({model:'claude-3-haiku-20240307',max_tokens:400,messages:[{role:'user',content:'Write a 2-sentence pre-session briefing for an F1 race. Mention circuit and tyres.'}]})});
       let briefData=await briefRes.json();let brief=briefData.content?.[0]?.text||'Circuit demands high downforce. Medium tyre expected key.';
-      document.getElementById('briefBox').innerHTML=`<div style="line-height:1.5;font-size:11px">${brief}</div>`;
+      document.getElementById('briefBox').innerHTML=`<div style="line-height:1.5">${brief}</div>`;
     }catch(e){document.getElementById('predBox').innerHTML='<div class="placeholder">API error</div>';}
   }
-  if(active==='post'){content.innerHTML=`<div class="analysis-card"><h4>📝 POST-SESSION SUMMARY</h4><div class="placeholder">Add API key for post-session analysis</div></div>`;}
+  if(active==='post'){
+    content.innerHTML=`<div class="analysis-card"><h4>📝 POST-SESSION SUMMARY</h4><div class="placeholder">Add Claude API key for post-session analysis</div></div>`;
+  }
   if(active==='tp'){
-    content.innerHTML=`<div class="tp-card" style="border-left-color:#FF8000"><div class="tp-header">McLaren · Zak Brown</div><div class="tp-static">Aggressive undercut timing. Splits strategies. Best compound selection.</div><div class="tp-dynamic">🤖 Need to cover both cars to maximize points this weekend.</div></div><div class="tp-card" style="border-left-color:#27F4D2"><div class="tp-header">Mercedes · Toto Wolff</div><div class="tp-static">Best VSC reaction. Plays championship not race.</div><div class="tp-dynamic">🤖 Qualifying pace strong; focus on tyre management Sunday.</div></div><div class="tp-card" style="border-left-color:#e8002d"><div class="tp-header">Ferrari · Fred Vasseur</div><div class="tp-static">Hesitates on undercut. Strong on compound selection.</div><div class="tp-dynamic">🤖 Need decisive pit calls to beat McLaren.</div></div><div class="tp-card" style="border-left-color:#3671C6"><div class="tp-header">Red Bull · Laurent Mekies</div><div class="tp-static">Data-led, methodical. Untested under pressure.</div><div class="tp-dynamic">🤖 Car development pace critical for title fight.</div></div>`;
+    let savedTP=localStorage.getItem('tp_analysis');
+    if(savedTP){
+      content.innerHTML=`<div id="tpGrid">${savedTP}</div><button id="clearTPBtn" style="margin-top:12px; background:var(--bg3); border:1px solid var(--line); padding:8px; color:var(--dim); border-radius:8px; width:100%; font-size:11px">🗑️ Clear Saved Analysis</button>`;
+      document.getElementById('clearTPBtn')?.addEventListener('click',()=>{localStorage.removeItem('tp_analysis');renderAnalysis();});
+    } else {
+      content.innerHTML=`<div class="analysis-card" style="text-align:center; padding:32px"><div style="font-size:32px; margin-bottom:16px">🤖</div><h4>TP Cheatsheet Generator</h4><p style="color:var(--dim); font-size:11px; margin:12px 0">Share prompt with any AI to generate team principal analysis</p><button id="sharePromptBtn" style="background:var(--red); border:none; padding:12px 24px; color:white; border-radius:30px; font-family:var(--mono); font-size:12px; font-weight:bold; margin:8px 0">📤 SHARE PROMPT</button><div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--line)"><p style="color:var(--muted); font-size:10px; margin-bottom:8px">Already have AI output?</p><button id="pasteTPBtn" style="background:var(--bg3); border:1px solid var(--line); padding:8px 16px; color:var(--dim); border-radius:20px; font-size:10px">📋 PASTE ANALYSIS</button></div></div>`;
+      document.getElementById('sharePromptBtn')?.addEventListener('click',()=>{
+        let circuit=document.getElementById('meetingSelect')?.selectedOptions[0]?.textContent||'this Grand Prix';
+        let prompt=`You are a senior F1 strategist. Generate Team Principal cheatsheet for ${circuit}.
+
+Write EXACTLY 3 sentences for each team in F1 paddock language:
+
+MCLAREN · Zak Brown (aggressive undercut, splits strategies)
+MERCEDES · Toto Wolff (best VSC reaction, plays championship)
+FERRARI · Fred Vasseur (hesitates on undercut, conservative under pressure)
+RED BULL · Laurent Mekies (data-led, methodical)
+
+Output format EXACTLY:
+===MCLAREN===
+[sentence 1] [sentence 2] [sentence 3]
+===MERCEDES===
+[sentence 1] [sentence 2] [sentence 3]
+===FERRARI===
+[sentence 1] [sentence 2] [sentence 3]
+===RED BULL===
+[sentence 1] [sentence 2] [sentence 3]`;
+        if(navigator.share){navigator.share({title:'F1 TP Prompt',text:prompt}).catch(()=>navigator.clipboard.writeText(prompt));}
+        else{navigator.clipboard.writeText(prompt);alert('Prompt copied!');}
+      });
+      document.getElementById('pasteTPBtn')?.addEventListener('click',()=>{
+        let modal=document.createElement('div');modal.className='modal-backdrop open';
+        modal.innerHTML=`<div class="modal-box"><div class="modal-head"><span class="modal-title">PASTE AI ANALYSIS</span><button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">✕</button></div><div class="modal-body"><textarea id="tpPasteArea" rows="12" style="width:100%; background:var(--bg3); color:var(--text); border:1px solid var(--line); padding:12px; font-family:monospace; font-size:11px; border-radius:8px" placeholder="Paste AI-generated analysis here..."></textarea><button id="saveTPAnalysis" style="margin-top:14px; width:100%; background:var(--red); border:none; padding:10px; color:white; border-radius:8px; font-weight:bold">SAVE TO APP</button></div></div>`;
+        document.body.appendChild(modal);
+        document.getElementById('saveTPAnalysis')?.addEventListener('click',()=>{let val=document.getElementById('tpPasteArea').value;if(val){localStorage.setItem('tp_analysis',val);modal.remove();renderAnalysis();}else alert('Paste analysis first');});
+      });
+    }
   }
 }
 
@@ -326,4 +395,4 @@ document.getElementById('rcBar').onclick=()=>{let body=document.getElementById('
 autoLoadCurrent();
 </script>
 </body>
-  </html>
+</html>
