@@ -1,1 +1,1 @@
-# f1-live-timing
+# f1-strategist
