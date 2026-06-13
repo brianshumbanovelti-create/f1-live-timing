@@ -104,60 +104,8 @@ select.status-done{border-color:var(--muted)!important}
 
 /* ── TRACKER REMOVED ── */
 
-/* ── ANALYSIS TAB ── */
-.analysis-scroll{flex:1;overflow-y:auto;padding-bottom:40px}
-.analysis-pills{display:flex;gap:4px;padding:10px 12px;background:var(--bg1);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.pill-btn{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.5px;padding:5px 10px;border:1px solid var(--line);background:var(--bg3);color:var(--dim);cursor:pointer;border-radius:20px;transition:all 0.15s;white-space:nowrap}
-.pill-btn.active{background:var(--red);border-color:var(--red);color:#fff}
-.analysis-section{padding:12px}
-.analysis-card{background:var(--bg1);border:1px solid var(--line);border-radius:8px;margin-bottom:12px;overflow:hidden}
-.analysis-card-head{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-.analysis-card-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text)}
-.analysis-card-sub{font-family:var(--mono);font-size:9px;color:var(--muted)}
-.analysis-card-body{padding:12px 14px}
-.analysis-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid #111}
-.analysis-row:last-child{border-bottom:none}
-.analysis-label{font-family:var(--mono);font-size:10px;color:var(--dim)}
-.analysis-value{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:600}
-.analysis-verdict{font-family:var(--mono);font-size:10px;color:var(--yellow);padding:8px 0 4px;line-height:1.5}
-.presession-item{padding:8px 0;border-bottom:1px solid #111;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.6}
-.presession-item:last-child{border-bottom:none}
-.presession-item b{color:var(--text)}
-
-/* ── DEBRIEF ── */
-.debrief-intro{padding:12px;background:var(--bg1);border:1px solid var(--line);border-radius:8px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.6}
-.debrief-btn{display:block;width:100%;margin-top:10px;padding:10px;background:var(--red);border:none;color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;border-radius:6px;cursor:pointer}
-.debrief-btn:hover{background:#c00}
-.debrief-btn:disabled{background:var(--muted);cursor:not-allowed}
-.tp-card{background:var(--bg1);border:1px solid var(--line);border-radius:8px;margin-bottom:12px;overflow:hidden}
-.tp-card-head{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.tp-team-bar{width:4px;height:20px;border-radius:2px;flex-shrink:0}
-.tp-name{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text)}
-.tp-person{font-family:var(--mono);font-size:9px;color:var(--muted)}
-.tp-body{padding:12px 14px}
-.tp-section-label{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.tp-profile{font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.6;white-space:pre-wrap;margin-bottom:10px}
-.tp-tendencies{display:flex;flex-direction:column;gap:3px}
-.tp-tendency{font-family:var(--mono);font-size:9px;color:var(--dim);padding-left:8px;border-left:2px solid var(--line);line-height:1.4}
-
-/* ── DRIVER SUB-TABS ── */
-.driver-subtabs{display:flex;gap:2px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--line)}
-.subtab-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:4px}
-.subtab-btn.active{background:var(--bg1);color:var(--text);border-color:var(--red)}
-.stint-card{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-bottom:8px}
-.stint-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.stint-compound{font-family:var(--mono);font-size:13px;font-weight:700}
-.stint-meta{font-family:var(--mono);font-size:9px;color:var(--muted)}
-.stint-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.stint-stat{display:flex;flex-direction:column;gap:1px}
-.stint-stat-label{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.5px}
-.stint-stat-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)}
-.stint-verdict{font-family:var(--mono);font-size:9px;color:var(--yellow);margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
-.braking-placeholder{padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.6}
-
-/* ── FEED BOTTOM-UP ── */
-#feedScroll{display:flex;flex-direction:column;justify-content:flex-end;min-height:100%}
-.feed-inner{display:flex;flex-direction:column;gap:0}
+/* ── FEED TAB ── */
+.feed-scroll{flex:1;overflow-y:auto;padding:8px 0}
 .feed-entry{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);animation:fadeIn 0.3s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 .feed-lap{font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;padding-top:2px;min-width:44px}
@@ -207,7 +155,6 @@ select.status-done{border-color:var(--muted)!important}
     <div class="tabs">
       <button class="tab-btn active" id="tabTiming" onclick="switchTab('timing')">TIMING</button>
       <button class="tab-btn" id="tabFeed" onclick="switchTab('feed')">FEED</button>
-      <button class="tab-btn" id="tabAnalysis" onclick="switchTab('analysis')">ANALYSIS</button>
     </div>
     <div class="selectors">
       <select id="yearSelect"><option value="2026" selected>2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
@@ -245,30 +192,6 @@ select.status-done{border-color:var(--muted)!important}
     </div>
   </div>
 
-  <!-- ANALYSIS TAB -->
-  <div class="tab-panel" id="panelAnalysis">
-    <div class="analysis-scroll">
-      <div class="analysis-pills">
-        <button class="pill-btn active" id="pillPreSession" onclick="switchAnalysis('pre')">PRE-SESSION</button>
-        <button class="pill-btn" id="pillPostSession" onclick="switchAnalysis('post')">POST-SESSION</button>
-        <button class="pill-btn" id="pillDebrief" onclick="switchAnalysis('debrief')">DEBRIEF</button>
-      </div>
-      <div id="analysisPreSession" class="analysis-section">
-        <div class="placeholder">SELECT A SESSION TO BEGIN</div>
-      </div>
-      <div id="analysisPostSession" class="analysis-section" style="display:none">
-        <div class="placeholder">POST-SESSION DATA AVAILABLE AFTER SESSION ENDS</div>
-      </div>
-      <div id="analysisDebrief" class="analysis-section" style="display:none">
-        <div class="debrief-intro">
-          <p>Generate a team debrief prompt. Download and upload to any AI model — Claude, ChatGPT, Gemini — for a full strategic debrief from each Team Principal's perspective.</p>
-          <button class="debrief-btn" id="debriefDownloadBtn" onclick="generateDebriefFile()">⬇ GENERATE DEBRIEF FILE</button>
-        </div>
-        <div id="debriefTeams" style="margin-top:12px"></div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- RC Modal -->
@@ -282,18 +205,12 @@ select.status-done{border-color:var(--muted)!important}
   </div>
 </div>
 
-<!-- Driver Analysis Modal -->
+<!-- Lap History Modal -->
 <div class="modal-backdrop" id="lapModal">
   <div class="modal-box">
     <div class="modal-head">
-      <span class="modal-title" id="lapModalTitle">Driver Analysis</span>
+      <span class="modal-title" id="lapModalTitle">Lap History</span>
       <button class="modal-close" onclick="closeModal('lapModal')">✕</button>
-    </div>
-    <div class="driver-subtabs">
-      <button class="subtab-btn active" id="subtabLaps" onclick="switchDriverTab('laps')">LAPS</button>
-      <button class="subtab-btn" id="subtabStints" onclick="switchDriverTab('stints')">STINTS</button>
-      <button class="subtab-btn" id="subtabBraking" onclick="switchDriverTab('braking')">BRAKING</button>
-      <button class="subtab-btn" id="subtabSpeed" onclick="switchDriverTab('speed')">SPEED</button>
     </div>
     <div class="modal-body" id="lapModalBody"></div>
   </div>
@@ -326,11 +243,7 @@ let lastKnownLapNum=0;        // highest lap number seen
 let processedLaps=new Set();  // lap numbers already narrated
 let stintHistory=new Map();   // dn→last compound seen
 let lastLapTimes=new Map();   // dn→[last 5 lap times] for rolling avg
-let currentFastestLap=null;
-let currentDriverDn=null;      // currently open driver in analysis modal
-let currentDriverTab='laps';   // active sub-tab
-let cachedDriverLaps=null;     // laps for open driver
-let cachedDriverStints=null;   // stints for open driver   // {dn, duration, lap}
+let currentFastestLap=null;   // {dn, duration, lap}
 
 const SEG={YELLOW:2048,GREEN:2049,PB:2050,PURPLE:2051,PIT:2052};
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
@@ -371,14 +284,11 @@ function driverTag(dn){const m=driverMeta.get(dn);return m?`<b style="color:${m.
 // ═══════════════════════════════════════
 function switchTab(tab){
   activeTab=tab;
-  ['timing','feed','analysis'].forEach(t=>{
-    const btn=document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`);
-    const panel=document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`);
-    if(btn)btn.classList.toggle('active',t===tab);
-    if(panel)panel.classList.toggle('active',t===tab);
+  ['timing','feed'].forEach(t=>{
+    document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active',t===tab);
+    document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active',t===tab);
   });
   if(tab==='feed')renderFeed();
-  if(tab==='analysis')renderAnalysis();
 }
 
 // ═══════════════════════════════════════
@@ -525,16 +435,6 @@ async function onSessionSelected(forceKey){
 // ═══════════════════════════════════════
 // TIMER
 // ═══════════════════════════════════════
-function getSessionLabel(){
-  const meeting=document.getElementById('meetingSelect');
-  const session=document.getElementById('sessionSelect');
-  const mText=meeting.options[meeting.selectedIndex]?.text||'';
-  const sText=session.options[session.selectedIndex]?.text||'';
-  if(mText&&mText!=='— GP —'&&sText&&sText!=='— Session —')return`${mText.toUpperCase()} · ${sText.toUpperCase()}`;
-  if(mText&&mText!=='— GP —')return mText.toUpperCase();
-  return'';
-}
-
 function startCountdownOnly(){
   const el=document.getElementById('sessionTimer');
   if(timerInterval)clearInterval(timerInterval);
@@ -542,8 +442,7 @@ function startCountdownOnly(){
     const now=new Date();
     const diff=sessionStart-now;
     if(diff<=0){clearInterval(timerInterval);el.textContent='';return}
-    const label=getSessionLabel();
-    el.textContent=`⏳ ${label?label+' · ':''}${fmtCountdown(diff)}`;
+    el.textContent='STARTS '+fmtCountdown(diff);
     el.className='session-timer soon';
   },1000);
 }
@@ -555,19 +454,13 @@ function startTimer(){
     if(!sessionEnd){el.textContent='';return}
     const now=new Date();
     const remaining=sessionEnd-now;
-    const label=getSessionLabel();
-    const prefix=label?label+' · ':'';
     if(remaining<=0){
-      el.textContent=`🏁 ${prefix}FINISHED`;
-      el.className='session-timer done';
+      el.textContent='FINISHED';el.className='session-timer done';
       clearInterval(timerInterval);
-      const banner=document.getElementById('chequeredBanner');
-      banner.textContent=label?`🏁 ${label} · FINISHED 🏁`:'🏁 SESSION ENDED 🏁';
-      banner.classList.add('show');
+      document.getElementById('chequeredBanner').classList.add('show');
       setSelectStatus('done');
     } else {
-      el.textContent=`🟢 ${prefix}${fmtCountdown(remaining)}`;
-      el.className='session-timer live';
+      el.textContent=fmtCountdown(remaining);el.className='session-timer live';
     }
   },1000);
 }
@@ -782,7 +675,6 @@ async function tick(){
 
   updateElimDivider(sorted,elimThreshold);
   generateFeed(laps,latestPos,latestIv,pitStops,stintMap,raceControl);
-  if(activeTab==='analysis')renderAnalysis();
 
   const now=new Date();
   if(sessionEnd&&now>sessionEnd)setSelectStatus('done');
@@ -972,7 +864,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       const leaderNow=sortedPos[0]?.[0];
       const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
       if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
-        newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(leaderNow)} leads for the first time. ${driverTag(leaderPrev)} displaced.`,ts:ts-0.1});
+        newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(leaderNow)} takes the lead from ${driverTag(leaderPrev)}.`,ts:ts-0.1});
       }
 
       let text=`Lap ${lapNum} — ${top5}.`;
@@ -992,7 +884,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const p2dn=sortedPos[1]?.[0];
         const gap=p2dn?latestIv.get(p2dn)?.gap_to_leader:null;
         const gapStr=gap!=null?` leads by ${typeof gap==='number'?gap.toFixed(1)+'s':gap}`:'';
-        newEntries.push({lap:lapNum,category:'c-fastest',text:`Last lap of the race — ${driverTag(leaderNowFinal)}${gapStr}. Barring incidents, that's the win.`,ts:ts+0.1});
+        newEntries.push({lap:lapNum,category:'c-fastest',text:`🏁 FINAL LAP. ${driverTag(leaderNowFinal)}${gapStr}.`,ts:ts+0.1});
       }
 
       // Overtakes (position swap vs previous lap, top 10 only)
@@ -1000,7 +892,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const prev=lastKnownPositions.get(dn);
         if(!prev||pos>=prev||pos>10)continue;
         const passed=[...posAtLap.entries()].find(([d,p])=>d!==dn&&p===prev);
-        if(passed)newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(dn)} through on ${driverTag(passed[0])}. P${pos}.`,ts:ts+0.2});
+        if(passed)newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(dn)} passes ${driverTag(passed[0])}. Now P${pos}.`,ts:ts+0.2});
       }
     }
 
@@ -1011,7 +903,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       if(lap.lap_duration&&lap.lap_duration>0){
         if(!currentFastestLap||lap.lap_duration<currentFastestLap.duration){
           currentFastestLap={dn:lap.driver_number,duration:lap.lap_duration,lap:lapNum};
-          newEntries.push({lap:lapNum,category:'c-fastest',text:`${driverTag(lap.driver_number)} goes quickest — <b style="color:var(--purple)">${fmtTime(lap.lap_duration)}</b>. Lap ${lapNum}.`,ts:ts+0.3});
+          newEntries.push({lap:lapNum,category:'c-fastest',text:`${driverTag(lap.driver_number)} sets fastest lap — <b style="color:var(--purple)">${fmtTime(lap.lap_duration)}</b> on lap ${lapNum}.`,ts:ts+0.3});
         }
       }
     }
@@ -1039,12 +931,8 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
             const loss=val-avg;
             if(loss>=0.5){
               anomalyThisLap.add(dn);
-              let severityText;
-              if(loss>=5.0)severityText=`${driverTag(dn)} stationary or near-stopped in S${si+1}. Lost <b>${loss.toFixed(2)}s</b>. Safety car likely.`;
-              else if(loss>=2.0)severityText=`${driverTag(dn)} loses ${loss.toFixed(2)}s in S${si+1}. Could be damage — watch this.`;
-              else if(loss>=1.0)severityText=`${driverTag(dn)} loses ${loss.toFixed(2)}s through S${si+1}. Possible lock-up or moment.`;
-              else severityText=`${driverTag(dn)} loses half a second in S${si+1}. Small moment.`;
-              newEntries.push({lap:lapNum,category:'c-incident',text:severityText,ts:lapNum});
+              const severity=loss>=5.0?'🔴 Critical stop or safety delay':loss>=2.0?'major incident':loss>=1.0?'significant time loss':'moment';
+              newEntries.push({lap:lapNum,category:'c-incident',text:`${driverTag(dn)} — ${severity} in S${si+1}. Lost <b>${loss.toFixed(2)}s</b> vs personal average.`,ts:lapNum});
             }
           }
         }
@@ -1053,7 +941,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         lastLapTimes.set(dn,history);
       }
       if(anomalyThisLap.size>=4){
-        newEntries.push({lap:lapNum,category:'c-sc',text:`⚠️ Something's happening — ${anomalyThisLap.size} drivers losing time simultaneously. Track incident likely.`,ts:lapNum+0.5});
+        newEntries.push({lap:lapNum,category:'c-sc',text:`⚠️ Possible track incident or safety delay — ${anomalyThisLap.size} drivers affected simultaneously.`,ts:lapNum+0.5});
       }
     } else {
       for(const lap of lapDrivers){
@@ -1080,7 +968,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const ds=stintMap.get(dn)||[];
         const{compound,age}=getCurrentTyre(ds,lapNum);
         const ti=compound?`. <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span> at ${age} laps`:'';
-        newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} going off the cliff — ${totalDrop.toFixed(2)}s lost over 4 laps${ti}. Has to box soon.`,ts:lapNum+0.6});
+        newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} lap times dropping 4 consecutive laps (+${totalDrop.toFixed(2)}s)${ti}. Possible tyre degradation.`,ts:lapNum+0.6});
       }
 
       // ── RATE OF CHANGE vs CAR AHEAD ──
@@ -1100,8 +988,8 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const ds=stintMap.get(dn)||[];
         const{compound,age}=getCurrentTyre(ds,lapNum);
         const ti=compound?`. <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span> at ${age} laps`:'';
-        if(perLap<0)newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(dn)} hunting the car ahead down. Gaining ${Math.abs(perLap).toFixed(2)}s a lap${ti}.`,ts:lapNum+0.7});
-        else newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} losing ${perLap.toFixed(2)}s a lap to the car ahead${ti}. Tyre management or pace issue.`,ts:lapNum+0.7});
+        if(perLap<0)newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(dn)} gaining ${Math.abs(perLap).toFixed(2)}s per lap for 3 laps${ti}.`,ts:lapNum+0.7});
+        else newEntries.push({lap:lapNum,category:'c-strategy',text:`${driverTag(dn)} losing ${perLap.toFixed(2)}s per lap for 3 laps${ti}.`,ts:lapNum+0.7});
       }
 
       // ── TEAMMATE BATTLE ──
@@ -1127,7 +1015,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const t2=getCurrentTyre(stintMap.get(slower)||[],lapNum);
         const t1s=t1.compound?`<span class="${tyreClass(t1.compound)}">${tyreLetter(t1.compound)}</span> ${t1.age}L`:'';
         const t2s=t2.compound?`<span class="${tyreClass(t2.compound)}">${tyreLetter(t2.compound)}</span> ${t2.age}L`:'';
-        newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(faster)} pulling away from ${driverTag(slower)} — ${diff.toFixed(2)}s faster over 3 laps. ${t1s} vs ${t2s}.`,ts:lapNum+0.8});
+        newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(faster)} ${diff.toFixed(2)}s faster than ${driverTag(slower)} for 3 laps. ${t1s} vs ${t2s}.`,ts:lapNum+0.8});
       }
 
       // ── STRANGE STAT: slower compound matching pace ──
@@ -1153,7 +1041,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
           processedPits.add(key);
           const scT=getCurrentTyre(stintMap.get(slowC)||[],lapNum);
           const fcT=getCurrentTyre(stintMap.get(fastC)||[],lapNum);
-          newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(slowC)} matching ${driverTag(fastC)} on pace. <span class="${tyreClass(scT.compound)}">${tyreLetter(scT.compound)}</span> ${scT.age}L vs <span class="${tyreClass(fcT.compound)}">${tyreLetter(fcT.compound)}</span> ${fcT.age}L — that's a strange one.`,ts:lapNum+0.9});
+          newEntries.push({lap:lapNum,category:'c-info',text:`${driverTag(slowC)} matching ${driverTag(fastC)} pace on <span class="${tyreClass(scT.compound)}">${tyreLetter(scT.compound)}</span> ${scT.age}L vs <span class="${tyreClass(fcT.compound)}">${tyreLetter(fcT.compound)}</span> ${fcT.age}L.`,ts:lapNum+0.9});
         }
       }
     }
@@ -1172,7 +1060,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       // Only mark processed if we have real position data
       if(pos!=='?'||lastKnownLapNum>0){
         processedPits.add(pitKey+'in');
-        newEntries.push({lap:lapIn,category:'c-strategy',text:`${driverTag(dn)} boxes from P${pos}.`,ts:lapIn});
+        newEntries.push({lap:lapIn,category:'c-strategy',text:`${driverTag(dn)} pits from P${pos}.`,ts:lapIn});
       }
     }
 
@@ -1185,9 +1073,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       const durStr=dur?` — ${parseFloat(dur).toFixed(1)}s stop`:'';
       if(pos!=='?'||lastKnownLapNum>0){
         processedPits.add(pitKey+'out');
-        const slowStop=dur&&parseFloat(dur)>3.5?` — slow stop, ${parseFloat(dur).toFixed(1)}s`:'';
-        const normalStop=dur&&parseFloat(dur)<=3.5?` — ${parseFloat(dur).toFixed(1)}s stop`:'';
-        newEntries.push({lap:lapOut,category:'c-strategy',text:`${driverTag(dn)} back out P${pos}${tyreStr}${slowStop||normalStop}.`,ts:lapOut+0.5});
+        newEntries.push({lap:lapOut,category:'c-strategy',text:`${driverTag(dn)} rejoins P${pos}${tyreStr}${durStr}.`,ts:lapOut+0.5});
       }
     }
   }
@@ -1226,7 +1112,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       if(!processedPits.has(firstKey)){
         processedPits.add(firstKey);
         const first=validLaps[0];
-        newEntries.push({lap:first.lap_number,category:'c-lap',text:`${driverTag(dn)} on track. First lap ${fmtTime(first.lap_duration)}.`,ts:first.lap_number});
+        newEntries.push({lap:first.lap_number,category:'c-lap',text:`${driverTag(dn)} first timed lap. ${fmtTime(first.lap_duration)}.`,ts:first.lap_number});
       }
 
       // Personal best improvement
@@ -1243,7 +1129,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
             const tStr=compound?` on <span class="${tyreClass(compound)}">${tyreLetter(compound)}</span>`:'';
             // Gap to session best
             const gapToP1=overallBestLap&&overallBestLap<Infinity&&lap.driver_number!==overallBestDriver?` (+${(lap.lap_duration-overallBestLap).toFixed(3)}s to P1)`:'';
-            newEntries.push({lap:lap.lap_number,category:'c-fastest',text:`${driverTag(dn)} goes quickest${tStr}. <b style="color:var(--purple)">${fmtTime(lap.lap_duration)}</b>${gapToP1}.`,ts:lap.lap_number+0.2});
+            newEntries.push({lap:lap.lap_number,category:'c-fastest',text:`${driverTag(dn)} personal best${tStr}. <b style="color:var(--purple)">${fmtTime(lap.lap_duration)}</b>${gapToP1}.`,ts:lap.lap_number+0.2});
           }
         }
       }
@@ -1262,7 +1148,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
           const driverStintsSorted=driverStints.slice().sort((a,b)=>a.lap_start-b.lap_start);
           const stintIndex=driverStintsSorted.indexOf(stint);
           if(stintIndex>0){
-            newEntries.push({lap:stint.lap_start,category:'c-strategy',text:`${driverTag(dn)} onto the <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span> ${stint.compound}. Lap ${stint.lap_start}.`,ts:stint.lap_start});
+            newEntries.push({lap:stint.lap_start,category:'c-strategy',text:`${driverTag(dn)} switches to <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span> ${stint.compound}. Lap ${stint.lap_start}.`,ts:stint.lap_start});
           }
         }
       }
@@ -1295,7 +1181,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const degPerLap=den>0?num/den:0;
         const degStr=degPerLap>=0?`+${degPerLap.toFixed(3)}`:`${degPerLap.toFixed(3)}`;
 
-        newEntries.push({lap:stintEnd,category:'c-strategy',text:`${driverTag(dn)} long run complete — ${stintLen} laps on <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span>. Avg <b>${fmtTime(avg)}</b>. Falling ${degStr}s a lap.`,ts:stintEnd+0.3});
+        newEntries.push({lap:stintEnd,category:'c-strategy',text:`${driverTag(dn)} long run: ${stintLen} laps on <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span>. Avg <b>${fmtTime(avg)}</b>. Deg ${degStr}s/lap.`,ts:stintEnd+0.3});
       }
     }
 
@@ -1342,7 +1228,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         if(spread>0.15)continue;
 
         processedPits.add(solidKey);
-        newEntries.push({lap:stintEnd,category:'c-fastest',text:`${driverTag(dn)} very consistent on the <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span>. ${driverLaps.length} laps within ${spread.toFixed(3)}s. That's a solid long run.`,ts:stintEnd+0.5});
+        newEntries.push({lap:stintEnd,category:'c-fastest',text:`${driverTag(dn)} solid long run on <span class="${tyreClass(stint.compound)}">${tyreLetter(stint.compound)}</span>. ${driverLaps.length} laps within ${spread.toFixed(3)}s (${fmtTime(Math.min(...times))} – ${fmtTime(Math.max(...times))}).`,ts:stintEnd+0.5});
       }
     }
 
@@ -1540,7 +1426,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         }
       }
       newEntries.push({lap:lap.lap_number,category:'c-fastest',
-        text:`${driverTag(dn)} goes P${newPos}. <b>${fmtTime(lap.lap_duration)}</b> — ${improvement}s faster${gapToPole}.${sectorNote}`,
+        text:`${driverTag(dn)} improves to P${newPos}. <b>${fmtTime(lap.lap_duration)}</b> (-${improvement}s)${gapToPole}.${sectorNote}`,
         ts:lap.lap_number+0.2});
     }
 
@@ -1556,7 +1442,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
           if(!processedPits.has(elimKey)){
             processedPits.add(elimKey);
             newEntries.push({lap:lastKnownLapNum,category:'c-incident',
-              text:`${driverTag(dn)} on the bubble — P${pos}${gapStr}. ${Math.floor(phaseRemaining*60)}s left to find time.`,
+              text:`${driverTag(dn)} on elimination line P${pos}.${gapStr}. ${Math.floor(phaseRemaining*60)}s remaining.`,
               ts:lastKnownLapNum+0.3});
           }
         }
@@ -1573,7 +1459,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
           if(!processedPits.has(safeKey)){
             processedPits.add(safeKey);
             newEntries.push({lap:lastKnownLapNum,category:'c-info',
-              text:`${driverTag(dn)} through to Q${qPhase+1}. P${pos} with ${Math.floor(phaseRemaining)} minutes left.`,
+              text:`${driverTag(dn)} Q${qPhase+1} confirmed. P${pos} with ${Math.floor(phaseRemaining)} minutes left.`,
               ts:lastKnownLapNum+0.4});
           }
         }
@@ -1647,7 +1533,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       if(pitLap&&!pitLap.duration_sector_3&&pitLap.duration_sector_1){
         processedPits.add(abortKey);
         newEntries.push({lap:pit.lap_number||lastKnownLapNum,category:'c-strategy',
-          text:`${driverTag(dn)} abort — pitted before finishing S3.`,
+          text:`${driverTag(dn)} aborted push lap. Pitted before completing S3.`,
           ts:(pit.lap_number||lastKnownLapNum)+0.8});
       }
     }
@@ -1661,7 +1547,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const p2str=p2?`. ${driverTag(p2[0])} +${(p2[1].duration-poleTime).toFixed(3)}s`:'';
         const p3str=p3?`. ${driverTag(p3[0])} +${(p3[1].duration-poleTime).toFixed(3)}s`:'';
         newEntries.push({lap:lastKnownLapNum,category:'c-fastest',
-          text:`🏆 Pole position — ${driverTag(overallBestDriver)} <b style="color:var(--purple)">${fmtTime(poleTime)}</b>${p2str}${p3str}.`,
+          text:`🏆 POLE POSITION: ${driverTag(overallBestDriver)} <b style="color:var(--purple)">${fmtTime(poleTime)}</b>${p2str}${p3str}.`,
           ts:lastKnownLapNum+1});
       }
     }
@@ -1673,7 +1559,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         processedPits.add(shootoutKey);
         const top10=qualOrder.slice(0,10).map(([dn])=>driverTag(dn)).join(', ');
         newEntries.push({lap:lastKnownLapNum,category:'c-info',
-          text:`Q3 underway. ${top10} fighting for pole.`,
+          text:`Q3 SHOOTOUT: ${top10} battle for pole.`,
           ts:lastKnownLapNum+0.05});
       }
     }
@@ -1689,7 +1575,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         const closest=qualOrder[cutoff];const safe=qualOrder[cutoff-1];
         const marginStr=closest&&safe?` ${driverTag(closest[0])} missed Q${elimConfPhase+1} by ${(closest[1].duration-safe[1].duration).toFixed(3)}s.`:'';
         newEntries.push({lap:lastKnownLapNum,category:'c-incident',
-          text:`Out in Q${elimConfPhase}: ${eliminated}.${marginStr}`,
+          text:`ELIMINATED IN Q${elimConfPhase}: ${eliminated}.${marginStr}`,
           ts:lastKnownLapNum+0.9});
       }
     }
@@ -1705,7 +1591,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
       if(processedPits.has(key))continue;
       processedPits.add(key);
       const pos=lastKnownPositions.get(dn)??'?';
-      newEntries.push({lap:maxDriverLap,category:'c-incident',text:`That's ${driverTag(dn)} out of the race from P${pos}. No data since lap ${maxDriverLap}.`,ts:maxDriverLap});
+      newEntries.push({lap:maxDriverLap,category:'c-incident',text:`${driverTag(dn)} retired from P${pos}. No data since lap ${maxDriverLap}.`,ts:maxDriverLap});
     }
   }
 
@@ -1721,314 +1607,20 @@ function renderFeed(){
     scroll.innerHTML='<div class="feed-placeholder">NO FEED DATA YET</div>';
     return;
   }
-  // Story order — oldest first, newest at bottom
-  const sorted=[...feedEntries].sort((a,b)=>((a.lap||0)-(b.lap||0))||((a.ts||0)-(b.ts||0)));
-  const atBottom=scroll.scrollHeight-scroll.scrollTop<=scroll.clientHeight+60;
+  // Render newest first
+  const sorted=[...feedEntries].sort((a,b)=>{
+    // Primary: lap number descending
+    const lapDiff=(b.lap||0)-(a.lap||0);
+    if(lapDiff!==0)return lapDiff;
+    // Secondary: ts descending (numeric)
+    return(b.ts||0)-(a.ts||0);
+  });
   scroll.innerHTML=sorted.map(e=>`
     <div class="feed-entry ${e.category}">
       <span class="feed-lap">L${e.lap}</span>
       <div class="feed-bar"></div>
       <span class="feed-text">${e.text}</span>
     </div>`).join('');
-  if(atBottom)scroll.scrollTop=scroll.scrollHeight;
-}
-
-// ═══════════════════════════════════════
-// ANALYSIS TAB
-// ═══════════════════════════════════════
-let activeAnalysisSection='pre';
-
-function switchAnalysis(section){
-  activeAnalysisSection=section;
-  ['pre','post','debrief'].forEach(s=>{
-    const pill=document.getElementById(`pill${s.charAt(0).toUpperCase()+s.slice(1)}Session`)||document.getElementById('pillDebrief');
-    const panel=document.getElementById(`analysis${s==='pre'?'PreSession':s==='post'?'PostSession':'Debrief'}`);
-    if(panel)panel.style.display=s===section?'block':'none';
-  });
-  document.getElementById('pillPreSession').classList.toggle('active',section==='pre');
-  document.getElementById('pillPostSession').classList.toggle('active',section==='post');
-  document.getElementById('pillDebrief').classList.toggle('active',section==='debrief');
-  if(section==='debrief')renderDebriefCards();
-}
-
-function renderAnalysis(){
-  renderPreSession();
-}
-
-function renderPreSession(){
-  const el=document.getElementById('analysisPreSession');
-  if(!sessionKey){el.innerHTML='<div class="placeholder">SELECT A SESSION TO BEGIN</div>';return}
-
-  // SC Probability from historical RC messages
-  const scEvents=allRCMessages.filter(m=>(m.flag||'').toUpperCase()==='SC'||(m.message||'').toUpperCase().includes('SAFETY CAR')).length;
-  const scProb=scEvents>0?`${Math.min(95,scEvents*15)}% (${scEvents} SC event${scEvents>1?'s':''} this session)`:'Data loading...';
-
-  // Compound usage summary from stints
-  const compoundCount=new Map();
-  // Built from stintMap in last tick — use allRCMessages as proxy for session activity
-  const meeting=document.getElementById('meetingSelect').options[document.getElementById('meetingSelect').selectedIndex]?.text||'';
-  const session=document.getElementById('sessionSelect').options[document.getElementById('sessionSelect').selectedIndex]?.text||'';
-
-  el.innerHTML=`
-    <div class="analysis-card">
-      <div class="analysis-card-head">
-        <span class="analysis-card-title">SESSION OVERVIEW</span>
-        <span class="analysis-card-sub">${meeting} · ${session}</span>
-      </div>
-      <div class="analysis-card-body">
-        <div class="presession-item">Session type: <b>${sessionType||'—'}</b></div>
-        <div class="presession-item">Safety car activity: <b>${scProb}</b></div>
-        <div class="presession-item">Drivers in session: <b>${driverMeta.size}</b></div>
-        <div class="presession-item">Laps completed: <b>${lastKnownLapNum}</b></div>
-      </div>
-    </div>
-    <div class="analysis-card">
-      <div class="analysis-card-head"><span class="analysis-card-title">TYRE COMPOUNDS USED</span></div>
-      <div class="analysis-card-body" id="compoundSummary">
-        <div class="presession-item" style="color:var(--muted)">Loading compound data...</div>
-      </div>
-    </div>
-    <div class="analysis-card">
-      <div class="analysis-card-head"><span class="analysis-card-title">PACE LEADERS</span></div>
-      <div class="analysis-card-body" id="paceLeaders">
-        <div class="presession-item" style="color:var(--muted)">Loading pace data...</div>
-      </div>
-    </div>`;
-
-  // Populate compound summary from cachedLaps
-  if(cachedLaps.size>0){
-    const compMap=new Map();
-    for(const lap of cachedLaps.values()){
-      // Can't get compound from laps directly — use stints
-    }
-    document.getElementById('compoundSummary').innerHTML='<div class="presession-item" style="color:var(--muted)">See driver stint cards for compound breakdown.</div>';
-  }
-
-  // Pace leaders from bestLapMap equivalent — use overallBestDriver
-  if(overallBestDriver&&overallBestLap<Infinity){
-    const meta=driverMeta.get(overallBestDriver);
-    const allBests=[];
-    const seen=new Set();
-    for(const lap of cachedLaps.values()){
-      if(!seen.has(lap.driver_number)&&lap.lap_duration&&lap.lap_duration>0){
-        seen.add(lap.driver_number);
-      }
-    }
-    // Build top 5 from cached laps
-    const driverBests=new Map();
-    for(const lap of cachedLaps.values()){
-      const dn=lap.driver_number;
-      if(lap.lap_duration&&lap.lap_duration>0){
-        if(!driverBests.has(dn)||lap.lap_duration<driverBests.get(dn))driverBests.set(dn,lap.lap_duration);
-      }
-    }
-    const sorted=[...driverBests.entries()].sort((a,b)=>a[1]-b[1]).slice(0,5);
-    const best=sorted[0]?.[1]||1;
-    let paceHtml='';
-    for(let i=0;i<sorted.length;i++){
-      const[dn,time]=sorted[i];
-      const m=driverMeta.get(dn);
-      const delta=i===0?'—':`+${(time-best).toFixed(3)}s`;
-      paceHtml+=`<div class="analysis-row">
-        <span class="analysis-label" style="color:${m?.teamColor||'var(--dim)'}">${m?.acronym||dn}</span>
-        <span class="analysis-value">${fmtTime(time)}</span>
-        <span style="font-family:var(--mono);font-size:10px;color:${i===0?'var(--purple)':'var(--dim)'}">${delta}</span>
-      </div>`;
-    }
-    document.getElementById('paceLeaders').innerHTML=paceHtml||'<div class="presession-item" style="color:var(--muted)">No lap data yet.</div>';
-  }
-}
-
-// ── DEBRIEF CARDS ──
-const TP_PROFILES=[
-  {
-    team:'McLAREN',
-    person:'ZAK BROWN',
-    color:'#FF8000',
-    profile:`Not a traditional technical TP. Commercial and cultural leader who hired the right people and stepped back. Andrea Stella runs the car, Brown runs the atmosphere.
-
-2023-2026: most dramatic rise in modern F1. World champions by trusting process over shortcuts.`,
-    tendencies:[
-      'Aggressive undercut timing — boxes with 15s gap if tyre delta justifies it',
-      'Will split Norris/Piastri strategy to cover multiple scenarios',
-      'Best compound selection on the grid 2024-2026',
-      'Occasionally over-complicated strategy backfires under SC timing'
-    ]
-  },
-  {
-    team:'MERCEDES',
-    person:'TOTO WOLFF',
-    color:'#27F4D2',
-    profile:`Most strategically complete TP on the grid. Trusts his people, sets principles not tactics. 2014-2021 defined the modern era. 2025-2026 rebuilt faster than anyone predicted.`,
-    tendencies:[
-      'Best VSC reaction speed in the paddock — commits before pit lane opens',
-      'Will overcut if car has pace advantage in clean air',
-      'Plays the championship not the race — accepts short-term loss for learning',
-      'Russell given more strategic autonomy than Hamilton had'
-    ]
-  },
-  {
-    team:'FERRARI',
-    person:'FREDERIC VASSEUR',
-    color:'#e8002d',
-    profile:`Brought in 2023 to fix strategic dysfunction. Pragmatic, direct, takes personal responsibility for bad calls. Progress 2023-2026 significant but hesitation under pressure remains.`,
-    tendencies:[
-      'Historically hesitates one lap too long on the undercut call',
-      'Overcuts more than any top team — partly design, partly indecision',
-      'Stronger on compound selection than pit timing',
-      'Reverts to conservative calls to protect position under pressure'
-    ]
-  },
-  {
-    team:'RED BULL',
-    person:'LAURENT MEKIES',
-    color:'#3671C6',
-    profile:`Arrived from Ferrari 2024. Brings structured process thinking to a team that ran on Newey genius for a decade. Challenge: rebuilding without the architect while managing Verstappen's frustration.`,
-    tendencies:[
-      'More methodical than Horner era — data-led, slower to commit',
-      'Less emotional under pressure — fewer instinctive calls',
-      'Strong driver relationship management from Ferrari experience',
-      'Untested as lead decision maker under genuine championship pressure'
-    ]
-  }
-];
-
-function renderDebriefCards(){
-  const el=document.getElementById('debriefTeams');
-  let html='';
-  for(const tp of TP_PROFILES){
-    html+=`<div class="tp-card">
-      <div class="tp-card-head">
-        <div class="tp-team-bar" style="background:${tp.color}"></div>
-        <div>
-          <div class="tp-name">${tp.team}</div>
-          <div class="tp-person">${tp.person}</div>
-        </div>
-      </div>
-      <div class="tp-body">
-        <div class="tp-section-label">PROFILE</div>
-        <div class="tp-profile">${tp.profile}</div>
-        <div class="tp-section-label">TENDENCIES</div>
-        <div class="tp-tendencies">
-          ${tp.tendencies.map(t=>`<div class="tp-tendency">— ${t}</div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-  el.innerHTML=html;
-}
-
-function generateDebriefFile(){
-  if(!sessionKey){alert('Select a session first.');return}
-  const btn=document.getElementById('debriefDownloadBtn');
-  btn.disabled=true;btn.textContent='GENERATING...';
-
-  const meeting=document.getElementById('meetingSelect').options[document.getElementById('meetingSelect').selectedIndex]?.text||'Unknown GP';
-  const session=document.getElementById('sessionSelect').options[document.getElementById('sessionSelect').selectedIndex]?.text||'Unknown Session';
-  const now=new Date().toISOString().slice(0,16).replace('T',' ');
-
-  // Build race result
-  const sortedDrivers=[...lastKnownPositions.entries()].sort((a,b)=>a[1]-b[1]);
-  const resultLines=sortedDrivers.slice(0,10).map(([dn,pos])=>{
-    const meta=driverMeta.get(dn);
-    const iv=latestIv.get(dn);
-    const gap=iv?.gap_to_leader!=null?(typeof iv.gap_to_leader==='number'?`+${iv.gap_to_leader.toFixed(3)}`:`+${iv.gap_to_leader}`):'—';
-    return`P${pos}  ${(meta?.acronym||dn).padEnd(4)}  ${gap.padEnd(10)}  ${meta?.teamName||''}`;
-  }).join('\n');
-
-  // Build stint breakdown for top 4 teams
-  const topTeams=['McLaren','Mercedes','Ferrari','Red Bull'];
-  let stintLines='';
-  for(const[dn,meta]of driverMeta){
-    const isTopTeam=topTeams.some(t=>meta.teamName&&meta.teamName.includes(t));
-    if(!isTopTeam)continue;
-    // Get stints from cachedLaps analysis
-    stintLines+=`\n${meta.acronym} (${meta.teamName}):\n`;
-    // We don't have per-driver stints easily here — reference the analysis
-    stintLines+=`  See timing app driver analysis for full stint breakdown.\n`;
-  }
-
-  // Build key events from feedEntries
-  const keyEvents=feedEntries
-    .filter(e=>['c-strategy','c-incident','c-sc','c-info'].includes(e.category))
-    .slice(-30)
-    .map(e=>`L${e.lap}  ${e.text.replace(/<[^>]+>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>')}`)
-    .join('\n');
-
-  // RC messages
-  const rcLines=allRCMessages.slice(-20).map(m=>`${fmtTimeLabel(m.date)}  [${m.flag||'—'}]  ${m.message||''}`).join('\n');
-
-  const txt=`F1 STRATEGIST — TEAM DEBRIEF PROMPT
-Session: ${meeting} · ${session}
-Generated: ${now} UTC
-${'═'.repeat(55)}
-INSTRUCTIONS FOR AI MODEL
-${'═'.repeat(55)}
-
-You are a senior F1 analyst producing a post-session 
-debrief for the top 4 constructor teams.
-
-For each team write a debrief as if the Team Principal 
-is addressing their drivers and engineers in the 
-post-session debrief room.
-
-Rules:
-- Use F1 paddock language throughout
-- Pitted = boxed, degradation = on the cliff, 
-  undercut = jump him in the pits
-- Be direct and specific — reference the actual data
-- Maximum 4 sentences per team
-- Cover: what worked, what didn't, one specific 
-  decision that defined the session, what changes next
-- Present tense, short sentences, no hedging
-
-${'═'.repeat(55)}
-TEAM PRINCIPAL PROFILES
-${'═'.repeat(55)}
-
-${TP_PROFILES.map(tp=>`${tp.team} · ${tp.person}
-Profile: ${tp.profile.replace(/\n/g,' ')}
-Tendencies: ${tp.tendencies.join(' | ')}`).join('\n\n')}
-
-${'═'.repeat(55)}
-SESSION DATA — ${meeting.toUpperCase()} · ${session.toUpperCase()}
-${'═'.repeat(55)}
-
-CLASSIFICATION (TOP 10)
-${'─'.repeat(45)}
-${resultLines||'Data not available'}
-
-KEY RACE EVENTS (from live feed)
-${'─'.repeat(45)}
-${keyEvents||'No feed data available'}
-
-RACE CONTROL MESSAGES
-${'─'.repeat(45)}
-${rcLines||'No messages'}
-
-WEATHER CONDITIONS
-${'─'.repeat(45)}
-${document.getElementById('weatherStrip').innerText||'No weather data'}
-
-STINT BREAKDOWN — TOP 4 TEAMS
-${'─'.repeat(45)}
-Open the timing app and tap each driver for full 
-stint analysis including compound averages and 
-degradation rates. Key data:
-${stintLines}
-${'═'.repeat(55)}
-END OF PROMPT — Paste above into your AI model
-${'═'.repeat(55)}`;
-
-  const blob=new Blob([txt],{type:'text/plain'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`F1_Debrief_${meeting.replace(/\s+/g,'_')}_${session.replace(/\s+/g,'_')}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
-  btn.disabled=false;
-  btn.textContent='⬇ GENERATE DEBRIEF FILE';
 }
 
 // ═══════════════════════════════════════
@@ -2058,131 +1650,31 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 async function showLapHistory(dn){
   if(!sessionKey)return;
   const meta=driverMeta.get(dn);if(!meta)return;
-  currentDriverDn=dn;
-  currentDriverTab='laps';
   document.getElementById('lapModalTitle').textContent=`${meta.acronym} · ${meta.fullName}`;
   document.getElementById('lapModalBody').innerHTML='<div class="placeholder" style="padding:20px">LOADING...</div>';
   document.getElementById('lapModal').classList.add('open');
-  // Reset sub-tab buttons
-  ['Laps','Stints','Braking','Speed'].forEach(t=>{
-    const btn=document.getElementById(`subtab${t}`);
-    if(btn)btn.classList.toggle('active',t.toLowerCase()==='laps');
-  });
 
   const[laps,stints]=await Promise.all([
     api(`laps?session_key=${sessionKey}&driver_number=${dn}`),
     api(`stints?session_key=${sessionKey}&driver_number=${dn}`)
   ]);
   laps.sort((a,b)=>a.lap_number-b.lap_number);
-  cachedDriverLaps=laps;
-  cachedDriverStints=stints;
-  renderDriverTab('laps');
-}
+  let driverBest=Infinity;
+  for(const l of laps)if(l.lap_duration&&l.lap_duration<driverBest)driverBest=l.lap_duration;
 
-function switchDriverTab(tab){
-  currentDriverTab=tab;
-  ['Laps','Stints','Braking','Speed'].forEach(t=>{
-    const btn=document.getElementById(`subtab${t}`);
-    if(btn)btn.classList.toggle('active',t.toLowerCase()===tab);
-  });
-  renderDriverTab(tab);
-}
+  function getStint(n){return stints.find(s=>n>=s.lap_start&&n<=(s.lap_end||999))}
+  function tc(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
 
-function renderDriverTab(tab){
-  const body=document.getElementById('lapModalBody');
-  if(!cachedDriverLaps){body.innerHTML='<div class="placeholder" style="padding:20px">NO DATA</div>';return}
-
-  if(tab==='laps'){
-    let driverBest=Infinity;
-    for(const l of cachedDriverLaps)if(l.lap_duration&&l.lap_duration<driverBest)driverBest=l.lap_duration;
-    function getStint(n){return(cachedDriverStints||[]).find(s=>n>=s.lap_start&&n<=(s.lap_end||999))}
-    function tc(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
-    let rows='';
-    for(const lap of cachedDriverLaps){
-      const stint=getStint(lap.lap_number);
-      const compound=stint?.compound||'';
-      const isOB=lap.lap_duration===overallBestLap;
-      const isPB=lap.lap_duration===driverBest&&!isOB;
-      const lapCls=isOB?'ob':isPB?'pb':'lt';
-      rows+=`<tr><td>${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}</td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}</td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}</td><td class="${tc(compound)}">${tyreLetter(compound)}</td></tr>`;
-    }
-    body.innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th><th>C</th></tr></thead><tbody>${rows||'<tr><td colspan="6" style="color:var(--muted);padding:10px 0">No data</td></tr>'}</tbody></table>`;
+  let rows='';
+  for(const lap of laps){
+    const stint=getStint(lap.lap_number);
+    const compound=stint?.compound||'';
+    const isOB=lap.lap_duration===overallBestLap;
+    const isPB=lap.lap_duration===driverBest&&!isOB;
+    const lapCls=isOB?'ob':isPB?'pb':'lt';
+    rows+=`<tr><td>${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}</td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}</td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}</td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}</td><td class="${tc(compound)}">${tyreLetter(compound)}</td></tr>`;
   }
-
-  else if(tab==='stints'){
-    const stints=cachedDriverStints||[];
-    if(!stints.length){body.innerHTML='<div class="placeholder" style="padding:20px">NO STINT DATA</div>';return}
-    stints.sort((a,b)=>a.lap_start-b.lap_start);
-
-    // Calculate per-stint stats
-    const stintStats=stints.map(s=>{
-      const end=s.lap_end||lastKnownLapNum;
-      const stintLaps=cachedDriverLaps.filter(l=>l.lap_duration&&l.lap_duration>0&&l.lap_number>=s.lap_start&&l.lap_number<=end);
-      if(!stintLaps.length)return{...s,avg:null,deg:null,laps:end-s.lap_start+1};
-      const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
-      // Degradation via linear regression
-      const n=stintLaps.length;
-      if(n<2)return{...s,avg,deg:0,laps:n};
-      const xMean=(n-1)/2;let num=0,den=0;
-      for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
-      const deg=den>0?num/den:0;
-      return{...s,avg,deg,laps:n};
-    }).filter(s=>s.avg);
-
-    // Find best compound
-    let bestCompound=null,bestDeg=Infinity;
-    for(const s of stintStats){if(s.deg<bestDeg&&s.compound){bestDeg=s.deg;bestCompound=s.compound}}
-
-    let html='';
-    for(const s of stintStats){
-      const col=tyreColor(s.compound||'');
-      const letter=tyreLetter(s.compound||'');
-      const degStr=s.deg>=0?`+${s.deg.toFixed(3)}`:`${s.deg.toFixed(3)}`;
-      const isBest=s.compound===bestCompound;
-      html+=`<div class="stint-card">
-        <div class="stint-head">
-          <span class="stint-compound" style="color:${col}">${letter} ${s.compound||'?'}</span>
-          <span class="stint-meta">Laps ${s.lap_start}–${s.lap_end||'?'} · ${s.laps} laps</span>
-          ${isBest?'<span style="font-family:var(--mono);font-size:8px;background:var(--green);color:#000;padding:2px 6px;border-radius:3px;margin-left:auto">BEST</span>':''}
-        </div>
-        <div class="stint-stats">
-          <div class="stint-stat"><span class="stint-stat-label">AVG PACE</span><span class="stint-stat-val">${fmtTime(s.avg)}</span></div>
-          <div class="stint-stat"><span class="stint-stat-label">DEG/LAP</span><span class="stint-stat-val" style="color:${s.deg>0.1?'#f87171':s.deg>0.05?'var(--yellow)':'var(--green)'">${degStr}s</span></div>
-        </div>
-        ${isBest?`<div class="stint-verdict">${tyreLetter(s.compound)} holding best this session. Lowest degradation rate.</div>`:''}
-      </div>`;
-    }
-
-    // Compound time cost comparison
-    if(stintStats.length>=2){
-      const sorted=[...stintStats].sort((a,b)=>a.avg-b.avg);
-      const best=sorted[0];
-      let compare='';
-      for(let i=1;i<sorted.length;i++){
-        const diff=(sorted[i].avg-best.avg).toFixed(3);
-        compare+=`<div class="analysis-row"><span class="analysis-label">${tyreLetter(best.compound||'')} vs ${tyreLetter(sorted[i].compound||'')}</span><span class="analysis-value" style="color:#f87171">+${diff}s/lap</span></div>`;
-      }
-      html+=`<div class="analysis-card" style="margin-top:4px"><div class="analysis-card-head"><span class="analysis-card-title">COMPOUND TIME COST</span></div><div class="analysis-card-body">${compare}</div></div>`;
-    }
-
-    body.innerHTML=html;
-  }
-
-  else if(tab==='braking'){
-    body.innerHTML=`<div class="braking-placeholder">
-      Braking profile data available post-session.<br><br>
-      Run the FastF1 Python script after the session ends to generate telemetry analysis including braking points, minimum corner speeds, and throttle application per corner.<br><br>
-      <span style="color:var(--muted)">Place the generated JSON in the /analysis/ folder of your repo.</span>
-    </div>`;
-  }
-
-  else if(tab==='speed'){
-    body.innerHTML=`<div class="braking-placeholder">
-      Speed trace data available post-session.<br><br>
-      Top speed per straight, minimum corner speed, and speed delta vs field generated from FastF1 telemetry after session ends.
-    </div>`;
-  }
-}
+  document.getElementById('lapModalBody').innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th><th>C</th></tr></thead><tbody>${rows||'<tr><td colspan="6" style="color:var(--muted);padding:10px 0">No data</td></tr>'}</tbody></table>`;
 }
 
 // ═══════════════════════════════════════
