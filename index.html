@@ -100,6 +100,8 @@ select.status-done{border-color:var(--muted)!important}
 .feed-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:14px}
 .feed-text{font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--dim);flex:1}
 .feed-text b{color:var(--text)}
+.feed-text strong.red{color:#e10600;font-weight:bold;text-transform:uppercase}
+.feed-text strong.yellow{color:#eab308;font-weight:bold;text-transform:uppercase}
 .feed-text .t-soft{color:#f97316}.feed-text .t-med{color:var(--yellow)}.feed-text .t-hard{color:#ccc}.feed-text .t-inter{color:var(--green)}.feed-text .t-wet{color:var(--blue)}
 .feed-entry.c-incident .feed-bar{background:var(--red)}
 .feed-entry.c-strategy .feed-bar{background:var(--yellow)}
@@ -264,6 +266,9 @@ let massIncidentSuppressUntilLap = 0;
 // Qualifying phase tracking using chequered flag count
 let chequeredFlagCount = 0;
 let qPhaseEliminatedData = { q1: null, q2: null };
+let q1Captured = false;
+let q2Captured = false;
+let sessionEnded = false;  // Track if session has ended (chequered flag received)
 
 const SEG={YELLOW:2048,GREEN:2049,PB:2050,PURPLE:2051,PIT:2052};
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
@@ -406,6 +411,9 @@ async function onSessionSelected(forceKey){
   // Reset qualifying tracking
   chequeredFlagCount = 0;
   qPhaseEliminatedData = { q1: null, q2: null };
+  q1Captured = false;
+  q2Captured = false;
+  sessionEnded = false;
 
   document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
   document.getElementById('chequeredBanner').classList.remove('show');
@@ -662,7 +670,7 @@ function updateRaceControl(data){
   activeYellowSectors.clear();
   let scActive=false;
   
-  // Track chequered flag count for qualifying phase detection
+  // Track session ended state
   const isQualifying = sessionType.toLowerCase().includes('qualif') || sessionType.toLowerCase().includes('sprint qual');
   
   for(const m of data){
@@ -674,13 +682,44 @@ function updateRaceControl(data){
     // Detect chequered flag for qualifying phases
     if(isQualifying && (f==='CHEQUERED' || msg.includes('CHEQUERED'))){
       chequeredFlagCount++;
+      sessionEnded = true;
       
       if(chequeredFlagCount === 1 && qPhaseEliminatedData.q1){
-        addFeedEntryToBuffer('c-info', `Q1 ENDED. ${qPhaseEliminatedData.q1}`, null, false);
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q1);
       } else if(chequeredFlagCount === 2 && qPhaseEliminatedData.q2){
-        addFeedEntryToBuffer('c-info', `Q2 ENDED. ${qPhaseEliminatedData.q2}`, null, false);
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q2);
       } else if(chequeredFlagCount === 3){
-        addFeedEntryToBuffer('c-info', `Q3 ENDED. Pole position determined.`, null, false);
+        // Get pole position from final order
+        if(latestPos.size > 0){
+          const sortedPos = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99);
+          if(sortedPos.length >= 3){
+            const p1 = sortedPos[0];
+            const p2 = sortedPos[1];
+            const p3 = sortedPos[2];
+            const p1Driver = driverMeta.get(p1[0])?.acronym || '#?';
+            const p2Driver = driverMeta.get(p2[0])?.acronym || '#?';
+            const p3Driver = driverMeta.get(p3[0])?.acronym || '#?';
+            const poleTime = overallBestLap !== Infinity ? fmtTime(overallBestLap) : '?';
+            // Get gaps from best laps if available
+            const qualBest = new Map();
+            for(const lap of cachedLaps.values()){
+              if(lap.lap_duration && lap.lap_duration > 0){
+                if(!qualBest.has(lap.driver_number) || lap.lap_duration < qualBest.get(lap.driver_number).duration){
+                  qualBest.set(lap.driver_number, {duration: lap.lap_duration, lap: lap.lap_number});
+                }
+              }
+            }
+            const bestOrder = [...qualBest.entries()].sort((a,b)=>a[1].duration - b[1].duration);
+            if(bestOrder.length >= 3){
+              const poleGap2 = (bestOrder[1][1].duration - bestOrder[0][1].duration).toFixed(3);
+              const poleGap3 = (bestOrder[2][1].duration - bestOrder[0][1].duration).toFixed(3);
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(bestOrder[0][0])} <b style="color:var(--purple)">${fmtTime(bestOrder[0][1].duration)}</b>. ${driverTag(bestOrder[1][0])} +${poleGap2}s. ${driverTag(bestOrder[2][0])} +${poleGap3}s.`);
+            } else {
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(p1[0])}. ${driverTag(p2[0])} P2. ${driverTag(p3[0])} P3.`);
+            }
+          }
+        }
+        addToFeedBuffer('c-info', `Q3 ENDED. Pole position determined.`);
       }
     }
   }
@@ -689,20 +728,34 @@ function updateRaceControl(data){
   const last=data[data.length-1];
   if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');
   document.getElementById('rcFlagDot').style.background=flagColor(last.flag);
-  document.getElementById('rcText').textContent=last.message||'';
+  
+  // Format race control message with bold colored text for flags
+  let rcText = last.message||'';
+  const flag = (last.flag||'').toUpperCase();
+  if(flag === 'RED'){
+    rcText = `<strong class="red">🔴 RED FLAG</strong> — ${rcText}`;
+  } else if(flag === 'YELLOW'){
+    rcText = `<strong class="yellow">🟡 YELLOW FLAG</strong> — ${rcText}`;
+  } else if(flag === 'SC'){
+    rcText = `<strong class="yellow">🟡 SAFETY CAR</strong> — ${rcText}`;
+  } else if(flag === 'VSC'){
+    rcText = `<strong class="yellow">🟡 VIRTUAL SAFETY CAR</strong> — ${rcText}`;
+  } else if(flag === 'GREEN'){
+    rcText = `<strong class="green">🟢 GREEN FLAG</strong> — ${rcText}`;
+  }
+  document.getElementById('rcText').innerHTML = rcText;
 }
 
-// Helper to add feed entry without needing full generateFeed context
-let pendingFeedEntries = [];
-function addFeedEntryToBuffer(category, text, lap, isRC){
-  pendingFeedEntries.push({
+let pendingBufferEntries = [];
+function addToFeedBuffer(category, text){
+  pendingBufferEntries.push({
     ts: Date.now(),
     sortKey: Date.now(),
     isoTime: new Date().toISOString(),
     timeLabel: new Date().toLocaleTimeString().slice(0,5),
     category: category,
     text: text,
-    isRC: isRC,
+    isRC: false,
     isLapMarker: false
   });
 }
@@ -793,7 +846,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
 
     // QUALIFYING: Personal best lap time
-    if(isQual){
+    if(isQual && !sessionEnded){
       for(const lap of lapDrivers){
         if(lap.lap_duration&&lap.lap_duration>0){
           const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
@@ -810,22 +863,28 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         }
       }
       
-      // Capture elimination data for Q1 and Q2 phases
-      if(sortedPos.length >= 20 && !qPhaseEliminatedData.q1 && lapNum < 30){
+      // Capture elimination data for Q1 and Q2 phases (only if not already captured)
+      if(sortedPos.length >= 20 && !q1Captured){
         const eliminatedQ1 = sortedPos.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
         const fastestEliminatedQ1 = sortedPos[15]?.[0];
-        const gapToP15Q1 = sortedPos[14]?.[1] - sortedPos[15]?.[1];
-        if(eliminatedQ1.length === 5){
-          qPhaseEliminatedData.q1 = `ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
+        const p15Pos = sortedPos[14]?.[1];
+        const p16Pos = sortedPos[15]?.[1];
+        const gapToP15Q1 = p15Pos - p16Pos;
+        if(eliminatedQ1.length === 5 && gapToP15Q1 > 0){
+          qPhaseEliminatedData.q1 = `Q1 ENDED. ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
+          q1Captured = true;
         }
       }
       
-      if(sortedPos.length >= 15 && !qPhaseEliminatedData.q2 && lapNum > 30){
+      if(sortedPos.length >= 15 && !q2Captured && q1Captured){
         const eliminatedQ2 = sortedPos.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
         const fastestEliminatedQ2 = sortedPos[10]?.[0];
-        const gapToP10Q2 = sortedPos[9]?.[1] - sortedPos[10]?.[1];
-        if(eliminatedQ2.length === 5){
-          qPhaseEliminatedData.q2 = `ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
+        const p10Pos = sortedPos[9]?.[1];
+        const p11Pos = sortedPos[10]?.[1];
+        const gapToP10Q2 = p10Pos - p11Pos;
+        if(eliminatedQ2.length === 5 && gapToP10Q2 > 0){
+          qPhaseEliminatedData.q2 = `Q2 ENDED. ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
+          q2Captured = true;
         }
       }
     }
@@ -903,7 +962,8 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     }
   }
 
-  // ========== UPGRADED SECTOR ANOMALY REPORTING WITH MASS INCIDENT SUPPRESSION ==========
+  // ========== SECTOR ANOMALY REPORTING WITH MASS INCIDENT SUPPRESSION ==========
+  // Only report anomalies if session has not ended (no cooldown lap spam)
   let criticalLossCount = 0;
   let criticalLossDrivers = new Set();
   
@@ -924,7 +984,8 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     
     let lapCriticalCount = 0;
     
-    if(!flagActive && lapNum > massIncidentSuppressUntilLap){
+    // Skip anomaly reporting if session has ended (cooldown laps after chequered flag)
+    if(!sessionEnded && !flagActive && lapNum > massIncidentSuppressUntilLap){
       for(const lap of lapDrivers){
         const dn = lap.driver_number;
         if(!lap.duration_sector_1 && !lap.duration_sector_2 && !lap.duration_sector_3) continue;
@@ -1001,14 +1062,14 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
               lap:lapNum, ts:lapSortKey + 460, sortKey:lapSortKey + 460,
               isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
               category:'c-rc-warn', isRC:true,
-              text: `🔴 RACE CONTROL: ${rcMsg}`
+              text: `RACE CONTROL: ${rcMsg}`
             });
           } else if(rcFlag === 'SC' || rcMsg.includes('SAFETY CAR')){
             newEntries.push({
               lap:lapNum, ts:lapSortKey + 470, sortKey:lapSortKey + 470,
               isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
               category:'c-rc-red', isRC:true,
-              text: `🔴 RACE CONTROL: ${rcMsg}`
+              text: `RACE CONTROL: ${rcMsg}`
             });
           }
         }
@@ -1031,18 +1092,31 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
   }
 
   // Combine with race control messages
-  const rcEntries=allRCMessages.map(m=>({
-    ts:new Date(m.date).getTime(),
-    sortKey:new Date(m.date).getTime(),
-    isoTime:m.date||'',
-    timeLabel:fmtTimeLabel(m.date),
-    category:m.flag==='RED'?'c-rc-red':(m.flag==='YELLOW'||m.flag==='SC'||m.flag==='VSC')?'c-rc-warn':'c-rc',
-    text:m.message||'',
-    isRC:true
-  }));
+  const rcEntries=allRCMessages.map(m=>{
+    let formattedText = m.message||'';
+    const flag = (m.flag||'').toUpperCase();
+    if(flag === 'RED'){
+      formattedText = `<strong class="red">🔴 RED FLAG</strong> — ${formattedText}`;
+    } else if(flag === 'YELLOW'){
+      formattedText = `<strong class="yellow">🟡 YELLOW FLAG</strong> — ${formattedText}`;
+    } else if(flag === 'SC'){
+      formattedText = `<strong class="yellow">🟡 SAFETY CAR</strong> — ${formattedText}`;
+    } else if(flag === 'VSC'){
+      formattedText = `<strong class="yellow">🟡 VIRTUAL SAFETY CAR</strong> — ${formattedText}`;
+    }
+    return {
+      ts:new Date(m.date).getTime(),
+      sortKey:new Date(m.date).getTime(),
+      isoTime:m.date||'',
+      timeLabel:fmtTimeLabel(m.date),
+      category:m.flag==='RED'?'c-rc-red':(m.flag==='YELLOW'||m.flag==='SC'||m.flag==='VSC')?'c-rc-warn':'c-rc',
+      text:formattedText,
+      isRC:true
+    };
+  });
 
-  const allEntries=[...newEntries,...rcEntries,...pendingFeedEntries];
-  pendingFeedEntries = [];
+  const allEntries=[...newEntries,...rcEntries,...pendingBufferEntries];
+  pendingBufferEntries = [];
   
   if(!allEntries.length)return;
 
@@ -1111,10 +1185,19 @@ function openRCModal(){
   const msgs=[...allRCMessages].reverse();
   if(!msgs.length)html+='<div style="color:var(--muted);font-family:var(--mono);font-size:11px;padding:10px 0">No messages</div>';
   for(const m of msgs){
+    let msgText = m.message||'';
+    const flag = (m.flag||'').toUpperCase();
+    if(flag === 'RED'){
+      msgText = `<strong style="color:#e10600">🔴 RED FLAG</strong> — ${msgText}`;
+    } else if(flag === 'YELLOW'){
+      msgText = `<strong style="color:#eab308">🟡 YELLOW FLAG</strong> — ${msgText}`;
+    } else if(flag === 'SC'){
+      msgText = `<strong style="color:#eab308">🟡 SAFETY CAR</strong> — ${msgText}`;
+    }
     html+=`<div class="rc-entry">
       <span class="rc-time">${fmtTimeLabel(m.date)}</span>
       <div class="rc-dot" style="background:${flagColor(m.flag)}"></div>
-      <span class="rc-message">${m.message||''}</span>
+      <span class="rc-message">${msgText}</span>
     </div>`;
   }
   body.innerHTML=html;
