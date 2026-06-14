@@ -257,6 +257,14 @@ let currentDriverTab='laps';
 let cachedDriverLaps=null;
 let cachedDriverStints=null;
 
+// Mass incident detection state
+let massIncidentActive = false;
+let massIncidentSuppressUntilLap = 0;
+
+// Qualifying phase tracking using chequered flag count
+let chequeredFlagCount = 0;
+let qPhaseEliminatedData = { q1: null, q2: null };
+
 const SEG={YELLOW:2048,GREEN:2049,PB:2050,PURPLE:2051,PIT:2052};
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
 const TEAM_COLORS={
@@ -390,6 +398,14 @@ async function onSessionSelected(forceKey){
   currentFastestLap=null;
   lastTickTime=null;cachedLaps.clear();
   latestPos.clear();latestIv.clear();
+  
+  // Reset mass incident state
+  massIncidentActive = false;
+  massIncidentSuppressUntilLap = 0;
+  
+  // Reset qualifying tracking
+  chequeredFlagCount = 0;
+  qPhaseEliminatedData = { q1: null, q2: null };
 
   document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
   document.getElementById('chequeredBanner').classList.remove('show');
@@ -641,7 +657,55 @@ function updateMiniSectors(dn,lastLap){const el=document.getElementById(`mini-${
 function updateTyreCol(dn,stints,lapNum){const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;const{compound,age}=getCurrentTyre(stints,lapNum);if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}const col=tyreColor(compound);el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;}
 function updatePit(dn,pit){const el=document.getElementById(`pit-${dn}`);if(!el)return;if(!pit){el.innerHTML='';return}const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}else if(outTime&&dur!=null){const key=`${dn}-${inTime}`;if(!pitFlash.has(key)){el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);pitFlash.set(key,tid);}} else el.innerHTML='';}
 function updateWeather(data){if(!data.length)return;const w=data[data.length-1];const rain=w.rainfall&&parseFloat(w.rainfall)>0;document.getElementById('weatherStrip').innerHTML=`<div class="wx-item">🌡 Track <span>${w.track_temperature??'—'}°C</span></div><div class="wx-item">💨 Air <span>${w.air_temperature??'—'}°C</span></div><div class="wx-item">💧 <span>${w.humidity??'—'}%</span></div><div class="wx-item">🌬 <span>${w.wind_speed??'—'} km/h</span></div>${rain?'<div class="wx-item wx-rain">🌧 RAIN</div>':''}`;}
-function updateRaceControl(data){allRCMessages=data;activeYellowSectors.clear();let scActive=false;for(const m of data){const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;if(f==='GREEN')activeYellowSectors.clear();}if(scActive)setSelectStatus('sc');if(!data.length)return;const last=data[data.length-1];if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');document.getElementById('rcFlagDot').style.background=flagColor(last.flag);document.getElementById('rcText').textContent=last.message||'';}
+function updateRaceControl(data){
+  allRCMessages=data;
+  activeYellowSectors.clear();
+  let scActive=false;
+  
+  // Track chequered flag count for qualifying phase detection
+  const isQualifying = sessionType.toLowerCase().includes('qualif') || sessionType.toLowerCase().includes('sprint qual');
+  
+  for(const m of data){
+    const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
+    if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);
+    if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;
+    if(f==='GREEN')activeYellowSectors.clear();
+    
+    // Detect chequered flag for qualifying phases
+    if(isQualifying && (f==='CHEQUERED' || msg.includes('CHEQUERED'))){
+      chequeredFlagCount++;
+      
+      if(chequeredFlagCount === 1 && qPhaseEliminatedData.q1){
+        addFeedEntryToBuffer('c-info', `Q1 ENDED. ${qPhaseEliminatedData.q1}`, null, false);
+      } else if(chequeredFlagCount === 2 && qPhaseEliminatedData.q2){
+        addFeedEntryToBuffer('c-info', `Q2 ENDED. ${qPhaseEliminatedData.q2}`, null, false);
+      } else if(chequeredFlagCount === 3){
+        addFeedEntryToBuffer('c-info', `Q3 ENDED. Pole position determined.`, null, false);
+      }
+    }
+  }
+  if(scActive)setSelectStatus('sc');
+  if(!data.length)return;
+  const last=data[data.length-1];
+  if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');
+  document.getElementById('rcFlagDot').style.background=flagColor(last.flag);
+  document.getElementById('rcText').textContent=last.message||'';
+}
+
+// Helper to add feed entry without needing full generateFeed context
+let pendingFeedEntries = [];
+function addFeedEntryToBuffer(category, text, lap, isRC){
+  pendingFeedEntries.push({
+    ts: Date.now(),
+    sortKey: Date.now(),
+    isoTime: new Date().toISOString(),
+    timeLabel: new Date().toLocaleTimeString().slice(0,5),
+    category: category,
+    text: text,
+    isRC: isRC,
+    isLapMarker: false
+  });
+}
 
 function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
   const isRace=sessionType.toLowerCase().includes('race');
@@ -745,6 +809,25 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
           }
         }
       }
+      
+      // Capture elimination data for Q1 and Q2 phases
+      if(sortedPos.length >= 20 && !qPhaseEliminatedData.q1 && lapNum < 30){
+        const eliminatedQ1 = sortedPos.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ1 = sortedPos[15]?.[0];
+        const gapToP15Q1 = sortedPos[14]?.[1] - sortedPos[15]?.[1];
+        if(eliminatedQ1.length === 5){
+          qPhaseEliminatedData.q1 = `ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
+        }
+      }
+      
+      if(sortedPos.length >= 15 && !qPhaseEliminatedData.q2 && lapNum > 30){
+        const eliminatedQ2 = sortedPos.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ2 = sortedPos[10]?.[0];
+        const gapToP10Q2 = sortedPos[9]?.[1] - sortedPos[10]?.[1];
+        if(eliminatedQ2.length === 5){
+          qPhaseEliminatedData.q2 = `ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
+        }
+      }
     }
 
     // RACE: Fastest lap (overall session best)
@@ -820,15 +903,10 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     }
   }
 
-  // ========== UPGRADED SECTOR ANOMALY REPORTING ==========
-  // This section processes sector time losses with improved messaging format
-  // It runs for all session types (Race, Practice, Qualifying)
-  
-  // Track mass incident detection (3+ drivers losing 2.0s+)
+  // ========== UPGRADED SECTOR ANOMALY REPORTING WITH MASS INCIDENT SUPPRESSION ==========
   let criticalLossCount = 0;
-  const criticalLossDrivers = new Set();
+  let criticalLossDrivers = new Set();
   
-  // Process each lap's sector anomalies
   for(const lapNum of lapNums){
     const lapDrivers = lapsByNumber.get(lapNum) || [];
     if(lapDrivers.length < Math.min(3, driverMeta.size*0.3)) continue;
@@ -844,10 +922,9 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     const lapSortKey = lapTimeISO ? new Date(lapTimeISO).getTime() : lapNum*100000;
     const lapTimeLabel = lapTimeISO ? fmtTimeLabel(lapTimeISO) : `L${lapNum}`;
     
-    let anomalyThisLap = new Set();
     let lapCriticalCount = 0;
     
-    if(!flagActive){
+    if(!flagActive && lapNum > massIncidentSuppressUntilLap){
       for(const lap of lapDrivers){
         const dn = lap.driver_number;
         if(!lap.duration_sector_1 && !lap.duration_sector_2 && !lap.duration_sector_3) continue;
@@ -862,27 +939,31 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
             const loss = val - avg;
             
             if(loss >= 0.5){
-              anomalyThisLap.add(dn);
-              
-              // Format message: implication first, then data
-              let severityText = '';
+              // Count critical losses (2.0s+) for mass incident detection
               if(loss >= 2.0){
-                severityText = `${driverTag(dn)} has a critical issue in S${si+1}, lost ${loss.toFixed(2)}s. Major car problem or off-track.`;
                 lapCriticalCount++;
                 criticalLossDrivers.add(dn);
-              } else if(loss >= 1.0){
-                severityText = `${driverTag(dn)} has a significant issue in S${si+1}, lost ${loss.toFixed(2)}s. Car issue or driver error.`;
-              } else if(loss >= 0.5){
-                severityText = `${driverTag(dn)} had a small moment in S${si+1}, lost ${loss.toFixed(2)}s.`;
               }
               
-              if(severityText){
-                newEntries.push({
-                  lap:lapNum, ts:lapSortKey + si*10, sortKey:lapSortKey + si*10,
-                  isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-                  category:'c-incident', isRC:false,
-                  text: severityText
-                });
+              // Only report individual incidents if NOT in mass incident suppression mode
+              if(!massIncidentActive || loss < 2.0){
+                let severityText = '';
+                if(loss >= 2.0){
+                  severityText = `${driverTag(dn)} has a critical issue in S${si+1}, lost ${loss.toFixed(2)}s. Major car problem or off-track.`;
+                } else if(loss >= 1.0){
+                  severityText = `${driverTag(dn)} has a significant issue in S${si+1}, lost ${loss.toFixed(2)}s. Car issue or driver error.`;
+                } else if(loss >= 0.5){
+                  severityText = `${driverTag(dn)} had a small moment in S${si+1}, lost ${loss.toFixed(2)}s.`;
+                }
+                
+                if(severityText){
+                  newEntries.push({
+                    lap:lapNum, ts:lapSortKey + si*10, sortKey:lapSortKey + si*10,
+                    isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
+                    category:'c-incident', isRC:false,
+                    text: severityText
+                  });
+                }
               }
             }
           }
@@ -894,11 +975,11 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         lastLapTimes.set(dn, history);
       }
       
-      // Track total critical losses across all laps
-      criticalLossCount = Math.max(criticalLossCount, lapCriticalCount);
-      
-      // Mass incident detection (3+ drivers losing 2.0s+ in same lap)
-      if(anomalyThisLap.size >= 3 && lapCriticalCount >= 2){
+      // MASS INCIDENT DETECTION: 3+ drivers losing 2.0s+ in same lap
+      if(lapCriticalCount >= 3 && !massIncidentActive){
+        massIncidentActive = true;
+        massIncidentSuppressUntilLap = lapNum + 5;
+        
         newEntries.push({
           lap:lapNum, ts:lapSortKey + 450, sortKey:lapSortKey + 450,
           isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
@@ -933,7 +1014,7 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         }
       }
     } else {
-      // During flag active, just update rolling history without reporting
+      // During flag active or suppression, just update rolling history without reporting
       for(const lap of lapDrivers){
         const dn = lap.driver_number;
         const h = lastLapTimes.get(dn) || [];
@@ -942,6 +1023,11 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         lastLapTimes.set(dn, h);
       }
     }
+  }
+  
+  // Reset mass incident state after 5 laps of no incidents
+  if(massIncidentActive && lastKnownLapNum > massIncidentSuppressUntilLap){
+    massIncidentActive = false;
   }
 
   // Combine with race control messages
@@ -955,7 +1041,9 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     isRC:true
   }));
 
-  const allEntries=[...newEntries,...rcEntries];
+  const allEntries=[...newEntries,...rcEntries,...pendingFeedEntries];
+  pendingFeedEntries = [];
+  
   if(!allEntries.length)return;
 
   allEntries.sort((a,b)=>a.sortKey-b.sortKey);
