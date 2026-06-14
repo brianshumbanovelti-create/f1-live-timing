@@ -679,91 +679,111 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     const posAtLap=new Map();
     for(const[dn]of latestPos)posAtLap.set(dn,latestPos.get(dn)?.position??99);
 
-    // EVERY LAP SUMMARY - no suppression
-    if(isRace || isFP){
-      const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
-      const top5Names=sortedPos.slice(0,5).map(([dn])=>{
-        const m=driverMeta.get(dn);return m?.acronym||String(dn);
-      }).join(', ');
+    // LAP SUMMARY - ALL SESSION TYPES (Race, Practice, Qualifying)
+    const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
+    const top5Names=sortedPos.slice(0,5).map(([dn])=>{
+      const m=driverMeta.get(dn);return m?.acronym||String(dn);
+    }).join(', ');
+    
+    // Track entry with isRC:false
+    newEntries.push({
+      lap:lapNum,ts:lapSortKey,sortKey:lapSortKey,
+      isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+      category:'c-lap',isLapMarker:true,
+      isRC:false,  // CRITICAL: marks as track message
+      text:`LAP ${lapNum} — ${top5Names}`
+    });
+
+    // Position changes - for all session types
+    const leaderNow=sortedPos[0]?.[0];
+    const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
+    if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
       newEntries.push({
-        lap:lapNum,ts:lapSortKey,sortKey:lapSortKey,
+        lap:lapNum,ts:lapSortKey+100,sortKey:lapSortKey+100,
         isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-        category:'c-lap',isLapMarker:true,
-        text:`LAP ${lapNum} — ${top5Names}`
+        category:'c-info',isRC:false,
+        text:`${driverTag(leaderNow)} takes the lead`
       });
     }
-
-    // Position changes - report any movement (no threshold)
-    if(isRace){
-      const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
-      
-      const leaderNow=sortedPos[0]?.[0];
-      const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
-      if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
+    
+    // Report any position change
+    for(const[dn,pos]of posAtLap){
+      const prev=lastKnownPositions.get(dn);
+      if(!prev||prev===pos)continue;
+      const gain=prev-pos;
+      if(gain>0){
         newEntries.push({
-          lap:lapNum,ts:lapSortKey+100,sortKey:lapSortKey+100,
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
           isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-          category:'c-info',
-          text:`${driverTag(leaderNow)} takes the lead from ${driverTag(leaderPrev)}.`
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} gains ${gain} to P${pos}`
         });
-      }
-      
-      // Report any position change (not just big moves)
-      for(const[dn,pos]of posAtLap){
-        const prev=lastKnownPositions.get(dn);
-        if(!prev||prev===pos)continue;
-        const gain=prev-pos;
-        if(gain>0){
-          newEntries.push({
-            lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
-            isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-            category:'c-info',
-            text:`${driverTag(dn)} gains ${gain} place${gain>1?'s':''} to P${pos}.`
-          });
-        } else if(gain<0){
-          const loss=Math.abs(gain);
-          newEntries.push({
-            lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
-            isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-            category:'c-info',
-            text:`${driverTag(dn)} drops to P${pos}.`
-          });
-        }
-      }
-      
-      // Final lap
-      const totalLaps=lapNums[lapNums.length-1];
-      if(lapNum===totalLaps){
-        const leaderNowFinal=sortedPos[0]?.[0];
+      } else if(gain<0){
         newEntries.push({
-          lap:lapNum,ts:lapSortKey+500,sortKey:lapSortKey+500,
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
           isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-          category:'c-fastest',
-          text:`🏁 FINAL LAP — ${driverTag(leaderNowFinal)} leads.`
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} drops to P${pos}`
         });
       }
     }
 
     for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
 
-    // FASTEST LAP - only when driver beats overall session best
-    for(const lap of lapDrivers){
-      if(lap.lap_duration&&lap.lap_duration>0){
-        if(lap.lap_duration<overallBestLap){
-          overallBestLap=lap.lap_duration;
-          overallBestDriver=lap.driver_number;
-          newEntries.push({
-            lap:lapNum,ts:lapSortKey+300,sortKey:lapSortKey+300,
-            isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-            category:'c-fastest',
-            text:`${driverTag(lap.driver_number)} goes quickest — <b style="color:var(--purple)">${fmtTime(lap.lap_duration)}</b>. Lap ${lapNum}.`
-          });
+    // QUALIFYING SPECIFIC: Personal best lap time
+    if(isQual){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          // Get driver's previous best
+          const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
+          const prevBest=driverLaps.filter(l=>l.lap_duration&&l.lap_number<lap.lap_number)
+            .reduce((best,l)=>Math.min(best,l.lap_duration),Infinity);
+          if(prevBest!==Infinity && lap.lap_duration<prevBest){
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+250+lap.driver_number,sortKey:lapSortKey+250+lap.driver_number,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} personal best — ${fmtTime(lap.lap_duration)}`
+            });
+          }
         }
+      }
+    }
+
+    // FASTEST LAP - only when driver beats overall session best (Race only typically)
+    if(isRace){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          if(lap.lap_duration<overallBestLap){
+            overallBestLap=lap.lap_duration;
+            overallBestDriver=lap.driver_number;
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+300,sortKey:lapSortKey+300,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} goes quickest — ${fmtTime(lap.lap_duration)}`
+            });
+          }
+        }
+      }
+    }
+    
+    // Final lap (Race only)
+    if(isRace){
+      const totalLaps=lapNums[lapNums.length-1];
+      if(lapNum===totalLaps){
+        const leaderNowFinal=sortedPos[0]?.[0];
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+500,sortKey:lapSortKey+500,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-fastest',isRC:false,
+          text:`🏁 FINAL LAP — ${driverTag(leaderNowFinal)} leads`
+        });
       }
     }
   }
 
-  // PIT STOPS
+  // PIT STOPS - with isRC:false
   for(const pit of allPitStops){
     const dn=pit.driver_number;
     const pitKey=`pit-${dn}-${pit.pit_in_time}`;
@@ -779,8 +799,8 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         newEntries.push({
           lap:lapIn,ts:pitInTime,sortKey:pitInTime,
           isoTime:pit.pit_in_time||'',timeLabel:fmtTimeLabel(pit.pit_in_time),
-          category:'c-strategy',
-          text:`${driverTag(dn)} pits from P${pos}.`
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} pits from P${pos}`
         });
       }
     }
@@ -796,14 +816,14 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
         newEntries.push({
           lap:lapOut,ts:pitOutTime+50,sortKey:pitOutTime+50,
           isoTime:pit.pit_out_time||'',timeLabel:fmtTimeLabel(pit.pit_out_time),
-          category:'c-strategy',
-          text:`${driverTag(dn)} rejoins P${pos}${tyreStr}. ${dur?`Stop time: ${parseFloat(dur).toFixed(1)}s`:'Pit stop complete'}`
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} rejoins P${pos}${tyreStr}`
         });
       }
     }
   }
 
-  // Combine with race control messages
+  // Combine with race control messages (isRC:true)
   const rcEntries=allRCMessages.map(m=>({
     ts:new Date(m.date).getTime(),
     sortKey:new Date(m.date).getTime(),
@@ -853,8 +873,6 @@ function renderFeed(){
   }
 
   const atBottom=scroll.scrollHeight-scroll.scrollTop<=scroll.clientHeight+100;
-  const prevHeight=scroll.scrollHeight;
-
   scroll.innerHTML=entries.map(e=>{
     if(e.isLapMarker){
       return`<div class="feed-lap-marker">${e.text}</div>`;
