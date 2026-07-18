@@ -95,6 +95,13 @@ select.status-done{border-color:var(--muted)!important}
 .feed-sub{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:4px;transition:all 0.15s}
 .feed-sub.active{background:var(--bg0);color:var(--text);border-color:var(--red)}
 #feedScroll{flex:1;overflow-y:auto}
+.insights-wrap{flex:1;overflow-y:auto;padding:14px}
+.insights-generate-btn{display:block;width:100%;max-width:280px;margin:40px auto 0;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:12px 16px;background:var(--red);color:#fff;border:none;border-radius:6px;cursor:pointer;transition:opacity 0.15s}
+.insights-generate-btn:hover{opacity:0.85}
+.insights-generate-btn:disabled{opacity:0.5;cursor:default}
+.insights-generate-wrap{text-align:center}
+.insights-session-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:10px}
+.insights-unsupported{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:0.5px;line-height:1.8}
 .feed-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line)}
 .feed-time{font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;padding-top:2px;min-width:48px}
 .feed-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:14px}
@@ -103,16 +110,16 @@ select.status-done{border-color:var(--muted)!important}
 .feed-text strong.red{color:#e10600;font-weight:bold;text-transform:uppercase}
 .feed-text strong.yellow{color:#eab308;font-weight:bold;text-transform:uppercase}
 .feed-text .t-soft{color:#f97316}.feed-text .t-med{color:var(--yellow)}.feed-text .t-hard{color:#ccc}.feed-text .t-inter{color:var(--green)}.feed-text .t-wet{color:var(--blue)}
-.feed-entry.c-lap-marker .feed-bar{background:var(--purple);width:3px}
-.feed-entry.c-lap-marker .feed-text{color:var(--text);font-weight:600}
-.feed-entry.c-strategy .feed-bar{background:var(--orange)}
+.feed-entry.c-incident .feed-bar{background:var(--red)}
+.feed-entry.c-strategy .feed-bar{background:var(--yellow)}
 .feed-entry.c-fastest .feed-bar{background:var(--purple)}
+.feed-entry.c-lap .feed-bar{background:var(--line)}
 .feed-entry.c-info .feed-bar{background:var(--blue)}
 .feed-entry.c-sc .feed-bar{background:var(--orange)}
 .feed-entry.c-rc .feed-bar{background:var(--green)}
 .feed-entry.c-rc-warn .feed-bar{background:var(--yellow)}
 .feed-entry.c-rc-red .feed-bar{background:var(--red)}
-.feed-lap-marker{background:var(--bg2);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;font-weight:600;margin-top:4px}
+.feed-lap-marker{padding:5px 12px;background:var(--bg2);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;font-weight:600;margin-top:4px}
 .feed-placeholder{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px}
 .placeholder{padding:50px 20px;text-align:center;color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:1px}
 
@@ -164,8 +171,8 @@ select.status-done{border-color:var(--muted)!important}
   <div class="header-top">
     <span class="brand">F1</span>
     <div class="tabs">
-      <button class="tab-btn active" id="tabTiming" onclick="switchTab('timing')">TIMING</button>
-      <button class="tab-btn" id="tabFeed" onclick="switchTab('feed')">FEED</button>
+      <button class="tab-btn active" id="tabTiming" onclick="switchTab('timing')">ORDER</button>
+      <button class="tab-btn" id="tabFeed" onclick="switchTab('feed')">INSIGHTS</button>
     </div>
     <div class="selectors">
       <select id="yearSelect"><option value="2026" selected>2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
@@ -194,13 +201,8 @@ select.status-done{border-color:var(--muted)!important}
     </div>
   </div>
   <div class="tab-panel" id="panelFeed">
-    <div class="feed-subtabs">
-      <button class="feed-sub active" id="feedSubAll" onclick="switchFeedTab('all')">ALL</button>
-      <button class="feed-sub" id="feedSubTrack" onclick="switchFeedTab('track')">TRACK</button>
-      <button class="feed-sub" id="feedSubRC" onclick="switchFeedTab('rc')">RACE CTRL</button>
-    </div>
-    <div class="feed-scroll" id="feedScroll">
-      <div class="feed-placeholder">FEED WILL POPULATE WHEN SESSION IS SELECTED</div>
+    <div class="insights-wrap" id="insightsWrap">
+      <div class="feed-placeholder">SELECT A SESSION, THEN DOWNLOAD DATA</div>
     </div>
   </div>
 </div>
@@ -244,13 +246,13 @@ let cachedLaps=new Map();
 let latestPos=new Map();
 let latestIv=new Map();
 let currentAudio=null;
-let weatherHistory=[];
 
 let feedEntries=[];
 let lastKnownPositions=new Map();
 let lastKnownLapNum=0;
 let processedLaps=new Set();
 let stintHistory=new Map();
+let lastLapTimes=new Map();
 let currentFastestLap=null;
 let processedPits=new Set();
 let processedQualiEvents=new Set();
@@ -259,18 +261,20 @@ let currentDriverTab='laps';
 let cachedDriverLaps=null;
 let cachedDriverStints=null;
 
-// Qualifying tracking
+// INSIGHTS state
+let downloadedSessions=new Set(); // sessionKey -> already downloaded a data file this session
+let lastStintMap=new Map(); // driver_number -> stints[] from the most recent tick()
+
+// Mass incident detection state
+let massIncidentActive = false;
+let massIncidentSuppressUntilLap = 0;
+
+// Qualifying phase tracking using chequered flag count
 let chequeredFlagCount = 0;
+let qPhaseEliminatedData = { q1: null, q2: null };
 let q1Captured = false;
 let q2Captured = false;
-let qEliminatedData = { q1: null, q2: null };
-
-// Gap history for trend analysis
-let gapHistory = new Map();
-
-// Temperature history
-let lastTrackTemp = null;
-let tempIncreaseCount = 0;
+let sessionEnded = false;  // Track if session has ended (chequered flag received)
 
 const SEG={YELLOW:2048,GREEN:2049,PB:2050,PURPLE:2051,PIT:2052};
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
@@ -310,7 +314,146 @@ function switchTab(tab){
     if(btn)btn.classList.toggle('active',t===tab);
     if(panel)panel.classList.toggle('active',t===tab);
   });
-  if(tab==='feed')renderFeed();
+  if(tab==='feed')renderInsightsTab();
+}
+
+// ========== INSIGHTS ==========
+
+function classifySessionType(){
+  const t=(sessionType||'').toLowerCase();
+  if(t.includes('race')&&!t.includes('sprint'))return'race';
+  if(t.includes('sprint')&&!t.includes('qualif')&&!t.includes('shootout'))return'sprint';
+  if(t.includes('qualif')||t.includes('shootout'))return'qualifying';
+  if(t.includes('practice'))return'practice';
+  return null;
+}
+
+function renderInsightsTab(){
+  const wrap=document.getElementById('insightsWrap');
+  if(!wrap)return;
+
+  if(!sessionKey){
+    wrap.innerHTML='<div class="feed-placeholder">SELECT A SESSION, THEN DOWNLOAD DATA</div>';
+    return;
+  }
+
+  const branch=classifySessionType();
+  const label=getSessionLabel()||'this session';
+
+  if(!branch){
+    wrap.innerHTML=`<div class="insights-unsupported">Could not determine session type for ${label}.<br>Data export currently supports Race sessions.</div>`;
+    return;
+  }
+
+  if(branch!=='race'){
+    wrap.innerHTML=`<div class="insights-unsupported">${branch.toUpperCase()} data export isn't built yet — only Race sessions are supported right now.</div>`;
+    return;
+  }
+
+  const already=downloadedSessions.has(sessionKey);
+  wrap.innerHTML=`<div class="insights-generate-wrap">
+    <button class="insights-generate-btn" onclick="downloadRaceData()">DOWNLOAD RACE DATA</button>
+    <div class="insights-session-label">${label} · ${branch.toUpperCase()}</div>
+    ${already?'<div class="insights-session-label" style="margin-top:4px">Already downloaded once this session — click again for a fresh copy</div>':''}
+  </div>`;
+}
+
+function slugify(s){
+  return(s||'session').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'session';
+}
+
+function downloadRaceData(){
+  if(!sessionKey)return;
+  const branch=classifySessionType();
+  if(branch!=='race')return;
+
+  const payload=buildRacePayload();
+  const filename=`f1-race-${slugify(getSessionLabel())}-${sessionKey}.json`;
+
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  downloadedSessions.add(sessionKey);
+  renderInsightsTab();
+}
+
+// ---- Race data-shaper ----
+// Builds a compact, hard-data-only payload from live app state. No telemetry,
+// no traffic/tow inference — only what's directly observable in the data.
+
+function buildRacePayload(){
+  const drivers=[];
+  const sortedByPos=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+
+  // Rebuild per-driver stint stats the same way the driver modal does
+  const lapsByDriver=new Map();
+  for(const lap of cachedLaps.values()){
+    if(!lapsByDriver.has(lap.driver_number))lapsByDriver.set(lap.driver_number,[]);
+    lapsByDriver.get(lap.driver_number).push(lap);
+  }
+  for(const arr of lapsByDriver.values())arr.sort((a,b)=>a.lap_number-b.lap_number);
+
+  for(const dn of sortedByPos){
+    const meta=driverMeta.get(dn);
+    if(!meta)continue;
+    const pos=latestPos.get(dn)?.position??null;
+    const iv=latestIv.get(dn);
+    const driverLaps=lapsByDriver.get(dn)||[];
+
+    let bestLap=null;
+    for(const l of driverLaps){
+      if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap))bestLap=l.lap_duration;
+    }
+
+    const driverStints=lastStintMap.get(dn)||[];
+    const stints=driverStints.map(s=>{
+      const end=s.lap_end||lastKnownLapNum;
+      const stintLaps=driverLaps.filter(l=>l.lap_duration&&l.lap_duration>0&&l.lap_number>=s.lap_start&&l.lap_number<=end);
+      if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:null,deg_per_lap:null};
+      const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
+      let deg=null;
+      if(stintLaps.length>=2){
+        const n=stintLaps.length,xMean=(n-1)/2;let num=0,den=0;
+        for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
+        deg=den>0?+(num/den).toFixed(3):0;
+      }
+      return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:+avg.toFixed(3),deg_per_lap:deg};
+    });
+
+    drivers.push({
+      position:pos,
+      driver:meta.acronym,
+      team:meta.teamName,
+      gap_to_leader:(iv&&iv.gap_to_leader!=null)?iv.gap_to_leader:(pos===1?0:null),
+      fastest_lap:bestLap?+bestLap.toFixed(3):null,
+      stints
+    });
+  }
+
+  // Race-defining race-control events only: flags and penalties (see filter logic below)
+  const rcEvents=(allRCMessages||[]).filter(m=>{
+    const cat=(m.category||'').toLowerCase();
+    const flag=(m.flag||'').toUpperCase();
+    const msg=(m.message||'').toUpperCase();
+    if(cat==='flag'&&['YELLOW','DOUBLE YELLOW','RED','CHEQUERED'].includes(flag))return true;
+    if(cat==='safetycar')return true;
+    if(/PENALTY|DRIVE THROUGH|DRIVE-THROUGH|STOP\/GO|STOP AND GO|DISQUALIFI/.test(msg))return true;
+    return false;
+  }).map(m=>({lap:m.lap_number??null,message:m.message||''}));
+
+  return{
+    session:getSessionLabel()||'Race',
+    classification:drivers,
+    fastest_overall:overallBestDriver?{driver:driverMeta.get(overallBestDriver)?.acronym,time:overallBestLap!==Infinity?+overallBestLap.toFixed(3):null}:null,
+    race_control_events:rcEvents
+  };
 }
 
 function switchFeedTab(sub){
@@ -401,20 +544,28 @@ async function onSessionSelected(forceKey){
   allRCMessages=[];locationData.clear();scLocation=null;
   activeYellowSectors.clear();overallBestLap=Infinity;overallBestDriver=null;
   feedEntries=[];lastKnownPositions.clear();lastKnownLapNum=0;
-  processedLaps.clear();processedPits.clear();processedQualiEvents.clear();
+  processedLaps.clear();processedPits.clear();processedQualiEvents.clear();stintHistory.clear();lastLapTimes.clear();
   currentFastestLap=null;
   lastTickTime=null;cachedLaps.clear();
   latestPos.clear();latestIv.clear();
-  weatherHistory=[];gapHistory.clear();lastTrackTemp=null;tempIncreaseCount=0;
+  lastStintMap.clear();
   
+  // Reset mass incident state
+  massIncidentActive = false;
+  massIncidentSuppressUntilLap = 0;
+  
+  // Reset qualifying tracking
   chequeredFlagCount = 0;
+  qPhaseEliminatedData = { q1: null, q2: null };
   q1Captured = false;
   q2Captured = false;
-  qEliminatedData = { q1: null, q2: null };
+  sessionEnded = false;
 
   document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
   document.getElementById('chequeredBanner').classList.remove('show');
-  document.getElementById('feedScroll').innerHTML='<div class="feed-placeholder">LOADING FEED...</div>';
+  const insightsWrap=document.getElementById('insightsWrap');
+  if(insightsWrap)insightsWrap.innerHTML='<div class="feed-placeholder">SELECT A SESSION, THEN DOWNLOAD DATA</div>';
+  if(activeTab==='feed')renderInsightsTab();
   setSelectStatus('');
 
   const[sessionInfo,drivers]=await Promise.all([
@@ -569,8 +720,13 @@ async function tick(){
       if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration)bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
       if(dur<overallBestLap){overallBestLap=dur;overallBestDriver=dn}
     }
-    lastLapMap.set(dn,{duration:dur,lapNum:lap.lap_number,s1:lap.duration_sector_1||null,s2:lap.duration_sector_2||null,s3:lap.duration_sector_3||null});
+    lastLapMap.set(dn,{duration:dur,lapNum:lap.lap_number,s1:lap.duration_sector_1||null,s2:lap.duration_sector_2||null,s3:lap.duration_sector_3||null,seg1:lap.segments_sector_1||[],seg2:lap.segments_sector_2||[],seg3:lap.segments_sector_3||[]});
   }
+
+  const vals=l=>[...lastLapMap.values()].map(x=>x[l]).filter(Boolean);
+  const bestS1=Math.min(...vals('s1'));
+  const bestS2=Math.min(...vals('s2'));
+  const bestS3=Math.min(...vals('s3'));
 
   const stintMap=new Map();
   for(const s of stints){
@@ -578,6 +734,7 @@ async function tick(){
     if(!stintMap.has(dn))stintMap.set(dn,[]);
     stintMap.get(dn).push(s);
   }
+  lastStintMap=stintMap;
 
   for(const p of positions){
     const dn=p.driver_number;
@@ -587,12 +744,6 @@ async function tick(){
   for(const iv of intervals){
     const dn=iv.driver_number;
     if(!latestIv.has(dn)||new Date(iv.date)>new Date(latestIv.get(dn).date))latestIv.set(dn,iv);
-    
-    // Store gap history for trend analysis
-    if(!gapHistory.has(dn))gapHistory.set(dn,[]);
-    const gaps = gapHistory.get(dn);
-    gaps.push({lap: iv.lap_number, gap: iv.gap_to_leader});
-    if(gaps.length > 10) gaps.shift();
   }
 
   let leaderDn=null;
@@ -640,65 +791,12 @@ async function tick(){
     updateTyreCol(dn,driverStints,lapNum);
     updatePit(dn,pit);
   }
-
-  // Calculate best sector times for personal bests
-  const bestS1 = Math.min(...[...lastLapMap.values()].map(x=>x.s1).filter(Boolean));
-  const bestS2 = Math.min(...[...lastLapMap.values()].map(x=>x.s2).filter(Boolean));
-  const bestS3 = Math.min(...[...lastLapMap.values()].map(x=>x.s3).filter(Boolean));
-
   updateElimDivider(sorted,elimThreshold);
-  generateFeed(laps,latestPos,latestIv,pitStops,stintMap,raceControl, weather);
+  generateFeed(laps,latestPos,latestIv,pitStops,stintMap,raceControl);
 
   const now=new Date();
   if(sessionEnd&&now>sessionEnd)setSelectStatus('done');
   else if(sessionStart&&now>=sessionStart)setSelectStatus('live');
-}
-
-function setSector(id,val,bestVal){
-  const el=document.getElementById(id);if(!el)return;
-  if(!val||!isFinite(bestVal)){el.textContent='—';el.className='sector-val equal';return;}
-  const d=val-bestVal;
-  if(Math.abs(d)<0.001){el.textContent=fmtTime(val);el.className='sector-val pb'}
-  else if(d<0){el.textContent=fmtDelta(d);el.className='sector-val ahead'}
-  else{el.textContent=fmtDelta(d);el.className='sector-val behind'}
-}
-
-function updateMiniSectors(dn,lastLap){
-  const el=document.getElementById(`mini-${dn}`);if(!el)return;
-  if(!lastLap){el.innerHTML='';return}
-  const allSegs=[...(lastLap.seg1||[]),...(lastLap.seg2||[]),...(lastLap.seg3||[])];
-  if(!allSegs.length){el.innerHTML='';return}
-  const frags=allSegs.map(v=>{
-    if(v===SEG.PURPLE)return'<div class="seg seg-purple"></div>';
-    if(v===SEG.PB||v===SEG.GREEN)return'<div class="seg seg-green"></div>';
-    if(v===SEG.YELLOW)return'<div class="seg seg-yellow"></div>';
-    if(v===SEG.PIT)return'<div class="seg seg-pit"></div>';
-    return'<div class="seg seg-grey"></div>';
-  }).join('');
-  if(el.innerHTML!==frags)el.innerHTML=frags;
-}
-
-function updateTyreCol(dn,stints,lapNum){
-  const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;
-  const{compound,age}=getCurrentTyre(stints,lapNum);
-  if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}
-  const col=tyreColor(compound);
-  el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;
-}
-
-function updatePit(dn,pit){
-  const el=document.getElementById(`pit-${dn}`);if(!el)return;
-  if(!pit){el.innerHTML='';return}
-  const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;
-  if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}
-  else if(outTime&&dur!=null){
-    const key=`${dn}-${inTime}`;
-    if(!pitFlash.has(key)){
-      el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;
-      const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);
-      pitFlash.set(key,tid);
-    }
-  } else el.innerHTML='';
 }
 
 function getCurrentTyre(stints,lapNum){
@@ -711,31 +809,68 @@ function getCurrentTyre(stints,lapNum){
 
 function getElimThreshold(){if(!sessionType)return null;if(sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual'))return 16;return null;}
 function updateElimDivider(sorted,threshold){let existing=document.getElementById('elimDivider');if(!threshold){if(existing)existing.classList.remove('show');return}if(!existing){existing=document.createElement('div');existing.id='elimDivider';existing.className='elim-divider';existing.textContent='── ELIMINATION ZONE ──';document.getElementById('driverList').appendChild(existing);}existing.classList.add('show');const container=document.getElementById('driverList');const firstElim=sorted.find(dn=>{const r=document.getElementById(`row-${dn}`);return r&&r.classList.contains('eliminated')});if(firstElim){const el=document.getElementById(`row-${firstElim}`);if(el)container.insertBefore(existing,el)}}
-
-function updateWeather(data){
-  if(!data.length)return;
-  const w=data[data.length-1];
-  const rain=w.rainfall&&parseFloat(w.rainfall)>0;
-  weatherHistory.push({temp: w.track_temperature, lap: lastKnownLapNum, time: new Date()});
-  if(weatherHistory.length>20)weatherHistory.shift();
-  document.getElementById('weatherStrip').innerHTML=`
-    <div class="wx-item">🌡 Track <span>${w.track_temperature??'—'}°C</span></div>
-    <div class="wx-item">💨 Air <span>${w.air_temperature??'—'}°C</span></div>
-    <div class="wx-item">💧 <span>${w.humidity??'—'}%</span></div>
-    <div class="wx-item">🌬 <span>${w.wind_speed??'—'} km/h</span></div>
-    ${rain?'<div class="wx-item wx-rain">🌧 RAIN</div>':''}`;
-}
-
+function setSector(id,val,bestVal){const el=document.getElementById(id);if(!el)return;if(!val||!isFinite(bestVal)){el.textContent='—';el.className='sector-val equal';return;}const d=val-bestVal;if(d===0){el.textContent=fmtTime(val);el.className='sector-val pb'}else if(d<0){el.textContent=fmtDelta(d);el.className='sector-val ahead'}else{el.textContent=fmtDelta(d);el.className='sector-val behind'}}
+function updateMiniSectors(dn,lastLap){const el=document.getElementById(`mini-${dn}`);if(!el)return;if(!lastLap){el.innerHTML='';return}const allSegs=[...(lastLap.seg1||[]),...(lastLap.seg2||[]),...(lastLap.seg3||[])];if(!allSegs.length){el.innerHTML='';return}const frags=allSegs.map(v=>{if(v===SEG.PURPLE)return'<div class="seg seg-purple"></div>';if(v===SEG.PB||v===SEG.GREEN)return'<div class="seg seg-green"></div>';if(v===SEG.YELLOW)return'<div class="seg seg-yellow"></div>';if(v===SEG.PIT)return'<div class="seg seg-pit"></div>';return'<div class="seg seg-grey"></div>';}).join('');if(el.innerHTML!==frags)el.innerHTML=frags;}
+function updateTyreCol(dn,stints,lapNum){const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;const{compound,age}=getCurrentTyre(stints,lapNum);if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}const col=tyreColor(compound);el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;}
+function updatePit(dn,pit){const el=document.getElementById(`pit-${dn}`);if(!el)return;if(!pit){el.innerHTML='';return}const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}else if(outTime&&dur!=null){const key=`${dn}-${inTime}`;if(!pitFlash.has(key)){el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);pitFlash.set(key,tid);}} else el.innerHTML='';}
+function updateWeather(data){if(!data.length)return;const w=data[data.length-1];const rain=w.rainfall&&parseFloat(w.rainfall)>0;document.getElementById('weatherStrip').innerHTML=`<div class="wx-item">🌡 Track <span>${w.track_temperature??'—'}°C</span></div><div class="wx-item">💨 Air <span>${w.air_temperature??'—'}°C</span></div><div class="wx-item">💧 <span>${w.humidity??'—'}%</span></div><div class="wx-item">🌬 <span>${w.wind_speed??'—'} km/h</span></div>${rain?'<div class="wx-item wx-rain">🌧 RAIN</div>':''}`;}
 function updateRaceControl(data){
   allRCMessages=data;
   activeYellowSectors.clear();
   let scActive=false;
+  
+  // Track session ended state
+  const isQualifying = sessionType.toLowerCase().includes('qualif') || sessionType.toLowerCase().includes('sprint qual');
   
   for(const m of data){
     const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
     if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);
     if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;
     if(f==='GREEN')activeYellowSectors.clear();
+    
+    // Detect chequered flag for qualifying phases
+    if(isQualifying && (f==='CHEQUERED' || msg.includes('CHEQUERED'))){
+      chequeredFlagCount++;
+      sessionEnded = true;
+      
+      if(chequeredFlagCount === 1 && qPhaseEliminatedData.q1){
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q1);
+      } else if(chequeredFlagCount === 2 && qPhaseEliminatedData.q2){
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q2);
+      } else if(chequeredFlagCount === 3){
+        // Get pole position from final order
+        if(latestPos.size > 0){
+          const sortedPos = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99);
+          if(sortedPos.length >= 3){
+            const p1 = sortedPos[0];
+            const p2 = sortedPos[1];
+            const p3 = sortedPos[2];
+            const p1Driver = driverMeta.get(p1[0])?.acronym || '#?';
+            const p2Driver = driverMeta.get(p2[0])?.acronym || '#?';
+            const p3Driver = driverMeta.get(p3[0])?.acronym || '#?';
+            const poleTime = overallBestLap !== Infinity ? fmtTime(overallBestLap) : '?';
+            // Get gaps from best laps if available
+            const qualBest = new Map();
+            for(const lap of cachedLaps.values()){
+              if(lap.lap_duration && lap.lap_duration > 0){
+                if(!qualBest.has(lap.driver_number) || lap.lap_duration < qualBest.get(lap.driver_number).duration){
+                  qualBest.set(lap.driver_number, {duration: lap.lap_duration, lap: lap.lap_number});
+                }
+              }
+            }
+            const bestOrder = [...qualBest.entries()].sort((a,b)=>a[1].duration - b[1].duration);
+            if(bestOrder.length >= 3){
+              const poleGap2 = (bestOrder[1][1].duration - bestOrder[0][1].duration).toFixed(3);
+              const poleGap3 = (bestOrder[2][1].duration - bestOrder[0][1].duration).toFixed(3);
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(bestOrder[0][0])} <b style="color:var(--purple)">${fmtTime(bestOrder[0][1].duration)}</b>. ${driverTag(bestOrder[1][0])} +${poleGap2}s. ${driverTag(bestOrder[2][0])} +${poleGap3}s.`);
+            } else {
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(p1[0])}. ${driverTag(p2[0])} P2. ${driverTag(p3[0])} P3.`);
+            }
+          }
+        }
+        addToFeedBuffer('c-info', `Q3 ENDED. Pole position determined.`);
+      }
+    }
   }
   if(scActive)setSelectStatus('sc');
   if(!data.length)return;
@@ -743,6 +878,7 @@ function updateRaceControl(data){
   if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');
   document.getElementById('rcFlagDot').style.background=flagColor(last.flag);
   
+  // Format race control message with bold colored text for flags
   let rcText = last.message||'';
   const flag = (last.flag||'').toUpperCase();
   if(flag === 'RED'){
@@ -753,22 +889,27 @@ function updateRaceControl(data){
     rcText = `<strong class="yellow">🟡 SAFETY CAR</strong> — ${rcText}`;
   } else if(flag === 'VSC'){
     rcText = `<strong class="yellow">🟡 VIRTUAL SAFETY CAR</strong> — ${rcText}`;
+  } else if(flag === 'GREEN'){
+    rcText = `<strong class="green">🟢 GREEN FLAG</strong> — ${rcText}`;
   }
   document.getElementById('rcText').innerHTML = rcText;
 }
 
-function getCompoundRank(c){
-  if(!c)return 2;
-  const u=c.toUpperCase();
-  if(u.includes('SOFT'))return 1;
-  if(u.includes('MEDIUM'))return 2;
-  if(u.includes('HARD'))return 3;
-  if(u.includes('INTER'))return 4;
-  if(u.includes('WET'))return 5;
-  return 2;
+let pendingBufferEntries = [];
+function addToFeedBuffer(category, text){
+  pendingBufferEntries.push({
+    ts: Date.now(),
+    sortKey: Date.now(),
+    isoTime: new Date().toISOString(),
+    timeLabel: new Date().toLocaleTimeString().slice(0,5),
+    category: category,
+    text: text,
+    isRC: false,
+    isLapMarker: false
+  });
 }
 
-function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,weather){
+function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
   const isRace=sessionType.toLowerCase().includes('race');
   const isFP=sessionType.toLowerCase().includes('practice');
   const isQual=sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual');
@@ -788,12 +929,11 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
   }
 
   const lapNums=[...lapsByNumber.keys()].sort((a,b)=>a-b);
-  let lastLapMarkerSent = 0;
 
   for(const lapNum of lapNums){
     if(processedLaps.has(lapNum))continue;
     const lapDrivers=lapsByNumber.get(lapNum);
-    if(lapDrivers.length<Math.min(5,driverMeta.size*0.3))continue;
+    if(lapDrivers.length<Math.min(3,driverMeta.size*0.3))continue;
 
     processedLaps.add(lapNum);
     if(lapNum>lastKnownLapNum)lastKnownLapNum=lapNum;
@@ -804,248 +944,129 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
 
     const posAtLap=new Map();
     for(const[dn]of latestPos)posAtLap.set(dn,latestPos.get(dn)?.position??99);
-    
-    const lapIntervals = [];
-    for(const[dn,iv]of latestIv){
-      if(iv.lap_number === lapNum){
-        lapIntervals.push(iv);
-        posAtLap.set(dn, iv.position);
-      }
-    }
 
-    // LAP MARKER with top 10
+    // LAP SUMMARY - ALL SESSION TYPES
     const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
-    if(sortedPos.length >= 10 && lastLapMarkerSent !== lapNum){
-      lastLapMarkerSent = lapNum;
-      const top10Names = sortedPos.slice(0,10).map(([dn])=>{
-        const m=driverMeta.get(dn); return m?.acronym||String(dn);
-      }).join(', ');
-      
+    const top5Names=sortedPos.slice(0,5).map(([dn])=>{
+      const m=driverMeta.get(dn);return m?.acronym||String(dn);
+    }).join(', ');
+    
+    newEntries.push({
+      lap:lapNum,ts:lapSortKey,sortKey:lapSortKey,
+      isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+      category:'c-lap',isLapMarker:true,
+      isRC:false,
+      text:`LAP ${lapNum} — ${top5Names}`
+    });
+
+    // Position changes
+    const leaderNow=sortedPos[0]?.[0];
+    const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
+    if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
       newEntries.push({
-        lap:lapNum, ts:lapSortKey, sortKey:lapSortKey,
-        isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-        category:'c-lap-marker', isLapMarker:true,
-        isRC:false,
-        text:`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nLAP ${lapNum} — ${top10Names}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+        lap:lapNum,ts:lapSortKey+100,sortKey:lapSortKey+100,
+        isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+        category:'c-info',isRC:false,
+        text:`${driverTag(leaderNow)} takes the lead`
       });
     }
-
-    // POSITION CHANGES
+    
     for(const[dn,pos]of posAtLap){
       const prev=lastKnownPositions.get(dn);
-      if(prev && prev!==pos){
-        if(pos<prev){
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+50+dn, sortKey:lapSortKey+50+dn,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-info', isRC:false,
-            text:`${driverTag(dn)} gains ${prev-pos} position${prev-pos>1?'s':''} to P${pos}.`
-          });
-        } else {
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+50+dn, sortKey:lapSortKey+50+dn,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-info', isRC:false,
-            text:`${driverTag(dn)} drops to P${pos}.`
-          });
-        }
+      if(!prev||prev===pos)continue;
+      const gain=prev-pos;
+      if(gain>0){
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} gains ${gain} to P${pos}`
+        });
+      } else if(gain<0){
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} drops to P${pos}`
+        });
       }
     }
 
     for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
 
-    // FASTEST LAP (overall session best)
-    for(const lap of lapDrivers){
-      if(lap.lap_duration && lap.lap_duration>0){
-        if(lap.lap_duration < overallBestLap - 0.001){
-          overallBestLap = lap.lap_duration;
-          overallBestDriver = lap.driver_number;
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+100, sortKey:lapSortKey+100,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-fastest', isRC:false,
-            text:`${driverTag(lap.driver_number)} sets fastest lap — ${fmtTime(lap.lap_duration)}.`
-          });
+    // QUALIFYING: Personal best lap time
+    if(isQual && !sessionEnded){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
+          const prevBest=driverLaps.filter(l=>l.lap_duration&&l.lap_number<lap.lap_number)
+            .reduce((best,l)=>Math.min(best,l.lap_duration),Infinity);
+          if(prevBest!==Infinity && lap.lap_duration<prevBest){
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+250+lap.driver_number,sortKey:lapSortKey+250+lap.driver_number,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} personal best — ${fmtTime(lap.lap_duration)}`
+            });
+          }
+        }
+      }
+      
+      // Capture elimination data for Q1 and Q2 phases (only if not already captured)
+      if(sortedPos.length >= 20 && !q1Captured){
+        const eliminatedQ1 = sortedPos.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ1 = sortedPos[15]?.[0];
+        const p15Pos = sortedPos[14]?.[1];
+        const p16Pos = sortedPos[15]?.[1];
+        const gapToP15Q1 = p15Pos - p16Pos;
+        if(eliminatedQ1.length === 5 && gapToP15Q1 > 0){
+          qPhaseEliminatedData.q1 = `Q1 ENDED. ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
+          q1Captured = true;
+        }
+      }
+      
+      if(sortedPos.length >= 15 && !q2Captured && q1Captured){
+        const eliminatedQ2 = sortedPos.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ2 = sortedPos[10]?.[0];
+        const p10Pos = sortedPos[9]?.[1];
+        const p11Pos = sortedPos[10]?.[1];
+        const gapToP10Q2 = p10Pos - p11Pos;
+        if(eliminatedQ2.length === 5 && gapToP10Q2 > 0){
+          qPhaseEliminatedData.q2 = `Q2 ENDED. ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
+          q2Captured = true;
         }
       }
     }
 
-    // PERSONAL BEST & PURPLE SECTORS
-    for(const lap of lapDrivers){
-      if(lap.lap_duration && lap.lap_duration>0){
-        const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
-        const prevBest = driverLaps.filter(l=>l.lap_duration && l.lap_number<lap.lap_number)
-          .reduce((best,l)=>Math.min(best,l.lap_duration),Infinity);
-        if(prevBest !== Infinity && lap.lap_duration < prevBest - 0.001){
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+110+lap.driver_number, sortKey:lapSortKey+110+lap.driver_number,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-fastest', isRC:false,
-            text:`${driverTag(lap.driver_number)} personal best — ${fmtTime(lap.lap_duration)}.`
-          });
-        }
-      }
-    }
-
-    // TYRE PERFORMANCE COMPARISON (Hard vs Medium, Soft vs Medium)
-    const tyrePerformance = new Map();
-    for(const[dn,driverStints]of stintMap){
-      const currentStint = driverStints.find(s => lapNum >= s.lap_start && lapNum <= (s.lap_end || 9999));
-      if(currentStint && currentStint.compound){
-        const driverLaps = allLapsByDriver.get(dn)||[];
-        const recentLaps = driverLaps.filter(l=>l.lap_duration && l.lap_number > lapNum-5 && l.lap_number <= lapNum);
-        if(recentLaps.length >= 3){
-          const avg = recentLaps.reduce((a,b)=>a+b.lap_duration,0)/recentLaps.length;
-          if(!tyrePerformance.has(currentStint.compound))tyrePerformance.set(currentStint.compound,[]);
-          tyrePerformance.get(currentStint.compound).push({dn, avg, age: lapNum - currentStint.lap_start + 1});
+    // RACE: Fastest lap (overall session best)
+    if(isRace){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          if(lap.lap_duration<overallBestLap){
+            overallBestLap=lap.lap_duration;
+            overallBestDriver=lap.driver_number;
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+300,sortKey:lapSortKey+300,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} goes quickest — ${fmtTime(lap.lap_duration)}`
+            });
+          }
         }
       }
     }
     
-    if(tyrePerformance.has('SOFT') && tyrePerformance.has('MEDIUM')){
-      const softAvg = tyrePerformance.get('SOFT').reduce((a,b)=>a+b.avg,0)/tyrePerformance.get('SOFT').length;
-      const mediumAvg = tyrePerformance.get('MEDIUM').reduce((a,b)=>a+b.avg,0)/tyrePerformance.get('MEDIUM').length;
-      const diff = softAvg - mediumAvg;
-      if(Math.abs(diff) > 0.2 && !processedQualiEvents.has(`tyre-comp-${lapNum}`)){
-        processedQualiEvents.add(`tyre-comp-${lapNum}`);
-        if(diff < 0){
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+120, sortKey:lapSortKey+120,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-strategy', isRC:false,
-            text:`Softs ${Math.abs(diff).toFixed(2)}s faster than Mediums but higher degradation expected.`
-          });
-        }
-      }
-    }
-
-    // GAP TRENDS & CLOSING RATE
-    for(const[dn,iv]of latestIv){
-      if(iv.lap_number === lapNum && iv.gap_to_leader !== null && iv.gap_to_leader !== undefined){
-        const gaps = gapHistory.get(dn) || [];
-        if(gaps.length >= 3){
-          const recent = gaps.slice(-3);
-          if(recent[0].gap && recent[2].gap){
-            const closing = recent[0].gap - recent[2].gap;
-            if(closing > 0.5 && closing < 3){
-              newEntries.push({
-                lap:lapNum, ts:lapSortKey+130+dn, sortKey:lapSortKey+130+dn,
-                isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-                category:'c-info', isRC:false,
-                text:`${driverTag(dn)} gaining ${closing.toFixed(2)}s over last 3 laps. Gap now ${iv.gap_to_leader.toFixed(1)}s.`
-              });
-            } else if(closing < -0.5 && closing > -3){
-              newEntries.push({
-                lap:lapNum, ts:lapSortKey+130+dn, sortKey:lapSortKey+130+dn,
-                isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-                category:'c-info', isRC:false,
-                text:`${driverTag(dn)} losing ${Math.abs(closing).toFixed(2)}s over last 3 laps. Gap now ${iv.gap_to_leader.toFixed(1)}s.`
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // TRAIN DETECTION (3+ cars within 1.5 seconds)
-    const gapsList = [];
-    for(const[dn,iv]of latestIv){
-      if(iv.lap_number === lapNum && iv.gap_to_leader !== null){
-        gapsList.push({dn, gap: iv.gap_to_leader});
-      }
-    }
-    gapsList.sort((a,b)=>a.gap - b.gap);
-    let trainCount = 0;
-    let trainStart = 0;
-    for(let i=0;i<gapsList.length-1;i++){
-      const diff = gapsList[i+1].gap - gapsList[i].gap;
-      if(diff < 0.8){
-        trainCount++;
-        if(trainCount >= 2){
-          const trainKey = `train-${lapNum}`;
-          if(!processedQualiEvents.has(trainKey)){
-            processedQualiEvents.add(trainKey);
-            newEntries.push({
-              lap:lapNum, ts:lapSortKey+140, sortKey:lapSortKey+140,
-              isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-              category:'c-info', isRC:false,
-              text:`Train forming: ${gapsList[i-1].dn}, ${gapsList[i].dn}, ${gapsList[i+1].dn} within 1.2s. Overtaking difficult.`
-            });
-          }
-          break;
-        }
-      } else {
-        trainCount = 0;
-      }
-    }
-
-    // TEMPERATURE IMPACT
-    if(weather && weather.length && lastTrackTemp !== null){
-      const currentTemp = weather[weather.length-1].track_temperature;
-      if(currentTemp && lastTrackTemp){
-        const tempDiff = currentTemp - lastTrackTemp;
-        if(tempDiff >= 5){
-          tempIncreaseCount++;
-          if(tempIncreaseCount >= 2){
-            newEntries.push({
-              lap:lapNum, ts:lapSortKey+150, sortKey:lapSortKey+150,
-              isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-              category:'c-info', isRC:false,
-              text:`Track temp +${tempDiff.toFixed(0)}°C in last 5 laps (${lastTrackTemp}°C → ${currentTemp}°C). Increased degradation expected.`
-            });
-            tempIncreaseCount = 0;
-          }
-        }
-      }
-    }
-    if(weather && weather.length) lastTrackTemp = weather[weather.length-1].track_temperature;
-
-    // PIT WINDOW ANALYSIS
-    if(isRace && sortedPos.length >= 3){
-      const p1 = sortedPos[0];
-      const p2 = sortedPos[1];
-      const p1Gap = latestIv.get(p1[0])?.gap_to_leader || 0;
-      const p2Gap = latestIv.get(p2[0])?.gap_to_leader || 0;
-      const pitLossTime = 2.5;
-      const safeGap = pitLossTime + 0.5;
-      
-      if(p2Gap > safeGap && p2Gap < safeGap + 1){
-        const pitKey = `pit-window-${lapNum}`;
-        if(!processedQualiEvents.has(pitKey)){
-          processedQualiEvents.add(pitKey);
-          newEntries.push({
-            lap:lapNum, ts:lapSortKey+160, sortKey:lapSortKey+160,
-            isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-            category:'c-strategy', isRC:false,
-            text:`${driverTag(p2[0])} can pit this lap and rejoin ahead of ${driverTag(p1[0])}. Gap needed ${safeGap.toFixed(1)}s. Current gap ${p2Gap.toFixed(1)}s. SAFE.`
-          });
-        }
-      }
-    }
-
-    // BACKMARKER IMPACT
-    for(const[dn,iv]of latestIv){
-      if(iv.lap_number === lapNum && iv.gap_to_leader !== null){
-        const position = sortedPos.findIndex(p=>p[0]===dn)+1;
-        if(position <= 5){
-          const driverBehind = sortedPos[position];
-          if(driverBehind){
-            const behindGap = latestIv.get(driverBehind[0])?.gap_to_leader || 0;
-            const timeLoss = behindGap - iv.gap_to_leader;
-            if(timeLoss > 0.5 && timeLoss < 2){
-              const backmarkerKey = `backmarker-${dn}-${lapNum}`;
-              if(!processedQualiEvents.has(backmarkerKey)){
-                processedQualiEvents.add(backmarkerKey);
-                newEntries.push({
-                  lap:lapNum, ts:lapSortKey+170+dn, sortKey:lapSortKey+170+dn,
-                  isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
-                  category:'c-info', isRC:false,
-                  text:`${driverTag(dn)} lost ${timeLoss.toFixed(1)}s behind traffic. Gap to ${driverTag(driverBehind[0])} now ${(behindGap - iv.gap_to_leader).toFixed(1)}s.`
-                });
-              }
-            }
-          }
-        }
+    // RACE: Final lap
+    if(isRace){
+      const totalLaps=lapNums[lapNums.length-1];
+      if(lapNum===totalLaps){
+        const leaderNowFinal=sortedPos[0]?.[0];
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+500,sortKey:lapSortKey+500,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-fastest',isRC:false,
+          text:`🏁 FINAL LAP — ${driverTag(leaderNowFinal)} leads`
+        });
       }
     }
   }
@@ -1058,23 +1079,21 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
     const lapOut=lapIn+1;
     const pitInTime=pit.pit_in_time?new Date(pit.pit_in_time).getTime():0;
     const pitOutTime=pit.pit_out_time?new Date(pit.pit_out_time).getTime():0;
-    const pitInLabel=fmtTimeLabel(pit.pit_in_time);
-    const pitOutLabel=fmtTimeLabel(pit.pit_out_time);
 
-    if(pit.pit_in_time && !processedPits.has(pitKey+'in')){
+    if(pit.pit_in_time&&!processedPits.has(pitKey+'in')){
       const pos=lastKnownPositions.get(dn)??'?';
       if(pos!=='?'||lastKnownLapNum>0){
         processedPits.add(pitKey+'in');
         newEntries.push({
-          lap:lapIn, ts:pitInTime, sortKey:pitInTime,
-          isoTime:pit.pit_in_time||'', timeLabel:pitInLabel,
-          category:'c-strategy', isRC:false,
-          text:`${driverTag(dn)} pits from P${pos}.`
+          lap:lapIn,ts:pitInTime,sortKey:pitInTime,
+          isoTime:pit.pit_in_time||'',timeLabel:fmtTimeLabel(pit.pit_in_time),
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} pits from P${pos}`
         });
       }
     }
 
-    if(pit.pit_out_time && !processedPits.has(pitKey+'out')){
+    if(pit.pit_out_time&&!processedPits.has(pitKey+'out')){
       const dur=pit.pit_duration??pit.stop_duration;
       const pos=lastKnownPositions.get(dn)??'?';
       const ds=stintMap.get(dn)||[];
@@ -1083,88 +1102,145 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
       if(pos!=='?'||lastKnownLapNum>0){
         processedPits.add(pitKey+'out');
         newEntries.push({
-          lap:lapOut, ts:pitOutTime+50, sortKey:pitOutTime+50,
-          isoTime:pit.pit_out_time||'', timeLabel:pitOutLabel,
-          category:'c-strategy', isRC:false,
-          text:`${driverTag(dn)} rejoins P${pos}${tyreStr}. ${dur?`Stop time ${dur.toFixed(1)}s`:'Pit stop complete'}`
+          lap:lapOut,ts:pitOutTime+50,sortKey:pitOutTime+50,
+          isoTime:pit.pit_out_time||'',timeLabel:fmtTimeLabel(pit.pit_out_time),
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} rejoins P${pos}${tyreStr}`
         });
       }
     }
   }
 
-  // QUALIFYING ELIMINATION MESSAGES
-  if(isQual){
-    const sortedPosFinal = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99);
-    if(sortedPosFinal.length >= 20 && !q1Captured && lastKnownLapNum > 15){
-      const eliminated = sortedPosFinal.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
-      const fastestEliminated = sortedPosFinal[15]?.[0];
-      const p15Pos = sortedPosFinal[14]?.[1]?.position;
-      const p16Pos = sortedPosFinal[15]?.[1]?.position;
-      const gap = (p15Pos - p16Pos).toFixed(3);
-      qEliminatedData.q1 = `Q1 ENDED. ELIMINATED IN Q1: ${eliminated.join(', ')}. ${driverTag(fastestEliminated)} missed Q2 by ${Math.abs(gap)}s.`;
-      q1Captured = true;
-    }
+  // ========== SECTOR ANOMALY REPORTING WITH MASS INCIDENT SUPPRESSION ==========
+  // Only report anomalies if session has not ended (no cooldown lap spam)
+  let criticalLossCount = 0;
+  let criticalLossDrivers = new Set();
+  
+  for(const lapNum of lapNums){
+    const lapDrivers = lapsByNumber.get(lapNum) || [];
+    if(lapDrivers.length < Math.min(3, driverMeta.size*0.3)) continue;
     
-    if(sortedPosFinal.length >= 15 && !q2Captured && q1Captured && lastKnownLapNum > 30){
-      const eliminated = sortedPosFinal.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
-      const fastestEliminated = sortedPosFinal[10]?.[0];
-      const p10Pos = sortedPosFinal[9]?.[1]?.position;
-      const p11Pos = sortedPosFinal[10]?.[1]?.position;
-      const gap = (p10Pos - p11Pos).toFixed(3);
-      qEliminatedData.q2 = `Q2 ENDED. ELIMINATED IN Q2: ${eliminated.join(', ')}. ${driverTag(fastestEliminated)} missed Q3 by ${Math.abs(gap)}s.`;
-      q2Captured = true;
-    }
-  }
-
-  // QUALIFYING PHASE TRANSITIONS (via chequered flag detection in race control)
-  for(const m of raceControl){
-    const msg = (m.message||'').toUpperCase();
-    if(msg.includes('CHEQUERED')){
-      chequeredFlagCount++;
-      if(chequeredFlagCount === 1 && qEliminatedData.q1){
+    const recentRC = allRCMessages.filter(m => (m.lap_number||0) >= lapNum-5);
+    const flagActive = activeYellowSectors.size > 0 ||
+      recentRC.some(m => {
+        const f = (m.flag||'').toUpperCase(), msg = (m.message||'').toUpperCase();
+        return f === 'VSC' || msg.includes('SAFETY CAR DEPLOYED') || msg.includes('VIRTUAL SAFETY CAR DEPLOYED');
+      });
+    
+    const lapTimeISO = lapDrivers.find(l=>l.date_start)?.date_start||null;
+    const lapSortKey = lapTimeISO ? new Date(lapTimeISO).getTime() : lapNum*100000;
+    const lapTimeLabel = lapTimeISO ? fmtTimeLabel(lapTimeISO) : `L${lapNum}`;
+    
+    let lapCriticalCount = 0;
+    
+    // Skip anomaly reporting if session has ended (cooldown laps after chequered flag)
+    if(!sessionEnded && !flagActive && lapNum > massIncidentSuppressUntilLap){
+      for(const lap of lapDrivers){
+        const dn = lap.driver_number;
+        if(!lap.duration_sector_1 && !lap.duration_sector_2 && !lap.duration_sector_3) continue;
+        const history = lastLapTimes.get(dn) || [];
+        
+        for(let si = 0; si < 3; si++){
+          const val = [lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3][si];
+          if(!val) continue;
+          const prevVals = history.map(h => h[si]).filter(Boolean);
+          if(prevVals.length >= 3){
+            const avg = prevVals.reduce((a,b) => a+b, 0) / prevVals.length;
+            const loss = val - avg;
+            
+            if(loss >= 0.5){
+              // Count critical losses (2.0s+) for mass incident detection
+              if(loss >= 2.0){
+                lapCriticalCount++;
+                criticalLossDrivers.add(dn);
+              }
+              
+              // Only report individual incidents if NOT in mass incident suppression mode
+              if(!massIncidentActive || loss < 2.0){
+                let severityText = '';
+                if(loss >= 2.0){
+                  severityText = `${driverTag(dn)} has a critical issue in S${si+1}, lost ${loss.toFixed(2)}s. Major car problem or off-track.`;
+                } else if(loss >= 1.0){
+                  severityText = `${driverTag(dn)} has a significant issue in S${si+1}, lost ${loss.toFixed(2)}s. Car issue or driver error.`;
+                } else if(loss >= 0.5){
+                  severityText = `${driverTag(dn)} had a small moment in S${si+1}, lost ${loss.toFixed(2)}s.`;
+                }
+                
+                if(severityText){
+                  newEntries.push({
+                    lap:lapNum, ts:lapSortKey + si*10, sortKey:lapSortKey + si*10,
+                    isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
+                    category:'c-incident', isRC:false,
+                    text: severityText
+                  });
+                }
+              }
+            }
+          }
+        }
+        
+        const entry = [lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3];
+        history.push(entry);
+        if(history.length > 5) history.shift();
+        lastLapTimes.set(dn, history);
+      }
+      
+      // MASS INCIDENT DETECTION: 3+ drivers losing 2.0s+ in same lap
+      if(lapCriticalCount >= 3 && !massIncidentActive){
+        massIncidentActive = true;
+        massIncidentSuppressUntilLap = lapNum + 5;
+        
         newEntries.push({
-          lap:lastKnownLapNum, ts:new Date(m.date).getTime()+10, sortKey:new Date(m.date).getTime()+10,
-          isoTime:m.date||'', timeLabel:fmtTimeLabel(m.date),
-          category:'c-info', isRC:false,
-          text:qEliminatedData.q1
+          lap:lapNum, ts:lapSortKey + 450, sortKey:lapSortKey + 450,
+          isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
+          category:'c-sc', isRC:false,
+          text: `⚠️ Multiple drivers affected by a track incident, losing critical time. Checking race control.`
         });
-      } else if(chequeredFlagCount === 2 && qEliminatedData.q2){
-        newEntries.push({
-          lap:lastKnownLapNum, ts:new Date(m.date).getTime()+20, sortKey:new Date(m.date).getTime()+20,
-          isoTime:m.date||'', timeLabel:fmtTimeLabel(m.date),
-          category:'c-info', isRC:false,
-          text:qEliminatedData.q2
+        
+        // Cross-reference with race control messages for this lap
+        const rcThisLap = allRCMessages.filter(m => {
+          const rcLap = m.lap_number || 0;
+          return rcLap === lapNum || rcLap === lapNum - 1 || rcLap === lapNum + 1;
         });
-      } else if(chequeredFlagCount === 3){
-        const poleDriver = overallBestDriver ? driverMeta.get(overallBestDriver)?.acronym : '?';
-        const p2Driver = sortedPosFinal[1]?.[0] ? driverMeta.get(sortedPosFinal[1][0])?.acronym : '?';
-        const p3Driver = sortedPosFinal[2]?.[0] ? driverMeta.get(sortedPosFinal[2][0])?.acronym : '?';
-        newEntries.push({
-          lap:lastKnownLapNum, ts:new Date(m.date).getTime()+30, sortKey:new Date(m.date).getTime()+30,
-          isoTime:m.date||'', timeLabel:fmtTimeLabel(m.date),
-          category:'c-fastest', isRC:false,
-          text:`🏆 POLE POSITION: ${driverTag(overallBestDriver)} ${fmtTime(overallBestLap)}. ${driverTag(sortedPosFinal[1][0])} P2. ${driverTag(sortedPosFinal[2][0])} P3.`
-        });
+        
+        for(const rc of rcThisLap){
+          const rcFlag = (rc.flag || '').toUpperCase();
+          const rcMsg = rc.message || '';
+          if(rcFlag === 'YELLOW' || rcMsg.includes('YELLOW')){
+            newEntries.push({
+              lap:lapNum, ts:lapSortKey + 460, sortKey:lapSortKey + 460,
+              isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
+              category:'c-rc-warn', isRC:true,
+              text: `RACE CONTROL: ${rcMsg}`
+            });
+          } else if(rcFlag === 'SC' || rcMsg.includes('SAFETY CAR')){
+            newEntries.push({
+              lap:lapNum, ts:lapSortKey + 470, sortKey:lapSortKey + 470,
+              isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
+              category:'c-rc-red', isRC:true,
+              text: `RACE CONTROL: ${rcMsg}`
+            });
+          }
+        }
+      }
+    } else {
+      // During flag active or suppression, just update rolling history without reporting
+      for(const lap of lapDrivers){
+        const dn = lap.driver_number;
+        const h = lastLapTimes.get(dn) || [];
+        h.push([lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3]);
+        if(h.length > 5) h.shift();
+        lastLapTimes.set(dn, h);
       }
     }
   }
-
-  // RACE FINAL LAP
-  if(isRace && lapNums.length){
-    const finalLap = Math.max(...lapNums);
-    if(lastKnownLapNum === finalLap && !processedQualiEvents.has('final-lap')){
-      processedQualiEvents.add('final-lap');
-      const finalLeader = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99)[0]?.[0];
-      newEntries.push({
-        lap:finalLap, ts:Date.now(), sortKey:Date.now()+500,
-        isoTime:new Date().toISOString(), timeLabel:new Date().toLocaleTimeString().slice(0,5),
-        category:'c-fastest', isRC:false,
-        text:`🏁 FINAL LAP — ${driverTag(finalLeader)} leads.`
-      });
-    }
+  
+  // Reset mass incident state after 5 laps of no incidents
+  if(massIncidentActive && lastKnownLapNum > massIncidentSuppressUntilLap){
+    massIncidentActive = false;
   }
 
-  // RACE CONTROL MESSAGES
+  // Combine with race control messages
   const rcEntries=allRCMessages.map(m=>{
     let formattedText = m.message||'';
     const flag = (m.flag||'').toUpperCase();
@@ -1188,11 +1264,14 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
     };
   });
 
-  const allEntries=[...newEntries,...rcEntries];
+  const allEntries=[...newEntries,...rcEntries,...pendingBufferEntries];
+  pendingBufferEntries = [];
+  
   if(!allEntries.length)return;
 
   allEntries.sort((a,b)=>a.sortKey-b.sortKey);
   
+  // Merge with existing feed entries, avoid duplicates
   const existingKeys=new Set(feedEntries.map(e=>`${e.isoTime}-${e.text.substring(0,50)}`));
   for(const e of allEntries){
     const key=`${e.isoTime}-${e.text.substring(0,50)}`;
@@ -1202,15 +1281,16 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl,w
     }
   }
   
+  // Sort feed entries chronologically
   feedEntries.sort((a,b)=>a.sortKey-b.sortKey);
-  if(feedEntries.length>500)feedEntries = feedEntries.slice(-500);
   
   if(activeTab==='feed')renderFeed();
 }
 
 function renderFeed(){
   const scroll=document.getElementById('feedScroll');
-  if(!feedEntries.length){
+  if(!scroll)return; // FEED tab removed in favor of INSIGHTS; feed data still collected for use there
+  if(!feedEntries.length&&!allRCMessages.length){
     scroll.innerHTML='<div class="feed-placeholder">FEED WILL POPULATE WHEN SESSION IS SELECTED</div>';
     return;
   }
@@ -1228,7 +1308,7 @@ function renderFeed(){
   const atBottom=scroll.scrollHeight-scroll.scrollTop<=scroll.clientHeight+100;
   scroll.innerHTML=entries.map(e=>{
     if(e.isLapMarker){
-      return`<div style="font-family:var(--mono);font-size:9px;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--line);color:var(--dim);letter-spacing:0.5px;margin-top:4px;white-space:pre-line">${e.text}</div>`;
+      return`<div class="feed-lap-marker">${e.text}</div>`;
     }
     const category=e.category||(e.isRC?getRCCategoryFromFlag(e.flag):'c-info');
     return`<div class="feed-entry ${category}">
@@ -1382,10 +1462,16 @@ function renderDriverTab(tab){
     body.innerHTML=html;
   }
   else if(tab==='braking'){
-    body.innerHTML=`<div class="braking-placeholder">Braking profile data available post-session.</div>`;
+    body.innerHTML=`<div class="braking-placeholder">
+      Braking profile data available post-session.<br><br>
+      Run the FastF1 Python script after the session ends to generate telemetry analysis.
+    </div>`;
   }
   else if(tab==='speed'){
-    body.innerHTML=`<div class="braking-placeholder">Speed trace data available post-session.</div>`;
+    body.innerHTML=`<div class="braking-placeholder">
+      Speed trace data available post-session.<br><br>
+      Top speed per straight and minimum corner speed generated from FastF1 telemetry.
+    </div>`;
   }
 }
 
