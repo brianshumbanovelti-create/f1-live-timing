@@ -263,6 +263,7 @@ let cachedDriverStints=null;
 
 // INSIGHTS state
 let downloadedSessions=new Set(); // sessionKey -> already downloaded a data file this session
+let insightsDownloading=false;
 let lastStintMap=new Map(); // driver_number -> stints[] from the most recent tick()
 
 // Mass incident detection state
@@ -341,18 +342,18 @@ function renderInsightsTab(){
   const label=getSessionLabel()||'this session';
 
   if(!branch){
-    wrap.innerHTML=`<div class="insights-unsupported">Could not determine session type for ${label}.<br>Data export currently supports Race sessions.</div>`;
+    wrap.innerHTML=`<div class="insights-unsupported">Could not determine session type for ${label}.</div>`;
     return;
   }
 
-  if(branch!=='race'){
-    wrap.innerHTML=`<div class="insights-unsupported">${branch.toUpperCase()} data export isn't built yet — only Race sessions are supported right now.</div>`;
+  if(insightsDownloading){
+    wrap.innerHTML=`<div class="feed-placeholder">PREPARING ${branch.toUpperCase()} DATA…</div>`;
     return;
   }
 
   const already=downloadedSessions.has(sessionKey);
   wrap.innerHTML=`<div class="insights-generate-wrap">
-    <button class="insights-generate-btn" onclick="downloadRaceData()">DOWNLOAD RACE DATA</button>
+    <button class="insights-generate-btn" onclick="downloadSessionData()">DOWNLOAD ${branch.toUpperCase()} DATA</button>
     <div class="insights-session-label">${label} · ${branch.toUpperCase()}</div>
     ${already?'<div class="insights-session-label" style="margin-top:4px">Already downloaded once this session — click again for a fresh copy</div>':''}
   </div>`;
@@ -362,43 +363,125 @@ function slugify(s){
   return(s||'session').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'session';
 }
 
-function downloadRaceData(){
-  if(!sessionKey)return;
+const BRANCH_BUILDERS={
+  race:buildRacePayload,
+  sprint:buildSprintPayload,
+  qualifying:buildQualifyingPayload,
+  practice:buildPracticePayload
+};
+
+async function downloadSessionData(){
+  if(!sessionKey||insightsDownloading)return;
   const branch=classifySessionType();
-  if(branch!=='race')return;
+  const builder=BRANCH_BUILDERS[branch];
+  if(!builder)return;
 
-  const payload=buildRacePayload();
-  const filename=`f1-race-${slugify(getSessionLabel())}-${sessionKey}.json`;
-
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  downloadedSessions.add(sessionKey);
+  const thisSessionKey=sessionKey;
+  insightsDownloading=true;
   renderInsightsTab();
+
+  try{
+    const payload=await builder();
+    const filename=`f1-${branch}-${slugify(getSessionLabel())}-${sessionKey}.json`;
+
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    downloadedSessions.add(sessionKey);
+  }catch(err){
+    console.error('Insights download failed:',err);
+  }finally{
+    insightsDownloading=false;
+    if(sessionKey===thisSessionKey)renderInsightsTab();
+  }
 }
 
 // ---- Race data-shaper ----
 // Builds a compact, hard-data-only payload from live app state. No telemetry,
 // no traffic/tow inference — only what's directly observable in the data.
 
-function buildRacePayload(){
-  const drivers=[];
-  const sortedByPos=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+// ---- Shared helpers ----
 
-  // Rebuild per-driver stint stats the same way the driver modal does
-  const lapsByDriver=new Map();
+function lapsByDriverMap(){
+  const m=new Map();
   for(const lap of cachedLaps.values()){
-    if(!lapsByDriver.has(lap.driver_number))lapsByDriver.set(lap.driver_number,[]);
-    lapsByDriver.get(lap.driver_number).push(lap);
+    if(!m.has(lap.driver_number))m.set(lap.driver_number,[]);
+    m.get(lap.driver_number).push(lap);
   }
-  for(const arr of lapsByDriver.values())arr.sort((a,b)=>a.lap_number-b.lap_number);
+  for(const arr of m.values())arr.sort((a,b)=>a.lap_number-b.lap_number);
+  return m;
+}
+
+function computeStintStats(driverStints,driverLaps){
+  return driverStints.map(s=>{
+    const end=s.lap_end||lastKnownLapNum;
+    const stintLaps=driverLaps.filter(l=>l.lap_duration&&l.lap_duration>0&&l.lap_number>=s.lap_start&&l.lap_number<=end);
+    if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:null,deg_per_lap:null,laps:0};
+    const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
+    let deg=null;
+    if(stintLaps.length>=2){
+      const n=stintLaps.length,xMean=(n-1)/2;let num=0,den=0;
+      for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
+      deg=den>0?+(num/den).toFixed(3):0;
+    }
+    return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:+avg.toFixed(3),deg_per_lap:deg,laps:stintLaps.length};
+  });
+}
+
+// Flags, safety cars, and penalties only — no traffic/tow inference, no full RC feed.
+function filteredRaceControlEvents(){
+  return(allRCMessages||[]).filter(m=>{
+    const cat=(m.category||'').toLowerCase();
+    const flag=(m.flag||'').toUpperCase();
+    const msg=(m.message||'').toUpperCase();
+    if(cat==='flag'&&['YELLOW','DOUBLE YELLOW','RED','CHEQUERED'].includes(flag))return true;
+    if(cat==='safetycar')return true;
+    if(/PENALTY|DRIVE THROUGH|DRIVE-THROUGH|STOP\/GO|STOP AND GO|DISQUALIFI/.test(msg))return true;
+    return false;
+  }).map(m=>({lap:m.lap_number??null,message:m.message||''}));
+}
+
+function sortedDriversByPosition(){
+  return[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+}
+
+// ---- Straight-line speed helper ----
+// Pulls max recorded speed per driver from car_data. Filtered server-side
+// (speed>=280) so we only pull the fast tail of the ~3.7Hz telemetry stream
+// instead of the full session trace — this is a summary stat, not raw
+// telemetry, and only runs once per download click, not on every tick.
+const SPEED_FLOOR=280;
+
+async function fetchTopSpeeds(){
+  const speeds=new Map(); // acronym -> max speed
+  const dns=[...driverMeta.keys()];
+  await Promise.all(dns.map(async dn=>{
+    const rows=await api(`car_data?session_key=${sessionKey}&driver_number=${dn}&speed>=${SPEED_FLOOR}`);
+    let max=null;
+    for(const r of rows){if(typeof r.speed==='number'&&(max===null||r.speed>max))max=r.speed;}
+    if(max!==null){
+      const acr=driverMeta.get(dn)?.acronym;
+      if(acr)speeds.set(acr,max);
+    }
+  }));
+  return speeds;
+}
+
+// ---- Race data-shaper ----
+// Builds a compact, hard-data-only payload from live app state. No telemetry,
+// no traffic/tow inference — only what's directly observable in the data.
+
+async function buildRacePayload(){
+  const drivers=[];
+  const sortedByPos=sortedDriversByPosition();
+  const lapsByDriver=lapsByDriverMap();
 
   for(const dn of sortedByPos){
     const meta=driverMeta.get(dn);
@@ -412,20 +495,7 @@ function buildRacePayload(){
       if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap))bestLap=l.lap_duration;
     }
 
-    const driverStints=lastStintMap.get(dn)||[];
-    const stints=driverStints.map(s=>{
-      const end=s.lap_end||lastKnownLapNum;
-      const stintLaps=driverLaps.filter(l=>l.lap_duration&&l.lap_duration>0&&l.lap_number>=s.lap_start&&l.lap_number<=end);
-      if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:null,deg_per_lap:null};
-      const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
-      let deg=null;
-      if(stintLaps.length>=2){
-        const n=stintLaps.length,xMean=(n-1)/2;let num=0,den=0;
-        for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
-        deg=den>0?+(num/den).toFixed(3):0;
-      }
-      return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:+avg.toFixed(3),deg_per_lap:deg};
-    });
+    const stints=computeStintStats(lastStintMap.get(dn)||[],driverLaps);
 
     drivers.push({
       position:pos,
@@ -433,26 +503,150 @@ function buildRacePayload(){
       team:meta.teamName,
       gap_to_leader:(iv&&iv.gap_to_leader!=null)?iv.gap_to_leader:(pos===1?0:null),
       fastest_lap:bestLap?+bestLap.toFixed(3):null,
-      stints
+      stints:stints.map(({laps,...rest})=>rest)
     });
   }
 
-  // Race-defining race-control events only: flags and penalties (see filter logic below)
-  const rcEvents=(allRCMessages||[]).filter(m=>{
-    const cat=(m.category||'').toLowerCase();
-    const flag=(m.flag||'').toUpperCase();
-    const msg=(m.message||'').toUpperCase();
-    if(cat==='flag'&&['YELLOW','DOUBLE YELLOW','RED','CHEQUERED'].includes(flag))return true;
-    if(cat==='safetycar')return true;
-    if(/PENALTY|DRIVE THROUGH|DRIVE-THROUGH|STOP\/GO|STOP AND GO|DISQUALIFI/.test(msg))return true;
-    return false;
-  }).map(m=>({lap:m.lap_number??null,message:m.message||''}));
+  const topSpeeds=await fetchTopSpeeds();
+  for(const d of drivers)d.top_speed_kmh=topSpeeds.has(d.driver)?topSpeeds.get(d.driver):null;
 
   return{
+    session_type:'race',
     session:getSessionLabel()||'Race',
     classification:drivers,
     fastest_overall:overallBestDriver?{driver:driverMeta.get(overallBestDriver)?.acronym,time:overallBestLap!==Infinity?+overallBestLap.toFixed(3):null}:null,
-    race_control_events:rcEvents
+    race_control_events:filteredRaceControlEvents()
+  };
+}
+
+// ---- Sprint data-shaper ----
+// Structurally identical to Race (classification, stints, pit-relevant stops,
+// flags/SC/penalties). Strategy is usually a non-factor in a sprint (near
+// zero-stop), so no separate "strategy story" field — same hard-data shape,
+// the branch label itself signals to the analyst that pit strategy narrative
+// should be downweighted.
+
+async function buildSprintPayload(){
+  const base=await buildRacePayload();
+  return{...base,session_type:'sprint',session:getSessionLabel()||'Sprint'};
+}
+
+// ---- Qualifying data-shaper ----
+// Splits laps into Q1/Q2/Q3 using chequered-flag lap numbers from race control
+// (each chequered flag marks the end of a phase), since OpenF1 doesn't label
+// phases directly. This is inferred from data structure, not from driver
+// behavior — a defensible inference, unlike traffic/tow calls.
+
+async function buildQualifyingPayload(){
+  const lapsByDriver=lapsByDriverMap();
+  const chequered=(allRCMessages||[])
+    .filter(m=>(m.category||'').toLowerCase()==='flag'&&(m.flag||'').toUpperCase()==='CHEQUERED')
+    .map(m=>m.lap_number)
+    .filter(n=>n!=null)
+    .sort((a,b)=>a-b);
+
+  // Phase boundaries: [0, chequered[0]] = Q1, (chequered[0], chequered[1]] = Q2, etc.
+  const phaseBounds=[];
+  let prev=0;
+  for(const c of chequered){phaseBounds.push([prev,c]);prev=c}
+  if(!phaseBounds.length){
+    // No chequered-flag data available — fall back to one undivided phase.
+    phaseBounds.push([0,lastKnownLapNum||9999]);
+  }
+  const phaseNames=['Q1','Q2','Q3'].slice(0,phaseBounds.length);
+
+  const phases=phaseBounds.map(([start,end],i)=>{
+    const driversInPhase=[];
+    for(const dn of positionOrder){
+      const meta=driverMeta.get(dn);
+      if(!meta)continue;
+      const driverLaps=(lapsByDriver.get(dn)||[]).filter(l=>l.lap_number>start&&l.lap_number<=end);
+      if(!driverLaps.length)continue;
+      let bestLap=null,bestSectors={s1:null,s2:null,s3:null};
+      for(const l of driverLaps){
+        if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap)){
+          bestLap=l.lap_duration;
+          bestSectors={s1:l.duration_sector_1||null,s2:l.duration_sector_2||null,s3:l.duration_sector_3||null};
+        }
+      }
+      if(bestLap==null)continue;
+      driversInPhase.push({driver:meta.acronym,team:meta.teamName,best_lap:+bestLap.toFixed(3),sectors:bestSectors});
+    }
+    driversInPhase.sort((a,b)=>a.best_lap-b.best_lap);
+    return{phase:phaseNames[i]||`Phase ${i+1}`,results:driversInPhase};
+  });
+
+  const topSpeeds=await fetchTopSpeeds();
+  const lastPhase=phases[phases.length-1];
+  if(lastPhase){
+    for(const r of lastPhase.results)r.top_speed_kmh=topSpeeds.has(r.driver)?topSpeeds.get(r.driver):null;
+  }
+
+  return{
+    session_type:'qualifying',
+    session:getSessionLabel()||'Qualifying',
+    phase_boundaries_inferred_from:'chequered flag lap numbers in race control data',
+    top_speed_note:'top_speed_kmh (max speed recorded across the session) is only attached to the final phase results, since that is the most representative sample',
+    phases,
+    pole:phases[phases.length-1]?.results[0]||null,
+    race_control_events:filteredRaceControlEvents()
+  };
+}
+
+// ---- Practice data-shaper ----
+// The hardest branch: OpenF1 doesn't label a stint as a "fuel run" (long-run
+// race pace) vs a "quali sim" (short, low-fuel banzai lap). We infer it from
+// stint length only — short stints (<=3 laps) are labeled quali-sim-like,
+// longer stints are labeled long-run-like — and every inferred field is
+// explicitly marked as an inference so the downstream analysis doesn't
+// state it as fact. No traffic/tow claims are made at all.
+
+const QUALI_SIM_MAX_LAPS=3;
+
+async function buildPracticePayload(){
+  const lapsByDriver=lapsByDriverMap();
+  const drivers=[];
+
+  for(const dn of positionOrder){
+    const meta=driverMeta.get(dn);
+    if(!meta)continue;
+    const driverLaps=lapsByDriver.get(dn)||[];
+    const stints=computeStintStats(lastStintMap.get(dn)||[],driverLaps);
+
+    let bestLap=null;
+    for(const l of driverLaps){
+      if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap))bestLap=l.lap_duration;
+    }
+
+    const labeledStints=stints.map(s=>({
+      compound:s.compound,
+      lap_start:s.lap_start,
+      lap_end:s.lap_end,
+      laps:s.laps,
+      avg_lap:s.avg_lap,
+      deg_per_lap:s.deg_per_lap,
+      inferred_run_type:s.laps===0?null:(s.laps<=QUALI_SIM_MAX_LAPS?'likely_quali_sim (inferred from short stint length)':'likely_long_run (inferred from stint length)')
+    }));
+
+    drivers.push({
+      driver:meta.acronym,
+      team:meta.teamName,
+      best_lap:bestLap?+bestLap.toFixed(3):null,
+      stints:labeledStints
+    });
+  }
+
+  drivers.sort((a,b)=>(a.best_lap??Infinity)-(b.best_lap??Infinity));
+
+  const topSpeeds=await fetchTopSpeeds();
+  for(const d of drivers)d.top_speed_kmh=topSpeeds.has(d.driver)?topSpeeds.get(d.driver):null;
+
+  return{
+    session_type:'practice',
+    session:getSessionLabel()||'Practice',
+    note:'stint run-type labels (quali_sim vs long_run) are inferred from stint length only, not confirmed — treat as a hint, not a fact',
+    drivers,
+    race_control_events:filteredRaceControlEvents()
   };
 }
 
