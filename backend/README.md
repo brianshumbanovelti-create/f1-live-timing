@@ -50,6 +50,14 @@ Render will give you a live URL like `https://f1-app-backend.onrender.com`
 - **No API keys required for either endpoint** — FastF1 pulls from public
   F1 timing archives, Reddit's JSON endpoint is public/unauthenticated for
   this kind of light, read-only use.
+- **`fastf1` is imported lazily, inside `fetch_fastf1_telemetry`, not at
+  the top of `app.py`.** Importing it eagerly pulls in pandas/numpy at
+  process boot and holds that memory permanently — on Render's free
+  512MB tier this left too little headroom, and even a lightweight
+  `/reddit` request could get its worker SIGKILL'd (OOM) because fastf1's
+  baseline footprint was already eating most of the budget. If you ever
+  add a new endpoint or refactor this file, keep `fastf1` imports scoped
+  to the function that needs them — don't move it back to the top.
 
 ## Testing locally
 
@@ -70,4 +78,3 @@ Then `POST` to `http://localhost:5000/telemetry` with a body like:
 ```
 
 `GET http://localhost:5000/reddit` needs no body.
-
