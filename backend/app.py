@@ -101,13 +101,30 @@ def sampled_trace(telemetry, sample_every_m=25):
     return trace
 
 
-def fetch_fastf1_telemetry(year, gp, session_code):
+def fetch_fastf1_telemetry(year, gp, session_code, driver_codes=None):
     """
     Returns a dict keyed by driver acronym — same key convention OpenF1 uses.
     Imports fastf1 lazily (see module docstring for why) — this is the ONLY
     place fastf1 gets imported and its cache gets enabled, and only runs
     when a /telemetry request actually needs it.
+
+    driver_codes: if given (a list like ["VER","HAM"]), ONLY those drivers
+    are processed — this is the main memory-reduction lever. DUELS already
+    caps selection at 4 drivers, so there's no reason to load/process the
+    full ~20-driver grid when only up to 4 are ever actually used. FastF1's
+    own session.load() still pulls the full session's timing data first
+    (no narrower load option exists in its API), but everything AFTER that
+    — the per-driver telemetry extraction, which is the heavier, more
+    memory-hungry part — only runs for the requested drivers.
+
+    Each driver's pandas telemetry object is extracted, reduced to plain
+    Python data, and explicitly discarded (`del` + gc.collect()) before
+    moving to the next driver, rather than letting them accumulate across
+    the loop — pandas DataFrames carry real overhead beyond the raw
+    numbers (index structures, dtype metadata), so holding several in
+    memory at once is avoidable, not free.
     """
+    import gc
     import fastf1  # lazy — keeps the idle process footprint small
 
     global _fastf1_cache_enabled
@@ -118,8 +135,11 @@ def fetch_fastf1_telemetry(year, gp, session_code):
     session = fastf1.get_session(year, gp, session_code)
     session.load(telemetry=True, laps=True, weather=False)
 
+    available = list(session.laps["Driver"].unique())
+    targets = [d for d in driver_codes if d in available] if driver_codes else available
+
     out = {}
-    for drv_code in session.laps["Driver"].unique():
+    for drv_code in targets:
         driver_laps = session.laps.pick_driver(drv_code)
         fastest = driver_laps.pick_fastest()
         if fastest is None or fastest.empty:
@@ -129,12 +149,18 @@ def fetch_fastf1_telemetry(year, gp, session_code):
         except Exception:
             continue  # this driver's telemetry isn't available; skip, don't fail the whole request
 
+        # Reduce to plain Python immediately — nothing pandas-shaped is
+        # kept alive past this point for this driver.
         out[drv_code] = {
             "fastest_lap_time": str(fastest["LapTime"]) if fastest.get("LapTime") is not None else None,
             "top_speed_kmh": round(float(tel["Speed"].max()), 1) if "Speed" in tel else None,
             "braking_points": detect_braking_points(tel),
             "telemetry_trace": sampled_trace(tel),
         }
+
+        del driver_laps, fastest, tel
+        gc.collect()
+
     return out
 
 
@@ -167,14 +193,18 @@ def merge_into_openf1_payload(openf1_payload, fastf1_by_driver):
 def telemetry():
     """
     Expects a JSON body: { "year": 2026, "gp": "Belgian Grand Prix",
-    "session": "R", "openf1_payload": {...} } — the frontend sends its
-    own already-built OpenF1 export as openf1_payload, and gets back the
-    same structure with FastF1 fields merged in.
+    "session": "R", "drivers": ["VER","HAM"], "openf1_payload": {...} }.
+    "drivers" should be the same up-to-4 acronyms the user selected in
+    DUELS — this scopes FastF1 processing to only those drivers, which is
+    the main lever for keeping this request's memory use down on Render's
+    free tier. If omitted, falls back to processing the whole field (not
+    recommended given free-tier RAM limits, but kept as a fallback).
     """
     body = request.get_json(force=True, silent=True) or {}
     year = body.get("year")
     gp = body.get("gp")
     session_code = body.get("session")
+    drivers = body.get("drivers")
     openf1_payload = body.get("openf1_payload")
 
     if not (year and gp and session_code):
@@ -183,7 +213,7 @@ def telemetry():
         return jsonify({"error": "openf1_payload is required"}), 400
 
     try:
-        fastf1_by_driver = fetch_fastf1_telemetry(int(year), gp, session_code)
+        fastf1_by_driver = fetch_fastf1_telemetry(int(year), gp, session_code, driver_codes=drivers)
     except Exception as e:
         return jsonify({"error": f"FastF1 fetch failed: {e}"}), 502
 
