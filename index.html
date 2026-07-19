@@ -69,7 +69,8 @@ select.status-done{border-color:var(--muted)!important}
 .tab-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
 .tab-panel.active{display:flex}
 
-.timing-scroll{flex:1;overflow-y:auto;overflow-x:hidden}
+.timing-scroll{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.timing-scroll::-webkit-scrollbar{display:none}
 .col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:6px 10px 6px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;gap:4px;align-items:center;position:sticky;top:0;background:rgba(14,14,17,0.92);backdrop-filter:blur(8px);z-index:5}
 
 .driver-row{border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.15s var(--ease),transform 0.4s var(--ease),opacity 0.3s var(--ease);user-select:none;position:relative}
@@ -109,7 +110,8 @@ select.status-done{border-color:var(--muted)!important}
 .feed-sub{font-family:var(--mono);font-size:10px;font-weight:600;padding:5px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
 .feed-sub.active{background:var(--bg0);color:var(--text);border-color:var(--accent)}
 #feedScroll{flex:1;overflow-y:auto}
-.insights-wrap{flex:1;overflow-y:auto;padding:20px 16px;display:flex;align-items:center;justify-content:center}
+.insights-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:20px 16px;display:flex;align-items:center;justify-content:center}
+.insights-wrap::-webkit-scrollbar{display:none}
 .insights-export-card{background:linear-gradient(180deg,var(--bg2),var(--bg1));border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 24px;max-width:320px;width:100%;text-align:center;box-shadow:var(--shadow-md);animation:fadeUp 0.35s var(--ease)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .insights-export-icon{width:48px;height:48px;margin:0 auto 16px;border-radius:var(--r-md);background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:22px}
@@ -172,7 +174,8 @@ select.status-done{border-color:var(--muted)!important}
 .modal-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px}
 .modal-close{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:2px 6px}
 .modal-close:hover{color:var(--text)}
-.modal-body{padding:12px 16px;max-height:70vh;overflow-y:auto}
+.modal-body{padding:12px 16px;max-height:70vh;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.modal-body::-webkit-scrollbar{display:none}
 .rc-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #111}
 .rc-entry:last-child{border-bottom:none}
 .rc-time{font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;padding-top:1px;min-width:48px}
@@ -268,6 +271,9 @@ let overallBestLap=Infinity,overallBestDriver=null;
 let pitFlash=new Map(),allRCMessages=[];
 let locationData=new Map(),scLocation=null,activeYellowSectors=new Set();
 let cachedLaps=new Map();
+let cachedPitStops=new Map();
+let cachedWeather=[];
+let cachedRaceControl=[];
 let latestPos=new Map();
 let latestIv=new Map();
 let currentAudio=null;
@@ -831,6 +837,9 @@ async function onSessionSelected(forceKey){
   processedLaps.clear();processedPits.clear();processedQualiEvents.clear();stintHistory.clear();lastLapTimes.clear();
   currentFastestLap=null;
   cachedLaps.clear();
+  cachedPitStops.clear();
+  cachedWeather=[];
+  cachedRaceControl=[];
   latestPos.clear();latestIv.clear();
   lastStintMap.clear();
   
@@ -971,10 +980,14 @@ async function buildCards(){
   });
 }
 
-async function loadSessionData(){
-  if(!sessionKey)return;
-  setSelectStatus('loading');
-
+// Fetches one round of session data and MERGES it into the persistent
+// caches — never replaces them wholesale. This matters because OpenF1 can
+// post different drivers' data at different times: a single fetch might
+// have complete stints for driver A but nothing yet for driver B, and the
+// next fetch could be the reverse. Overwriting fully on each fetch would
+// lose whatever the previous round got right; merging only fills gaps that
+// are still empty, so three fetches strictly accumulate completeness.
+async function fetchAndMergeSessionData(){
   const[newLaps,intervals,positions,pitStops,raceControl,stints,weather]=await Promise.all([
     api(`laps?session_key=${sessionKey}`),
     api(`intervals?session_key=${sessionKey}`),
@@ -989,35 +1002,18 @@ async function loadSessionData(){
     const key=`${lap.driver_number}:${lap.lap_number}`;
     cachedLaps.set(key,lap);
   }
-  const laps=[...cachedLaps.values()].sort((a,b)=>a.lap_number-b.lap_number);
 
-  updateWeather(weather);
-  updateRaceControl(raceControl);
-
-  const bestLapMap=new Map(),lastLapMap=new Map();
-  overallBestLap=Infinity;overallBestDriver=null;
-
-  for(const lap of laps){
-    const dn=lap.driver_number,dur=lap.lap_duration;
-    if(dur&&dur>0){
-      if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration)bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
-      if(dur<overallBestLap){overallBestLap=dur;overallBestDriver=dn}
-    }
-    lastLapMap.set(dn,{duration:dur,lapNum:lap.lap_number,s1:lap.duration_sector_1||null,s2:lap.duration_sector_2||null,s3:lap.duration_sector_3||null});
-  }
-
-  const vals=l=>[...lastLapMap.values()].map(x=>x[l]).filter(Boolean);
-  const bestS1=Math.min(...vals('s1'));
-  const bestS2=Math.min(...vals('s2'));
-  const bestS3=Math.min(...vals('s3'));
-
-  const stintMap=new Map();
+  // Merge stints per-driver: only replace a driver's stint list if the new
+  // fetch actually returned something for them, or if we had nothing before.
+  const newStintsByDriver=new Map();
   for(const s of stints){
     const dn=s.driver_number;
-    if(!stintMap.has(dn))stintMap.set(dn,[]);
-    stintMap.get(dn).push(s);
+    if(!newStintsByDriver.has(dn))newStintsByDriver.set(dn,[]);
+    newStintsByDriver.get(dn).push(s);
   }
-  lastStintMap=stintMap;
+  for(const[dn,list]of newStintsByDriver){
+    if(list.length)lastStintMap.set(dn,list);
+  }
 
   for(const p of positions){
     const dn=p.driver_number;
@@ -1029,15 +1025,72 @@ async function loadSessionData(){
     if(!latestIv.has(dn)||new Date(iv.date)>new Date(latestIv.get(dn).date))latestIv.set(dn,iv);
   }
 
-  let leaderDn=null;
-  for(const[dn,iv]of latestIv){if(iv.gap_to_leader===0||iv.gap_to_leader===null||iv.gap_to_leader==='0'){leaderDn=dn;break}}
-  if(!leaderDn)for(const[dn,p]of latestPos){if(p.position===1){leaderDn=dn;break}}
-
-  const latestPit=new Map();
+  const latestPit=new Map(cachedPitStops);
   for(const p of pitStops){
     const dn=p.driver_number;
     if(!latestPit.has(dn)||new Date(p.pit_in_time)>new Date(latestPit.get(dn).pit_in_time))latestPit.set(dn,p);
   }
+  cachedPitStops=latestPit;
+
+  if(weather&&weather.length)cachedWeather=weather;
+  if(raceControl&&raceControl.length)cachedRaceControl=mergeRCMessages(cachedRaceControl,raceControl);
+}
+
+function mergeRCMessages(existing,fresh){
+  const seen=new Set(existing.map(m=>`${m.date}|${m.message}`));
+  const merged=[...existing];
+  for(const m of fresh){
+    const key=`${m.date}|${m.message}`;
+    if(!seen.has(key)){merged.push(m);seen.add(key)}
+  }
+  return merged;
+}
+
+// Renders the driver list from whatever is currently in the persistent
+// caches — safe to call repeatedly after each fetch-and-merge round.
+function renderSessionData(){
+  const laps=[...cachedLaps.values()].sort((a,b)=>a.lap_number-b.lap_number);
+
+  updateWeather(cachedWeather);
+  updateRaceControl(cachedRaceControl);
+
+  const bestLapMap=new Map(),lastLapMap=new Map();
+  overallBestLap=Infinity;overallBestDriver=null;
+
+  for(const lap of laps){
+    const dn=lap.driver_number,dur=lap.lap_duration;
+    if(dur&&dur>0){
+      if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration)bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
+      if(dur<overallBestLap){overallBestLap=dur;overallBestDriver=dn}
+    }
+    // Track the most recent lap overall (for lap time/tyre age), but track
+    // each sector's most recent NON-NULL value independently — OpenF1 can
+    // post a driver's final lap before every sector has finished timing
+    // (S3 in particular completes last, at the finish line), so tying every
+    // sector to one single "last lap" object can leave a real, earlier value
+    // blank even though it's sitting right there in the data.
+    const prev=lastLapMap.get(dn)||{};
+    lastLapMap.set(dn,{
+      duration:dur,
+      lapNum:lap.lap_number,
+      s1:lap.duration_sector_1||prev.s1||null,
+      s2:lap.duration_sector_2||prev.s2||null,
+      s3:lap.duration_sector_3||prev.s3||null
+    });
+  }
+
+  const vals=l=>[...lastLapMap.values()].map(x=>x[l]).filter(Boolean);
+  const bestS1=Math.min(...vals('s1'));
+  const bestS2=Math.min(...vals('s2'));
+  const bestS3=Math.min(...vals('s3'));
+
+  const stintMap=lastStintMap;
+
+  let leaderDn=null;
+  for(const[dn,iv]of latestIv){if(iv.gap_to_leader===0||iv.gap_to_leader===null||iv.gap_to_leader==='0'){leaderDn=dn;break}}
+  if(!leaderDn)for(const[dn,p]of latestPos){if(p.position===1){leaderDn=dn;break}}
+
+  const latestPit=cachedPitStops;
 
   const container=document.getElementById('driverList');
   const sorted=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
@@ -1075,11 +1128,30 @@ async function loadSessionData(){
     updatePit(dn,pit);
   }
   updateElimDivider(sorted,elimThreshold);
-  generateFeed(laps,latestPos,latestIv,pitStops,stintMap,raceControl);
+  generateFeed(laps,latestPos,latestIv,[...cachedPitStops.values()],stintMap,cachedRaceControl);
 
   const now=new Date();
   if(sessionEnd&&now>sessionEnd)setSelectStatus('done');
   else if(sessionStart&&now>=sessionStart)setSelectStatus('live');
+}
+
+// Orchestrates the one-shot load: fetch+merge, render, then up to two more
+// fetch+merge+render rounds a few seconds apart to backfill anything OpenF1
+// hadn't finished posting on the first pass. Each round only fills gaps
+// (see fetchAndMergeSessionData) — it never discards data already fetched.
+// Stops after 3 rounds regardless of completeness, so this can't turn into
+// the old indefinite polling loop.
+async function loadSessionData(){
+  if(!sessionKey)return;
+  const thisSessionKey=sessionKey;
+  setSelectStatus('loading');
+
+  for(let round=0;round<3;round++){
+    if(sessionKey!==thisSessionKey)return; // user switched sessions mid-backfill
+    await fetchAndMergeSessionData();
+    renderSessionData();
+    if(round<2)await new Promise(r=>setTimeout(r,3000));
+  }
 }
 
 function getCurrentTyre(stints,lapNum){
