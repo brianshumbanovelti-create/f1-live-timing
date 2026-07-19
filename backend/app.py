@@ -17,6 +17,15 @@ file/browser genuinely cannot do on its own:
 Nothing here talks to Anthropic/Claude — analysis still happens in a
 Claude Project, by design (see project notes on why that stays separate).
 This service only fetches and shapes data; it draws no conclusions.
+
+IMPORTANT — fastf1 is imported LAZILY (inside fetch_fastf1_telemetry, not
+at module level). Importing it eagerly pulls in pandas/numpy at process
+boot and sits in memory permanently, which on Render's free 512MB tier
+left too little headroom — a plain /reddit request could get its worker
+killed (SIGKILL, OOM) even though /reddit itself is lightweight, simply
+because fastf1's baseline footprint was already using most of the budget.
+Loading it only when /telemetry is actually called keeps the idle process
+small and only pays FastF1's memory cost when a telemetry request needs it.
 """
 
 import os
@@ -25,18 +34,19 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-import fastf1
-
 app = Flask(__name__)
 CORS(app)  # allows the GitHub Pages frontend (a different origin) to call this API
 
-# FastF1's own recommended cache — speeds up repeat requests for the same
-# session. Render's free tier disk is ephemeral (wiped on redeploy/restart),
-# which is fine: worst case, a cold cache just means the next request after
-# a restart takes longer, it doesn't break anything.
+# FastF1's own recommended cache dir — speeds up repeat requests for the
+# same session. Render's free tier disk is ephemeral (wiped on
+# redeploy/restart), which is fine: worst case, a cold cache just means
+# the next request after a restart takes longer, it doesn't break anything.
+# Just creating the folder here is cheap and doesn't need fastf1 imported;
+# actually enabling it happens inside fetch_fastf1_telemetry, alongside the
+# lazy import itself.
 CACHE_DIR = "/tmp/fastf1_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
-fastf1.Cache.enable_cache(CACHE_DIR)
+_fastf1_cache_enabled = False
 
 
 def slugify(s):
@@ -92,7 +102,19 @@ def sampled_trace(telemetry, sample_every_m=25):
 
 
 def fetch_fastf1_telemetry(year, gp, session_code):
-    """Returns a dict keyed by driver acronym — same key convention OpenF1 uses."""
+    """
+    Returns a dict keyed by driver acronym — same key convention OpenF1 uses.
+    Imports fastf1 lazily (see module docstring for why) — this is the ONLY
+    place fastf1 gets imported and its cache gets enabled, and only runs
+    when a /telemetry request actually needs it.
+    """
+    import fastf1  # lazy — keeps the idle process footprint small
+
+    global _fastf1_cache_enabled
+    if not _fastf1_cache_enabled:
+        fastf1.Cache.enable_cache(CACHE_DIR)
+        _fastf1_cache_enabled = True
+
     session = fastf1.get_session(year, gp, session_code)
     session.load(telemetry=True, laps=True, weather=False)
 
