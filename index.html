@@ -1,1029 +1,1220 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>F1Debrief</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface2: #1c1c1c;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --muted: #888;
-      --accent: #e10600;
-      --accent-dim: #b00500;
-      --green: #00d2be;
-      --yellow: #ffd700;
-      --soft: #ff3333;
-      --medium: #ffcc00;
-      --hard: #ffffff;
-      --inter: #40e0d0;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      overflow: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    /* Hide all scrollbars */
-    * {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    *::-webkit-scrollbar { display: none; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>F1Debrief</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .app {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-    }
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0e14;
+            color: #e8edf3;
+        }
 
-    header {
-      padding: 12px 16px 8px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    header h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-    header h1 span { color: var(--accent); }
+        /* hide scrollbars everywhere */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
 
-    .tabs {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .tab {
-      flex: 1;
-      padding: 12px 8px;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-      border-bottom: 2px solid transparent;
-    }
-    .tab.active {
-      color: var(--text);
-      border-bottom-color: var(--accent);
-    }
-    .tab:active { background: var(--surface2); }
+        /* ---------- APP SHELL ---------- */
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 12px 12px 12px;
+            background: #0a0e14;
+        }
 
-    .selectors {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    select {
-      flex: 1;
-      min-width: 100px;
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 0.85rem;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
-    }
-    select:disabled { opacity: 0.5; }
-    select:focus { outline: none; border-color: var(--accent); }
+        /* ---------- HEADER ---------- */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0 8px 0;
+            border-bottom: 1px solid #1f2a36;
+            flex-shrink: 0;
+        }
+        .app-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #e10600, #ff4d4d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-header .badge {
+            font-size: 0.6rem;
+            background: #1f2a36;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #8a9aa8;
+            letter-spacing: 0.3px;
+        }
 
-    #content {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 12px;
-      -webkit-overflow-scrolling: touch;
-    }
+        /* ---------- TABS ---------- */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin: 12px 0 10px 0;
+            flex-shrink: 0;
+            border-bottom: 1px solid #1f2a36;
+            padding-bottom: 6px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #6a7a88;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+        .tab-btn:hover {
+            color: #c0d0dc;
+            background: #141c24;
+        }
+        .tab-btn.active {
+            color: #fff;
+            background: #1f2a36;
+        }
 
-    .loading, .empty, .error {
-      text-align: center;
-      padding: 40px 16px;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .error { color: var(--accent); }
+        /* ---------- SELECTORS ---------- */
+        .selectors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            padding: 8px 0 10px 0;
+            flex-shrink: 0;
+            border-bottom: 1px solid #1a232e;
+        }
+        .selectors .sel-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1 1 100px;
+            min-width: 100px;
+        }
+        .selectors label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6a7a88;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .selectors select {
+            background: #141c24;
+            border: 1px solid #1f2a36;
+            color: #e8edf3;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 60px;
+            outline: none;
+            cursor: pointer;
+        }
+        .selectors select:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .selectors select option {
+            background: #0a0e14;
+        }
 
-    /* Order table */
-    .order-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-    .order-table th {
-      text-align: left;
-      padding: 8px 6px;
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-    }
-    .order-table td {
-      padding: 10px 6px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .order-table tr {
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .order-table tr:active { background: var(--surface2); }
-    .pos {
-      font-weight: 700;
-      width: 28px;
-      color: var(--muted);
-    }
-    .driver-cell {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .team-dot {
-      width: 4px;
-      height: 22px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    .driver-name { font-weight: 600; }
-    .team-name { font-size: 0.75rem; color: var(--muted); }
-    .time-cell { font-variant-numeric: tabular-nums; text-align: right; }
-    .status-badge {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--surface2);
-      color: var(--muted);
-    }
-    .status-badge.dnf { background: #3a1515; color: #ff6b6b; }
-    .status-badge.dsq { background: #3a2a15; color: #ffb86b; }
+        /* ---------- CONTENT AREA ---------- */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 12px 0 8px 0;
+            min-height: 0;
+        }
 
-    /* Sub-view */
-    .subview-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .back-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .back-btn:active { background: var(--border); }
-    .subview-title { font-size: 1.1rem; font-weight: 700; }
+        /* ---------- ORDER TAB ---------- */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .order-row {
+            display: grid;
+            grid-template-columns: 36px 1fr 80px 60px 60px;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: #11181f;
+            transition: background 0.15s;
+            cursor: pointer;
+            font-size: 0.85rem;
+            gap: 4px;
+        }
+        .order-row:hover {
+            background: #1a2430;
+        }
+        .order-row .pos {
+            font-weight: 700;
+            color: #6a7a88;
+            text-align: center;
+        }
+        .order-row .name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .order-row .abbr {
+            color: #8a9aa8;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+        .order-row .gap {
+            color: #8a9aa8;
+            font-size: 0.75rem;
+            text-align: right;
+        }
+        .order-row .status {
+            font-size: 0.7rem;
+            text-align: right;
+            color: #6a7a88;
+        }
+        .order-row .status.finished {
+            color: #4ade80;
+        }
+        .order-row .status.dnf {
+            color: #f87171;
+        }
 
-    .laps-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-    }
-    .laps-table th {
-      text-align: left;
-      padding: 6px 4px;
-      color: var(--muted);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-    }
-    .laps-table td {
-      padding: 8px 4px;
-      border-bottom: 1px solid var(--border);
-      font-variant-numeric: tabular-nums;
-    }
-    .compound {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .compound.SOFT { background: #4a1515; color: #ff5555; }
-    .compound.MEDIUM { background: #4a3a15; color: #ffcc44; }
-    .compound.HARD { background: #333; color: #ddd; }
-    .compound.INTERMEDIATE { background: #153a2a; color: #44ddaa; }
-    .compound.WET { background: #152a4a; color: #55aaff; }
+        /* ---------- DRIVER DETAIL (sub-view) ---------- */
+        .detail-view {
+            padding: 4px 0;
+        }
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .detail-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .detail-header .back-btn {
+            background: #1f2a36;
+            border: none;
+            color: #e8edf3;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .detail-header .back-btn:hover {
+            background: #2a3a4a;
+        }
+        .detail-laps {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.8rem;
+        }
+        .detail-laps .lap-row {
+            display: grid;
+            grid-template-columns: 50px 60px 1fr 60px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: #11181f;
+            gap: 6px;
+        }
+        .detail-laps .lap-row .lap-num {
+            color: #6a7a88;
+        }
+        .detail-laps .lap-row .lap-time {
+            font-weight: 500;
+        }
+        .detail-laps .lap-row .tyre {
+            font-size: 0.7rem;
+            padding: 1px 10px;
+            border-radius: 12px;
+            background: #1a2430;
+            display: inline-block;
+            width: fit-content;
+        }
+        .detail-laps .lap-row .tyre.soft {
+            background: #e10600;
+            color: #fff;
+        }
+        .detail-laps .lap-row .tyre.medium {
+            background: #f5a623;
+            color: #0a0e14;
+        }
+        .detail-laps .lap-row .tyre.hard {
+            background: #4a7a9a;
+            color: #fff;
+        }
+        .detail-laps .lap-row .tyre.intermediate {
+            background: #2b7a4a;
+            color: #fff;
+        }
+        .detail-laps .lap-row .tyre.wet {
+            background: #2a5a7a;
+            color: #fff;
+        }
+        .detail-laps .lap-row .tyre.unknown {
+            background: #2a2a2a;
+            color: #8a8a8a;
+        }
+        .detail-laps .lap-row .sector {
+            color: #8a9aa8;
+            font-size: 0.7rem;
+            text-align: right;
+        }
 
-    /* Insights */
-    .insights-grid {
-      display: grid;
-      gap: 12px;
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-    }
-    .card h3 {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      font-size: 0.9rem;
-    }
-    .stat-label { color: var(--muted); }
-    .stat-value { font-weight: 600; font-variant-numeric: tabular-nums; }
-    .strategy-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .strategy-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-    }
-    .strategy-item .name { min-width: 70px; font-weight: 600; }
-    .stint-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-    .pill {
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
+        /* ---------- INSIGHTS ---------- */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .insight-card {
+            background: #11181f;
+            border-radius: 8px;
+            padding: 14px 16px;
+            border-left: 3px solid #1f2a36;
+        }
+        .insight-card h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6a7a88;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .insight-card .value {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .insight-card .value small {
+            font-weight: 400;
+            color: #8a9aa8;
+            font-size: 0.7rem;
+        }
+        .insight-card .list {
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        .insight-card .list .highlight {
+            color: #f5a623;
+        }
 
-    /* Duels */
-    .duels-select {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .driver-check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .driver-check.selected {
-      border-color: var(--accent);
-      background: #1a1010;
-    }
-    .driver-check input { display: none; }
-    .check-box {
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--border);
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .driver-check.selected .check-box {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-    .driver-check.selected .check-box::after {
-      content: "✓";
-      color: white;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .compare-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-    .compare-btn:disabled {
-      background: var(--border);
-      color: var(--muted);
-      cursor: not-allowed;
-    }
-    .compare-btn:active:not(:disabled) { background: var(--accent-dim); }
-    .chart-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 14px;
-    }
-    .chart-box h4 {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .chart-wrap {
-      position: relative;
-      height: 180px;
-    }
-    .note {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 8px;
-    }
+        /* ---------- DUELS ---------- */
+        .duels-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .duels-selectors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            align-items: center;
+        }
+        .duels-selectors .driver-pick {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #11181f;
+            padding: 4px 12px 4px 8px;
+            border-radius: 20px;
+        }
+        .duels-selectors .driver-pick label {
+            font-size: 0.7rem;
+            color: #6a7a88;
+        }
+        .duels-selectors .driver-pick select {
+            background: #141c24;
+            border: 1px solid #1f2a36;
+            color: #e8edf3;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            outline: none;
+            max-width: 80px;
+        }
+        .duels-selectors .compare-btn {
+            background: #e10600;
+            border: none;
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: auto;
+        }
+        .duels-selectors .compare-btn:hover {
+            background: #ff1a1a;
+        }
+        .duels-selectors .compare-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
 
-    @media (min-width: 600px) {
-      .chart-wrap { height: 220px; }
-      .insights-grid { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+        .duels-charts {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 4px;
+        }
+        .duels-charts .chart-box {
+            background: #11181f;
+            border-radius: 8px;
+            padding: 12px 10px 6px 10px;
+        }
+        .duels-charts .chart-box h4 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #6a7a88;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .duels-charts .chart-box canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 140px;
+        }
+
+        /* ---------- EMPTY STATE ---------- */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #4a5a68;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 20px;
+        }
+        .empty-state span {
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 640px) {
+            .app-header h1 {
+                font-size: 1.1rem;
+            }
+            .app-header .badge {
+                font-size: 0.5rem;
+                padding: 2px 10px;
+            }
+            .tab-btn {
+                font-size: 0.75rem;
+                padding: 4px 12px;
+            }
+            .selectors {
+                gap: 4px 8px;
+            }
+            .selectors .sel-group {
+                flex: 1 1 70px;
+                min-width: 70px;
+            }
+            .selectors select {
+                font-size: 0.7rem;
+                padding: 4px 4px;
+            }
+            .order-row {
+                grid-template-columns: 28px 1fr 50px 40px 40px;
+                font-size: 0.7rem;
+                padding: 5px 6px;
+            }
+            .order-row .gap {
+                font-size: 0.65rem;
+            }
+            .order-row .status {
+                font-size: 0.6rem;
+            }
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+            .detail-laps .lap-row {
+                grid-template-columns: 40px 50px 1fr 40px;
+                font-size: 0.7rem;
+                padding: 3px 6px;
+            }
+            .duels-selectors .driver-pick {
+                padding: 2px 8px 2px 6px;
+            }
+            .duels-selectors .compare-btn {
+                font-size: 0.7rem;
+                padding: 4px 14px;
+            }
+            .duels-charts .chart-box canvas {
+                max-height: 100px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .order-row {
+                grid-template-columns: 24px 1fr 40px 30px 30px;
+                font-size: 0.65rem;
+                gap: 2px;
+            }
+            .order-row .gap {
+                font-size: 0.55rem;
+            }
+            .order-row .status {
+                font-size: 0.5rem;
+            }
+            .selectors .sel-group {
+                flex: 1 1 50px;
+                min-width: 50px;
+            }
+            .selectors label {
+                font-size: 0.55rem;
+            }
+            .selectors select {
+                font-size: 0.6rem;
+                padding: 3px 2px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>F1<span>Debrief</span></h1>
-    </header>
+    <div id="app">
+        <!-- HEADER -->
+        <header class="app-header">
+            <h1>🏎️ F1Debrief</h1>
+            <span class="badge">post‑session</span>
+        </header>
 
-    <nav class="tabs">
-      <button class="tab active" data-tab="order">Order</button>
-      <button class="tab" data-tab="insights">Insights</button>
-      <button class="tab" data-tab="duels">Duels</button>
-    </nav>
+        <!-- TABS -->
+        <div class="tabs" id="tabBar">
+            <button class="tab-btn active" data-tab="order">Order</button>
+            <button class="tab-btn" data-tab="insights">Insights</button>
+            <button class="tab-btn" data-tab="duels">Duels</button>
+        </div>
 
-    <div class="selectors">
-      <select id="yearSelect" aria-label="Year"></select>
-      <select id="meetingSelect" aria-label="Grand Prix" disabled>
-        <option value="">Grand Prix</option>
-      </select>
-      <select id="sessionSelect" aria-label="Session" disabled>
-        <option value="">Session</option>
-      </select>
-    </div>
-
-    <div id="content">
-      <div class="empty">Select a year, Grand Prix and session to begin</div>
-    </div>
-  </div>
-
-  <script>
-    const API = "https://api.openf1.org/v1";
-    const CURRENT_YEAR = new Date().getFullYear();
-
-    // State
-    let state = {
-      year: null,
-      meetingKey: null,
-      sessionKey: null,
-      tab: "order",
-      subview: null,          // driver_number or null
-      selectedDrivers: new Set(),
-      data: null              // { drivers, results, stints, weather, laps, carCache }
-    };
-
-    // DOM
-    const yearSelect = document.getElementById("yearSelect");
-    const meetingSelect = document.getElementById("meetingSelect");
-    const sessionSelect = document.getElementById("sessionSelect");
-    const content = document.getElementById("content");
-    const tabs = document.querySelectorAll(".tab");
-
-    // ---------- Helpers ----------
-    async function fetchJSON(url) {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      return res.json();
-    }
-
-    function fmtTime(sec) {
-      if (sec == null || isNaN(sec)) return "—";
-      if (Array.isArray(sec)) return sec.map(s => fmtTime(s)).join(" / ");
-      if (sec > 3600) {
-        const h = Math.floor(sec / 3600);
-        const m = Math.floor((sec % 3600) / 60);
-        const s = (sec % 60).toFixed(3);
-        return `${h}:${String(m).padStart(2,"0")}:${s.padStart(6,"0")}`;
-      }
-      if (sec > 60) {
-        const m = Math.floor(sec / 60);
-        const s = (sec % 60).toFixed(3);
-        return `${m}:${s.padStart(6,"0")}`;
-      }
-      return sec.toFixed(3) + "s";
-    }
-
-    function downsample(arr, max = 280) {
-      if (!arr || arr.length <= max) return arr || [];
-      const step = Math.ceil(arr.length / max);
-      return arr.filter((_, i) => i % step === 0);
-    }
-
-    function teamColor(hex) {
-      return hex ? `#${hex}` : "#555";
-    }
-
-    function getDriver(num) {
-      return (state.data?.drivers || []).find(d => d.driver_number === num) || {};
-    }
-
-    // ---------- Init selectors ----------
-    function initYears() {
-      yearSelect.innerHTML = '<option value="">Year</option>';
-      for (let y = CURRENT_YEAR; y >= 2023; y--) {
-        const opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        yearSelect.appendChild(opt);
-      }
-    }
-
-    yearSelect.addEventListener("change", async () => {
-      state.year = yearSelect.value ? +yearSelect.value : null;
-      state.meetingKey = null;
-      state.sessionKey = null;
-      state.data = null;
-      state.subview = null;
-      state.selectedDrivers.clear();
-      meetingSelect.innerHTML = '<option value="">Loading…</option>';
-      meetingSelect.disabled = true;
-      sessionSelect.innerHTML = '<option value="">Session</option>';
-      sessionSelect.disabled = true;
-      render();
-      if (!state.year) return;
-      try {
-        const meetings = await fetchJSON(`${API}/meetings?year=${state.year}`);
-        meetings.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-        meetingSelect.innerHTML = '<option value="">Grand Prix</option>';
-        meetings.forEach(m => {
-          const opt = document.createElement("option");
-          opt.value = m.meeting_key;
-          opt.textContent = m.meeting_name || m.circuit_short_name || m.country_name;
-          meetingSelect.appendChild(opt);
-        });
-        meetingSelect.disabled = false;
-      } catch (e) {
-        meetingSelect.innerHTML = '<option value="">Error loading</option>';
-      }
-    });
-
-    meetingSelect.addEventListener("change", async () => {
-      state.meetingKey = meetingSelect.value ? +meetingSelect.value : null;
-      state.sessionKey = null;
-      state.data = null;
-      state.subview = null;
-      state.selectedDrivers.clear();
-      sessionSelect.innerHTML = '<option value="">Loading…</option>';
-      sessionSelect.disabled = true;
-      render();
-      if (!state.meetingKey) return;
-      try {
-        const sessions = await fetchJSON(`${API}/sessions?meeting_key=${state.meetingKey}`);
-        sessions.sort((a, b) => new Date(a.date_start) - new Date(b.date_start));
-        sessionSelect.innerHTML = '<option value="">Session</option>';
-        sessions.forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = s.session_key;
-          opt.textContent = s.session_name || s.session_type;
-          sessionSelect.appendChild(opt);
-        });
-        sessionSelect.disabled = false;
-      } catch (e) {
-        sessionSelect.innerHTML = '<option value="">Error loading</option>';
-      }
-    });
-
-    sessionSelect.addEventListener("change", async () => {
-      state.sessionKey = sessionSelect.value ? +sessionSelect.value : null;
-      state.data = null;
-      state.subview = null;
-      state.selectedDrivers.clear();
-      render();
-      if (!state.sessionKey) return;
-      await loadSessionData();
-    });
-
-    // ---------- Load core session data (light) ----------
-    async function loadSessionData() {
-      content.innerHTML = '<div class="loading">Loading session data…</div>';
-      try {
-        const [drivers, results, stints, weather] = await Promise.all([
-          fetchJSON(`${API}/drivers?session_key=${state.sessionKey}`),
-          fetchJSON(`${API}/session_result?session_key=${state.sessionKey}`),
-          fetchJSON(`${API}/stints?session_key=${state.sessionKey}`),
-          fetchJSON(`${API}/weather?session_key=${state.sessionKey}`).catch(() => [])
-        ]);
-        // Sort results by position
-        results.sort((a, b) => (a.position || 99) - (b.position || 99));
-        state.data = {
-          drivers,
-          results,
-          stints,
-          weather,
-          laps: {},          // driver_number -> laps[]
-          allLaps: null,     // full set when needed
-          carCache: {}       // driver_number -> downsampled car_data
-        };
-        render();
-      } catch (e) {
-        content.innerHTML = `<div class="error">Failed to load session data.<br>${e.message}</div>`;
-      }
-    }
-
-    // ---------- Tabs ----------
-    tabs.forEach(btn => {
-      btn.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        btn.classList.add("active");
-        state.tab = btn.dataset.tab;
-        state.subview = null;
-        render();
-      });
-    });
-
-    // ---------- Render ----------
-    function render() {
-      if (!state.sessionKey || !state.data) {
-        if (!state.sessionKey) {
-          content.innerHTML = '<div class="empty">Select a year, Grand Prix and session to begin</div>';
-        }
-        return;
-      }
-      if (state.subview) {
-        renderDriverLaps(state.subview);
-        return;
-      }
-      if (state.tab === "order") renderOrder();
-      else if (state.tab === "insights") renderInsights();
-      else if (state.tab === "duels") renderDuels();
-    }
-
-    // ===== ORDER =====
-    function renderOrder() {
-      const { results, drivers } = state.data;
-      if (!results.length) {
-        content.innerHTML = '<div class="empty">No classification data available for this session</div>';
-        return;
-      }
-      let html = `<table class="order-table"><thead><tr>
-        <th>Pos</th><th>Driver</th><th>Time / Gap</th><th></th>
-      </tr></thead><tbody>`;
-      results.forEach(r => {
-        const d = getDriver(r.driver_number);
-        const name = d.name_acronym || d.broadcast_name || `#${r.driver_number}`;
-        const team = d.team_name || "";
-        const color = teamColor(d.team_colour);
-        let timeStr = "—";
-        if (r.duration != null) timeStr = fmtTime(r.duration);
-        if (r.gap_to_leader != null && r.position !== 1) {
-          const gap = Array.isArray(r.gap_to_leader) ? r.gap_to_leader[r.gap_to_leader.length-1] : r.gap_to_leader;
-          if (typeof gap === "string") timeStr = gap;
-          else if (gap != null) timeStr = "+" + fmtTime(gap);
-        }
-        let status = "";
-        if (r.dnf) status = '<span class="status-badge dnf">DNF</span>';
-        else if (r.dsq) status = '<span class="status-badge dsq">DSQ</span>';
-        else if (r.dns) status = '<span class="status-badge">DNS</span>';
-
-        html += `<tr data-driver="${r.driver_number}">
-          <td class="pos">${r.position ?? "—"}</td>
-          <td><div class="driver-cell">
-            <div class="team-dot" style="background:${color}"></div>
-            <div>
-              <div class="driver-name">${name}</div>
-              <div class="team-name">${team}</div>
+        <!-- SELECTORS -->
+        <div class="selectors" id="selectorBar">
+            <div class="sel-group">
+                <label for="selYear">Year</label>
+                <select id="selYear"></select>
             </div>
-          </div></td>
-          <td class="time-cell">${timeStr}</td>
-          <td>${status}</td>
-        </tr>`;
-      });
-      html += "</tbody></table>";
-      content.innerHTML = html;
+            <div class="sel-group">
+                <label for="selGP">GP</label>
+                <select id="selGP" disabled></select>
+            </div>
+            <div class="sel-group">
+                <label for="selSession">Session</label>
+                <select id="selSession" disabled></select>
+            </div>
+        </div>
 
-      content.querySelectorAll("tr[data-driver]").forEach(row => {
-        row.addEventListener("click", () => {
-          state.subview = +row.dataset.driver;
-          render();
-        });
-      });
-    }
+        <!-- CONTENT -->
+        <div class="content" id="contentArea">
+            <div class="empty-state">
+                <span>🏁</span>
+                <p>Select a year, GP and session to begin</p>
+            </div>
+        </div>
+    </div>
 
-    // ===== DRIVER LAPS SUBVIEW =====
-    async function renderDriverLaps(driverNumber) {
-      const d = getDriver(driverNumber);
-      const name = d.full_name || d.broadcast_name || `#${driverNumber}`;
-      content.innerHTML = `<div class="subview-header">
-        <button class="back-btn" id="backBtn">← Back</button>
-        <div class="subview-title">${name}</div>
-      </div>
-      <div class="loading">Loading laps…</div>`;
+    <script>
+        (function() {
+            'use strict';
 
-      document.getElementById("backBtn").onclick = () => {
-        state.subview = null;
-        render();
-      };
+            // ---------- CONSTANTS ----------
+            const API_BASE = 'https://api.openf1.org/v1';
 
-      try {
-        if (!state.data.laps[driverNumber]) {
-          const laps = await fetchJSON(`${API}/laps?session_key=${state.sessionKey}&driver_number=${driverNumber}`);
-          laps.sort((a, b) => (a.lap_number || 0) - (b.lap_number || 0));
-          state.data.laps[driverNumber] = laps;
-        }
-        const laps = state.data.laps[driverNumber];
-        const stints = (state.data.stints || []).filter(s => s.driver_number === driverNumber)
-          .sort((a, b) => (a.stint_number || 0) - (b.stint_number || 0));
+            // ---------- STATE ----------
+            const state = {
+                // selectors
+                year: null,
+                gp: null,
+                sessionKey: null,
+                // data caches (keyed by sessionKey)
+                cache: {
+                    drivers: null, // array
+                    results: null, // array
+                    stints: null, // array
+                    weather: null, // array
+                    laps: {}, // driverNumber -> array
+                    carData: {}, // driverNumber -> array (raw, before downsampling)
+                },
+                // UI state
+                activeTab: 'order',
+                detailDriver: null, // driverNumber if in detail view
+                // duels
+                duelDrivers: [null, null, null, null],
+                duelCharts: [],
+            };
 
-        // Map lap -> compound
-        const lapCompound = {};
-        stints.forEach(s => {
-          const start = s.lap_start || 1;
-          const end = s.lap_end || 999;
-          for (let i = start; i <= end; i++) lapCompound[i] = s.compound || "—";
-        });
+            // ---------- DOM REFS ----------
+            const $ = id => document.getElementById(id);
+            const elYear = $('selYear');
+            const elGP = $('selGP');
+            const elSession = $('selSession');
+            const content = $('contentArea');
+            const tabBtns = document.querySelectorAll('.tab-btn');
 
-        if (!laps.length) {
-          content.querySelector(".loading").outerHTML = '<div class="empty">No lap data</div>';
-          return;
-        }
+            // ---------- HELPERS ----------
+            function getNumber(v) { const n = Number(v); return isNaN(n) ? null : n; }
 
-        let html = `<table class="laps-table"><thead><tr>
-          <th>Lap</th><th>Time</th><th>S1</th><th>S2</th><th>S3</th><th>Tyre</th>
-        </tr></thead><tbody>`;
-        laps.forEach(l => {
-          const compound = lapCompound[l.lap_number] || "—";
-          html += `<tr>
-            <td>${l.lap_number ?? "—"}</td>
-            <td>${fmtTime(l.lap_duration)}</td>
-            <td>${fmtTime(l.duration_sector_1)}</td>
-            <td>${fmtTime(l.duration_sector_2)}</td>
-            <td>${fmtTime(l.duration_sector_3)}</td>
-            <td><span class="compound ${compound}">${compound}</span></td>
-          </tr>`;
-        });
-        html += "</tbody></table>";
-        content.querySelector(".loading").outerHTML = html;
-      } catch (e) {
-        content.querySelector(".loading").outerHTML = `<div class="error">Failed to load laps<br>${e.message}</div>`;
-      }
-    }
+            function safeName(d) { return d?.full_name || d?.name || 'Unknown'; }
 
-    // ===== INSIGHTS =====
-    async function renderInsights() {
-      content.innerHTML = '<div class="loading">Building insights…</div>';
-      const { results, stints, weather, drivers } = state.data;
+            function abbrName(d) { return d?.name_acronym || d?.abbreviation || d?.driver_number || '??'; }
 
-      // Load all laps once if not present (needed for pace analysis)
-      if (!state.data.allLaps) {
-        try {
-          const all = await fetchJSON(`${API}/laps?session_key=${state.sessionKey}`);
-          state.data.allLaps = all;
-        } catch {
-          state.data.allLaps = [];
-        }
-      }
-      const allLaps = state.data.allLaps || [];
-
-      // --- Compute insights ---
-      // Fastest lap overall
-      let fastest = null;
-      allLaps.forEach(l => {
-        if (l.lap_duration && (!fastest || l.lap_duration < fastest.lap_duration)) {
-          fastest = l;
-        }
-      });
-
-      // Best sectors
-      const bestS = [null, null, null];
-      allLaps.forEach(l => {
-        [l.duration_sector_1, l.duration_sector_2, l.duration_sector_3].forEach((s, i) => {
-          if (s && (!bestS[i] || s < bestS[i].time)) {
-            bestS[i] = { time: s, driver: l.driver_number, lap: l.lap_number };
-          }
-        });
-      });
-
-      // Consistency: stddev of flying laps (exclude pit outs roughly)
-      const driverPace = {};
-      allLaps.forEach(l => {
-        if (!l.lap_duration || l.is_pit_out_lap) return;
-        if (!driverPace[l.driver_number]) driverPace[l.driver_number] = [];
-        driverPace[l.driver_number].push(l.lap_duration);
-      });
-      const consistency = Object.entries(driverPace).map(([num, times]) => {
-        if (times.length < 3) return null;
-        const mean = times.reduce((a, b) => a + b, 0) / times.length;
-        const variance = times.reduce((a, b) => a + (b - mean) ** 2, 0) / times.length;
-        return { num: +num, std: Math.sqrt(variance), mean, count: times.length };
-      }).filter(Boolean).sort((a, b) => a.std - b.std);
-
-      // Tyre strategies
-      const strategies = {};
-      (stints || []).forEach(s => {
-        if (!strategies[s.driver_number]) strategies[s.driver_number] = [];
-        strategies[s.driver_number].push(s);
-      });
-      Object.values(strategies).forEach(arr => arr.sort((a, b) => (a.stint_number || 0) - (b.stint_number || 0)));
-
-      // Weather summary
-      let weatherSummary = "No weather data";
-      if (weather && weather.length) {
-        const last = weather[weather.length - 1];
-        const temps = weather.map(w => w.track_temperature).filter(t => t != null);
-        const airs = weather.map(w => w.air_temperature).filter(t => t != null);
-        const rains = weather.filter(w => w.rainfall > 0).length;
-        weatherSummary = `Track ${last.track_temperature ?? "—"}°C · Air ${last.air_temperature ?? "—"}°C`;
-        if (temps.length) {
-          const minT = Math.min(...temps).toFixed(1);
-          const maxT = Math.max(...temps).toFixed(1);
-          weatherSummary += ` (track ${minT}–${maxT}°C)`;
-        }
-        if (rains) weatherSummary += ` · Rain samples: ${rains}`;
-      }
-
-      // Results summary
-      const winner = results[0];
-      const dnfCount = results.filter(r => r.dnf).length;
-      const finisherCount = results.filter(r => !r.dnf && !r.dns && !r.dsq).length;
-
-      // Build HTML
-      let html = '<div class="insights-grid">';
-
-      // Classification card
-      html += `<div class="card"><h3>Classification</h3>`;
-      if (winner) {
-        const wd = getDriver(winner.driver_number);
-        html += `<div class="stat-row"><span class="stat-label">Winner</span><span class="stat-value">${wd.name_acronym || wd.broadcast_name || "#" + winner.driver_number}</span></div>`;
-        html += `<div class="stat-row"><span class="stat-label">Time</span><span class="stat-value">${fmtTime(winner.duration)}</span></div>`;
-      }
-      html += `<div class="stat-row"><span class="stat-label">Classified</span><span class="stat-value">${finisherCount}</span></div>`;
-      html += `<div class="stat-row"><span class="stat-label">DNF / DSQ</span><span class="stat-value">${dnfCount} / ${results.filter(r=>r.dsq).length}</span></div>`;
-      html += `</div>`;
-
-      // Fastest
-      html += `<div class="card"><h3>Fastest Lap & Sectors</h3>`;
-      if (fastest) {
-        const fd = getDriver(fastest.driver_number);
-        html += `<div class="stat-row"><span class="stat-label">Fastest Lap</span><span class="stat-value">${fd.name_acronym || "#"+fastest.driver_number} · ${fmtTime(fastest.lap_duration)} (L${fastest.lap_number})</span></div>`;
-      } else {
-        html += `<div class="stat-row"><span class="stat-label">Fastest Lap</span><span class="stat-value">—</span></div>`;
-      }
-      bestS.forEach((b, i) => {
-        if (b) {
-          const bd = getDriver(b.driver);
-          html += `<div class="stat-row"><span class="stat-label">Best S${i+1}</span><span class="stat-value">${bd.name_acronym || "#"+b.driver} · ${fmtTime(b.time)}</span></div>`;
-        }
-      });
-      html += `</div>`;
-
-      // Consistency
-      html += `<div class="card"><h3>Most Consistent (σ of lap times)</h3>`;
-      if (consistency.length) {
-        consistency.slice(0, 5).forEach((c, idx) => {
-          const cd = getDriver(c.num);
-          html += `<div class="stat-row"><span class="stat-label">${idx+1}. ${cd.name_acronym || "#"+c.num}</span><span class="stat-value">σ ${c.std.toFixed(3)}s (${c.count} laps)</span></div>`;
-        });
-      } else {
-        html += `<div class="stat-row"><span class="stat-label">Insufficient data</span><span class="stat-value">—</span></div>`;
-      }
-      html += `</div>`;
-
-      // Weather
-      html += `<div class="card"><h3>Weather</h3>
-        <div class="stat-row"><span class="stat-value" style="font-weight:500">${weatherSummary}</span></div>
-      </div>`;
-
-      // Tyre strategies
-      html += `<div class="card" style="grid-column:1/-1"><h3>Tyre Strategies</h3><div class="strategy-list">`;
-      const orderedDrivers = results.map(r => r.driver_number);
-      orderedDrivers.forEach(num => {
-        const st = strategies[num] || [];
-        if (!st.length) return;
-        const dd = getDriver(num);
-        const color = teamColor(dd.team_colour);
-        html += `<div class="strategy-item">
-          <div class="team-dot" style="background:${color};height:18px"></div>
-          <span class="name">${dd.name_acronym || "#"+num}</span>
-          <div class="stint-pills">`;
-        st.forEach(s => {
-          const comp = s.compound || "?";
-          const age = s.tyre_age_at_start != null ? ` (${s.tyre_age_at_start})` : "";
-          const laps = (s.lap_end && s.lap_start) ? ` L${s.lap_start}-${s.lap_end}` : "";
-          html += `<span class="pill compound ${comp}">${comp}${age}${laps}</span>`;
-        });
-        html += `</div></div>`;
-      });
-      html += `</div></div>`;
-
-      html += "</div>";
-      content.innerHTML = html;
-    }
-
-    // ===== DUELS =====
-    function renderDuels() {
-      const { drivers, results } = state.data;
-      // Prefer order from results, fallback to drivers list
-      const ordered = results.length
-        ? results.map(r => getDriver(r.driver_number)).filter(d => d.driver_number)
-        : drivers;
-
-      let html = `<div class="duels-select">`;
-      ordered.forEach(d => {
-        const num = d.driver_number;
-        const selected = state.selectedDrivers.has(num);
-        const color = teamColor(d.team_colour);
-        html += `<label class="driver-check ${selected ? "selected" : ""}" data-num="${num}">
-          <div class="check-box"></div>
-          <div class="team-dot" style="background:${color}"></div>
-          <div>
-            <div class="driver-name">${d.name_acronym || d.broadcast_name || "#"+num}</div>
-            <div class="team-name">${d.team_name || ""}</div>
-          </div>
-        </label>`;
-      });
-      html += `</div>
-        <button class="compare-btn" id="compareBtn" ${state.selectedDrivers.size < 1 || state.selectedDrivers.size > 4 ? "disabled" : ""}>
-          Compare ${state.selectedDrivers.size}/4
-        </button>
-        <div id="duelCharts"></div>
-        <p class="note">Telemetry is heavily downsampled to keep data usage low. Full session only.</p>`;
-
-      content.innerHTML = html;
-
-      // Toggle selection
-      content.querySelectorAll(".driver-check").forEach(el => {
-        el.addEventListener("click", () => {
-          const num = +el.dataset.num;
-          if (state.selectedDrivers.has(num)) {
-            state.selectedDrivers.delete(num);
-          } else {
-            if (state.selectedDrivers.size >= 4) return;
-            state.selectedDrivers.add(num);
-          }
-          renderDuels(); // re-render to update UI
-        });
-      });
-
-      document.getElementById("compareBtn")?.addEventListener("click", runDuels);
-    }
-
-    async function runDuels() {
-      const nums = [...state.selectedDrivers];
-      if (nums.length < 1 || nums.length > 4) return;
-
-      const chartsEl = document.getElementById("duelCharts");
-      chartsEl.innerHTML = '<div class="loading">Fetching telemetry (this may take a moment)…</div>';
-
-      const colors = ["#e10600", "#00d2be", "#f5ff00", "#9b59b6"];
-      const datasets = { speed: [], rpm: [], throttle: [], brake: [] };
-      const labelsRef = { current: null };
-
-      try {
-        for (let i = 0; i < nums.length; i++) {
-          const num = nums[i];
-          let points = state.data.carCache[num];
-          if (!points) {
-            const raw = await fetchJSON(`${API}/car_data?session_key=${state.sessionKey}&driver_number=${num}`);
-            // Sort by date just in case
-            raw.sort((a, b) => new Date(a.date) - new Date(b.date));
-            points = downsample(raw, 260);
-            state.data.carCache[num] = points;
-          }
-          const d = getDriver(num);
-          const label = d.name_acronym || `#${num}`;
-          const col = colors[i % colors.length];
-
-          // Build relative time axis from first sample of this driver
-          const t0 = points.length ? new Date(points[0].date).getTime() : 0;
-          const times = points.map(p => ((new Date(p.date).getTime() - t0) / 1000).toFixed(1));
-
-          if (!labelsRef.current) labelsRef.current = times;
-
-          datasets.speed.push({
-            label, data: points.map(p => p.speed), borderColor: col, backgroundColor: col + "33",
-            borderWidth: 1.5, pointRadius: 0, tension: 0.1
-          });
-          datasets.rpm.push({
-            label, data: points.map(p => p.rpm), borderColor: col, backgroundColor: col + "33",
-            borderWidth: 1.5, pointRadius: 0, tension: 0.1
-          });
-          datasets.throttle.push({
-            label, data: points.map(p => p.throttle), borderColor: col, backgroundColor: col + "33",
-            borderWidth: 1.5, pointRadius: 0, tension: 0.1
-          });
-          datasets.brake.push({
-            label, data: points.map(p => p.brake), borderColor: col, backgroundColor: col + "33",
-            borderWidth: 1.5, pointRadius: 0, tension: 0.1
-          });
-        }
-
-        // Use the longest time axis or first one
-        const labels = labelsRef.current || [];
-
-        chartsEl.innerHTML = `
-          <div class="chart-box"><h4>Speed (km/h)</h4><div class="chart-wrap"><canvas id="chartSpeed"></canvas></div></div>
-          <div class="chart-box"><h4>RPM</h4><div class="chart-wrap"><canvas id="chartRpm"></canvas></div></div>
-          <div class="chart-box"><h4>Throttle (%)</h4><div class="chart-wrap"><canvas id="chartThrottle"></canvas></div></div>
-          <div class="chart-box"><h4>Brake</h4><div class="chart-wrap"><canvas id="chartBrake"></canvas></div></div>
-        `;
-
-        const commonOpts = {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          plugins: {
-            legend: { labels: { color: "#ccc", boxWidth: 12, font: { size: 11 } } }
-          },
-          scales: {
-            x: {
-              display: false,
-              ticks: { color: "#666", maxTicksLimit: 8 }
-            },
-            y: {
-              ticks: { color: "#888", font: { size: 10 } },
-              grid: { color: "#222" }
+            function statusClass(status) {
+                if (!status) return '';
+                const s = String(status).toLowerCase();
+                if (s.includes('finish') || s === 'finished') return 'finished';
+                if (s.includes('dnf') || s.includes('retired') || s.includes('accident')) return 'dnf';
+                return '';
             }
-          },
-          elements: { line: { borderJoinStyle: "round" } }
-        };
 
-        new Chart(document.getElementById("chartSpeed"), {
-          type: "line",
-          data: { labels, datasets: datasets.speed },
-          options: commonOpts
-        });
-        new Chart(document.getElementById("chartRpm"), {
-          type: "line",
-          data: { labels, datasets: datasets.rpm },
-          options: commonOpts
-        });
-        new Chart(document.getElementById("chartThrottle"), {
-          type: "line",
-          data: { labels, datasets: datasets.throttle },
-          options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, min: 0, max: 105 } } }
-        });
-        new Chart(document.getElementById("chartBrake"), {
-          type: "line",
-          data: { labels, datasets: datasets.brake },
-          options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, min: 0, max: 105 } } }
-        });
+            function getTyreClass(compound) {
+                if (!compound) return 'unknown';
+                const c = String(compound).toLowerCase();
+                if (c.includes('soft')) return 'soft';
+                if (c.includes('medium')) return 'medium';
+                if (c.includes('hard')) return 'hard';
+                if (c.includes('intermediate') || c.includes('inter')) return 'intermediate';
+                if (c.includes('wet')) return 'wet';
+                return 'unknown';
+            }
 
-      } catch (e) {
-        chartsEl.innerHTML = `<div class="error">Failed to load telemetry.<br>${e.message}<br>Try fewer drivers or a different session.</div>`;
-      }
-    }
+            function formatTime(ms) {
+                if (!ms) return '—';
+                const sec = ms / 1000;
+                if (sec < 60) return sec.toFixed(2) + 's';
+                const m = Math.floor(sec / 60);
+                const s = (sec % 60).toFixed(2);
+                return m + ':' + (s < 10 ? '0' : '') + s;
+            }
 
-    // Boot
-    initYears();
-    render();
-  </script>
+            function downsampleTelemetry(data, maxPoints = 180) {
+                if (!data || data.length <= maxPoints) return data || [];
+                const step = Math.ceil(data.length / maxPoints);
+                const result = [];
+                for (let i = 0; i < data.length; i += step) {
+                    result.push(data[i]);
+                }
+                // always include last point
+                if (result[result.length - 1] !== data[data.length - 1]) {
+                    result.push(data[data.length - 1]);
+                }
+                return result;
+            }
+
+            // ---------- API FETCH (with caching) ----------
+            async function fetchAPI(endpoint) {
+                const url = API_BASE + endpoint;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+                return res.json();
+            }
+
+            // ---------- LOAD YEARS ----------
+            async function loadYears() {
+                try {
+                    // OpenF1: get unique years from sessions
+                    const data = await fetchAPI('/sessions?year_min=2018&year_max=2026');
+                    const years = [...new Set(data.map(s => s.year).filter(Boolean))].sort((a, b) => b - a);
+                    elYear.innerHTML = '<option value="">Year</option>' +
+                        years.map(y => `<option value="${y}">${y}</option>`).join('');
+                    if (years.length) {
+                        elYear.value = years[0];
+                        await onYearChange();
+                    }
+                } catch (err) {
+                    console.warn('Failed to load years, using defaults', err);
+                    // fallback
+                    elYear.innerHTML = '<option value="2025">2025</option><option value="2024">2024</option>';
+                    elYear.value = '2025';
+                    await onYearChange();
+                }
+            }
+
+            // ---------- SELECTOR CHANGE HANDLERS ----------
+            async function onYearChange() {
+                const year = elYear.value;
+                if (!year) {
+                    elGP.innerHTML = '<option value="">GP</option>';
+                    elGP.disabled = true;
+                    elSession.innerHTML = '<option value="">Session</option>';
+                    elSession.disabled = true;
+                    return;
+                }
+                state.year = year;
+                elGP.disabled = false;
+                elGP.innerHTML = '<option value="">Loading GPs…</option>';
+                try {
+                    const data = await fetchAPI(`/sessions?year=${year}`);
+                    const gps = [...new Set(data.map(s => s.location || s.country || s.name).filter(Boolean))].sort();
+                    elGP.innerHTML = '<option value="">GP</option>' +
+                        gps.map(g => `<option value="${g}">${g}</option>`).join('');
+                    if (gps.length) {
+                        elGP.value = gps[0];
+                        await onGPChange();
+                    } else {
+                        elGP.innerHTML = '<option value="">No GPs</option>';
+                        elSession.innerHTML = '<option value="">Session</option>';
+                        elSession.disabled = true;
+                    }
+                } catch (err) {
+                    console.warn('Failed to load GPs', err);
+                    elGP.innerHTML = '<option value="">GP</option>';
+                }
+            }
+
+            async function onGPChange() {
+                const gp = elGP.value;
+                if (!gp) {
+                    elSession.innerHTML = '<option value="">Session</option>';
+                    elSession.disabled = true;
+                    return;
+                }
+                state.gp = gp;
+                elSession.disabled = false;
+                elSession.innerHTML = '<option value="">Loading sessions…</option>';
+                try {
+                    const data = await fetchAPI(`/sessions?year=${state.year}`);
+                    const sessions = data
+                        .filter(s => (s.location || s.country || s.name) === gp)
+                        .sort((a, b) => (a.session_key || 0) - (b.session_key || 0));
+                    elSession.innerHTML = '<option value="">Session</option>' +
+                        sessions.map(s => `<option value="${s.session_key}">${s.session_name || s.name || 'Race'}</option>`)
+                        .join('');
+                    if (sessions.length) {
+                        elSession.value = sessions[0].session_key;
+                        await onSessionChange();
+                    } else {
+                        elSession.innerHTML = '<option value="">No sessions</option>';
+                    }
+                } catch (err) {
+                    console.warn('Failed to load sessions', err);
+                    elSession.innerHTML = '<option value="">Session</option>';
+                }
+            }
+
+            async function onSessionChange() {
+                const key = elSession.value;
+                if (!key) {
+                    state.sessionKey = null;
+                    state.cache.drivers = null;
+                    state.cache.results = null;
+                    state.cache.stints = null;
+                    state.cache.weather = null;
+                    state.cache.laps = {};
+                    state.cache.carData = {};
+                    renderEmpty('Select a session');
+                    return;
+                }
+                const sk = Number(key);
+                state.sessionKey = sk;
+                // clear caches except session-specific
+                state.cache.drivers = null;
+                state.cache.results = null;
+                state.cache.stints = null;
+                state.cache.weather = null;
+                state.cache.laps = {};
+                state.cache.carData = {};
+                state.detailDriver = null;
+
+                // load core data
+                await loadCoreData(sk);
+                renderCurrentTab();
+            }
+
+            // ---------- LOAD CORE DATA ----------
+            async function loadCoreData(sessionKey) {
+                const cache = state.cache;
+                try {
+                    const [drivers, results, stints] = await Promise.all([
+                        fetchAPI(`/drivers?session_key=${sessionKey}`),
+                        fetchAPI(`/session_results?session_key=${sessionKey}`),
+                        fetchAPI(`/stints?session_key=${sessionKey}`),
+                    ]);
+                    cache.drivers = drivers;
+                    cache.results = results;
+                    cache.stints = stints;
+                } catch (err) {
+                    console.warn('Failed to load core data', err);
+                    cache.drivers = [];
+                    cache.results = [];
+                    cache.stints = [];
+                }
+                // optional weather
+                try {
+                    const weather = await fetchAPI(`/weather?session_key=${sessionKey}`);
+                    cache.weather = weather;
+                } catch (_) { cache.weather = null; }
+            }
+
+            // ---------- LOAD LAPS (for a driver) ----------
+            async function loadLapsForDriver(sessionKey, driverNumber) {
+                const cache = state.cache;
+                if (cache.laps[driverNumber]) return cache.laps[driverNumber];
+                try {
+                    const data = await fetchAPI(`/laps?session_key=${sessionKey}&driver_number=${driverNumber}`);
+                    cache.laps[driverNumber] = data;
+                    return data;
+                } catch (_) {
+                    cache.laps[driverNumber] = [];
+                    return [];
+                }
+            }
+
+            // ---------- LOAD CAR DATA (for duels) ----------
+            async function loadCarDataForDriver(sessionKey, driverNumber) {
+                const cache = state.cache;
+                if (cache.carData[driverNumber]) return cache.carData[driverNumber];
+                try {
+                    const data = await fetchAPI(`/car_data?session_key=${sessionKey}&driver_number=${driverNumber}`);
+                    cache.carData[driverNumber] = data;
+                    return data;
+                } catch (_) {
+                    cache.carData[driverNumber] = [];
+                    return [];
+                }
+            }
+
+            // ---------- RENDER ----------
+            function renderEmpty(msg = 'No data') {
+                content.innerHTML = `<div class="empty-state"><span>📋</span><p>${msg}</p></div>`;
+            }
+
+            function renderCurrentTab() {
+                if (state.detailDriver) {
+                    renderDriverDetail();
+                    return;
+                }
+                const tab = state.activeTab;
+                if (tab === 'order') renderOrder();
+                else if (tab === 'insights') renderInsights();
+                else if (tab === 'duels') renderDuels();
+                else renderEmpty('Unknown tab');
+            }
+
+            // ---------- ORDER ----------
+            function renderOrder() {
+                const results = state.cache.results || [];
+                const drivers = state.cache.drivers || [];
+                if (!results.length) {
+                    content.innerHTML = `<div class="empty-state"><span>🏁</span><p>No results for this session</p></div>`;
+                    return;
+                }
+                // map driver_number -> driver
+                const driverMap = {};
+                drivers.forEach(d => { driverMap[d.driver_number] = d; });
+
+                let html = '<div class="order-list">';
+                // sort by position
+                const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
+                sorted.forEach(r => {
+                    const dn = r.driver_number;
+                    const d = driverMap[dn] || {};
+                    const pos = r.position || '—';
+                    const name = safeName(d) || safeName(r) || `#${dn}`;
+                    const abbr = abbrName(d) || abbrName(r) || dn;
+                    const gap = r.time || r.gap_to_leader || '';
+                    const status = r.status || r.finish_status || '';
+                    const cls = statusClass(status);
+                    html += `<div class="order-row" data-driver="${dn}" data-name="${name}">
+                        <span class="pos">${pos}</span>
+                        <span class="name">${name}</span>
+                        <span class="abbr">${abbr}</span>
+                        <span class="gap">${gap}</span>
+                        <span class="status ${cls}">${status || '—'}</span>
+                    </div>`;
+                });
+                html += '</div>';
+                content.innerHTML = html;
+
+                // click handlers
+                content.querySelectorAll('.order-row').forEach(row => {
+                    row.addEventListener('click', () => {
+                        const dn = row.dataset.driver;
+                        if (dn) {
+                            state.detailDriver = Number(dn);
+                            renderDriverDetail();
+                        }
+                    });
+                });
+            }
+
+            // ---------- DRIVER DETAIL ----------
+            async function renderDriverDetail() {
+                const dn = state.detailDriver;
+                if (!dn) { renderCurrentTab(); return; }
+
+                const drivers = state.cache.drivers || [];
+                const d = drivers.find(drv => drv.driver_number === dn) || {};
+                const name = safeName(d) || `Driver #${dn}`;
+
+                // load laps if not cached
+                const laps = await loadLapsForDriver(state.sessionKey, dn);
+
+                // stints for tyre mapping
+                const stints = (state.cache.stints || []).filter(s => s.driver_number === dn);
+                // build tyre map: lap_start -> compound
+                const tyreMap = {};
+                stints.forEach(st => {
+                    const start = st.lap_start || 1;
+                    const end = st.lap_end || 999;
+                    const compound = st.compound || st.tyre_compound || '';
+                    for (let i = start; i <= end; i++) {
+                        tyreMap[i] = compound;
+                    }
+                });
+
+                let html = `<div class="detail-view">
+                    <div class="detail-header">
+                        <button class="back-btn" id="detailBack">← Back</button>
+                        <h2>${name}  <span style="font-size:0.7rem;color:#6a7a88;font-weight:400;">#${dn}</span></h2>
+                    </div>
+                    <div class="detail-laps">`;
+
+                if (laps.length) {
+                    const sorted = [...laps].sort((a, b) => (a.lap_number || 0) - (b.lap_number || 0));
+                    sorted.forEach(lap => {
+                        const ln = lap.lap_number || '—';
+                        const time = lap.lap_duration ? formatTime(lap.lap_duration * 1000) : '—';
+                        const compound = tyreMap[ln] || lap.tyre_compound || '';
+                        const tyreCls = getTyreClass(compound);
+                        const sector1 = lap.sector1_time ? formatTime(lap.sector1_time * 1000) : '';
+                        const sector2 = lap.sector2_time ? formatTime(lap.sector2_time * 1000) : '';
+                        const sector3 = lap.sector3_time ? formatTime(lap.sector3_time * 1000) : '';
+                        const sectors = [sector1, sector2, sector3].filter(Boolean).join(' | ');
+                        html += `<div class="lap-row">
+                            <span class="lap-num">Lap ${ln}</span>
+                            <span class="lap-time">${time}</span>
+                            <span class="tyre ${tyreCls}">${compound || '—'}</span>
+                            <span class="sector">${sectors || '—'}</span>
+                        </div>`;
+                    });
+                } else {
+                    html += `<p style="color:#6a7a88;padding:12px;">No lap data available</p>`;
+                }
+
+                html += `</div></div>`;
+                content.innerHTML = html;
+
+                document.getElementById('detailBack')?.addEventListener('click', () => {
+                    state.detailDriver = null;
+                    renderCurrentTab();
+                });
+            }
+
+            // ---------- INSIGHTS ----------
+            function renderInsights() {
+                const results = state.cache.results || [];
+                const drivers = state.cache.drivers || [];
+                const stints = state.cache.stints || [];
+                const weather = state.cache.weather || [];
+
+                if (!results.length) {
+                    content.innerHTML = `<div class="empty-state"><span>🔍</span><p>No data for insights</p></div>`;
+                    return;
+                }
+
+                const driverMap = {};
+                drivers.forEach(d => { driverMap[d.driver_number] = d; });
+
+                // 1. winner & gaps
+                const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
+                const winner = sorted[0];
+                const winnerName = safeName(driverMap[winner?.driver_number]) || '—';
+                const gapToSecond = sorted[1]?.time || sorted[1]?.gap_to_leader || '—';
+
+                // 2. tyre strategies: count compounds per driver
+                const tyreCounts = {};
+                stints.forEach(s => {
+                    const dn = s.driver_number;
+                    const comp = s.compound || s.tyre_compound || 'unknown';
+                    if (!tyreCounts[dn]) tyreCounts[dn] = {};
+                    tyreCounts[dn][comp] = (tyreCounts[dn][comp] || 0) + 1;
+                });
+                let strategySummary = '';
+                const stratEntries = Object.entries(tyreCounts).slice(0, 6);
+                if (stratEntries.length) {
+                    strategySummary = stratEntries.map(([dn, counts]) => {
+                        const name = safeName(driverMap[Number(dn)]) || `#${dn}`;
+                        const parts = Object.entries(counts).map(([c, n]) => `${c} (${n})`).join(', ');
+                        return `<span style="display:block;">${name}: ${parts}</span>`;
+                    }).join('');
+                } else {
+                    strategySummary = 'No stint data available';
+                }
+
+                // 3. weather
+                let weatherSummary = '—';
+                if (weather.length) {
+                    const w = weather[weather.length - 1];
+                    const temp = w.air_temperature || w.temperature || '';
+                    const cond = w.condition || w.weather || '';
+                    weatherSummary = `${cond} ${temp}°C`.trim();
+                }
+
+                // 4. position changes (if we have laps we could compute, but we'll skip for light)
+                const html = `
+                    <div class="insights-grid">
+                        <div class="insight-card">
+                            <h3>🏆 Winner</h3>
+                            <div class="value">${winnerName}</div>
+                            <div style="font-size:0.7rem;color:#6a7a88;">Gap to 2nd: ${gapToSecond}</div>
+                        </div>
+                        <div class="insight-card">
+                            <h3>🌤️ Weather</h3>
+                            <div class="value">${weatherSummary}</div>
+                        </div>
+                        <div class="insight-card" style="grid-column: 1 / -1;">
+                            <h3>🔧 Tyre Strategies</h3>
+                            <div class="list">${strategySummary}</div>
+                        </div>
+                        <div class="insight-card" style="grid-column: 1 / -1;">
+                            <h3>📊 Field</h3>
+                            <div class="list">${sorted.slice(0, 8).map((r, i) => {
+                                const dn = r.driver_number;
+                                const name = safeName(driverMap[dn]) || `#${dn}`;
+                                const pos = r.position || i+1;
+                                return `<span>${pos}. ${name}  <span style="color:#6a7a88;">${r.time || r.gap_to_leader || ''}</span></span>`;
+                            }).join('<br>')}</div>
+                        </div>
+                    </div>
+                `;
+                content.innerHTML = html;
+            }
+
+            // ---------- DUELS ----------
+            function renderDuels() {
+                const drivers = state.cache.drivers || [];
+                if (!drivers.length) {
+                    content.innerHTML = `<div class="empty-state"><span>⚔️</span><p>Load a session first</p></div>`;
+                    return;
+                }
+
+                // Build driver options
+                const opts = drivers.map(d =>
+                    `<option value="${d.driver_number}">${safeName(d)} (${abbrName(d)})</option>`
+                ).join('');
+
+                let html = `
+                    <div class="duels-panel">
+                        <div class="duels-selectors">
+                            ${[0,1,2,3].map(i => `
+                                <div class="driver-pick">
+                                    <label>#${i+1}</label>
+                                    <select class="duel-driver-select" data-idx="${i}">
+                                        <option value="">—</option>
+                                        ${opts}
+                                    </select>
+                                </div>
+                            `).join('')}
+                            <button class="compare-btn" id="duelCompare">Compare</button>
+                        </div>
+                        <div class="duels-charts" id="duelChartsContainer"></div>
+                    </div>
+                `;
+                content.innerHTML = html;
+
+                // restore selections
+                const selects = content.querySelectorAll('.duel-driver-select');
+                selects.forEach((sel, i) => {
+                    if (state.duelDrivers[i]) sel.value = state.duelDrivers[i];
+                    sel.addEventListener('change', () => {
+                        state.duelDrivers[i] = sel.value ? Number(sel.value) : null;
+                    });
+                });
+
+                document.getElementById('duelCompare')?.addEventListener('click', async () => {
+                    const selected = state.duelDrivers.filter(d => d !== null);
+                    if (selected.length < 2) {
+                        alert('Select at least 2 drivers to compare');
+                        return;
+                    }
+                    // fetch car data for each
+                    const container = document.getElementById('duelChartsContainer');
+                    container.innerHTML = '<div style="color:#6a7a88;padding:12px;">Loading telemetry…</div>';
+
+                    try {
+                        const promises = selected.map(dn => loadCarDataForDriver(state.sessionKey, dn));
+                        const results = await Promise.all(promises);
+                        // map driverNumber -> data
+                        const dataMap = {};
+                        selected.forEach((dn, i) => {
+                            dataMap[dn] = results[i] || [];
+                        });
+                        // downsample and render charts
+                        renderDuelCharts(dataMap, drivers);
+                    } catch (err) {
+                        console.warn('Failed to load car data', err);
+                        container.innerHTML = '<div style="color:#f87171;padding:12px;">Failed to load telemetry data</div>';
+                    }
+                });
+            }
+
+            function renderDuelCharts(dataMap, drivers) {
+                const container = document.getElementById('duelChartsContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                // destroy old charts
+                state.duelCharts.forEach(c => c.destroy());
+                state.duelCharts = [];
+
+                const driverNames = {};
+                drivers.forEach(d => { driverNames[d.driver_number] = safeName(d) || `#${d.driver_number}`; });
+
+                // metrics to plot
+                const metrics = [
+                    { key: 'speed', label: 'Speed (km/h)', color: '#e10600' },
+                    { key: 'rpm', label: 'RPM', color: '#f5a623' },
+                    { key: 'throttle', label: 'Throttle (%)', color: '#4ade80' },
+                    { key: 'brake', label: 'Brake (%)', color: '#60a5fa' },
+                ];
+
+                const colors = ['#e10600', '#f5a623', '#4ade80', '#60a5fa', '#a78bfa', '#f472b6'];
+
+                metrics.forEach((metric, mi) => {
+                    const box = document.createElement('div');
+                    box.className = 'chart-box';
+                    const title = document.createElement('h4');
+                    title.textContent = metric.label;
+                    box.appendChild(title);
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `duelChart-${mi}`;
+                    box.appendChild(canvas);
+                    container.appendChild(box);
+
+                    const datasets = [];
+                    let idx = 0;
+                    for (const [dn, rawData] of Object.entries(dataMap)) {
+                        if (!rawData || !rawData.length) continue;
+                        const downsampled = downsampleTelemetry(rawData, 200);
+                        const points = downsampled.map(d => d[metric.key]).filter(v => v !== null && v !== undefined);
+                        if (!points.length) continue;
+                        const name = driverNames[Number(dn)] || `#${dn}`;
+                        datasets.push({
+                            label: name,
+                            data: points,
+                            borderColor: colors[idx % colors.length],
+                            backgroundColor: 'transparent',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.1,
+                        });
+                        idx++;
+                    }
+
+                    if (!datasets.length) {
+                        box.innerHTML += '<div style="color:#6a7a88;padding:4px 0;font-size:0.7rem;">No data</div>';
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    const chart = new Chart(ctx, {
+                        type: 'line',
+                        data: { datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: { color: '#8a9aa8', boxWidth: 10, padding: 8, font: { size: 9 } }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(ctx) {
+                                            return ctx.dataset.label + ': ' + ctx.parsed.y;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: false,
+                                },
+                                y: {
+                                    ticks: { color: '#6a7a88', font: { size: 8 } },
+                                    grid: { color: '#1f2a36' },
+                                }
+                            },
+                            elements: {
+                                line: { borderWidth: 1.5 },
+                                point: { radius: 0 }
+                            }
+                        }
+                    });
+                    state.duelCharts.push(chart);
+                    // force canvas height
+                    canvas.style.height = '100px';
+                });
+            }
+
+            // ---------- TAB SWITCHING ----------
+            function switchTab(tab) {
+                state.activeTab = tab;
+                tabBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                });
+                state.detailDriver = null;
+                renderCurrentTab();
+            }
+
+            // ---------- INIT ----------
+            async function init() {
+                // tab clicks
+                tabBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchTab(btn.dataset.tab);
+                    });
+                });
+
+                // selectors
+                elYear.addEventListener('change', onYearChange);
+                elGP.addEventListener('change', onGPChange);
+                elSession.addEventListener('change', onSessionChange);
+
+                await loadYears();
+
+                // load initial session if pre-selected
+                if (elSession.value) {
+                    await onSessionChange();
+                }
+            }
+
+            // ---------- START ----------
+            document.addEventListener('DOMContentLoaded', init);
+
+        })();
+    </script>
 </body>
 </html>
-```
