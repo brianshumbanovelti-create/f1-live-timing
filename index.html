@@ -8,13 +8,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
     <style>
-        /* ---------- RESET & BASE ---------- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         html,
         body {
             height: 100%;
@@ -23,8 +21,6 @@
             background: #0a0e14;
             color: #e8edf3;
         }
-
-        /* hide scrollbars everywhere */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -32,8 +28,6 @@
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
-
-        /* ---------- APP SHELL ---------- */
         #app {
             display: flex;
             flex-direction: column;
@@ -44,8 +38,6 @@
             padding: 0 12px 12px 12px;
             background: #0a0e14;
         }
-
-        /* ---------- HEADER ---------- */
         .app-header {
             display: flex;
             align-items: center;
@@ -71,8 +63,6 @@
             color: #8a9aa8;
             letter-spacing: 0.3px;
         }
-
-        /* ---------- TABS ---------- */
         .tabs {
             display: flex;
             gap: 4px;
@@ -101,8 +91,6 @@
             color: #fff;
             background: #1f2a36;
         }
-
-        /* ---------- SELECTORS ---------- */
         .selectors {
             display: flex;
             flex-wrap: wrap;
@@ -144,8 +132,6 @@
         .selectors select option {
             background: #0a0e14;
         }
-
-        /* ---------- CONTENT AREA ---------- */
         .content {
             flex: 1;
             overflow-y: auto;
@@ -153,8 +139,6 @@
             padding: 12px 0 8px 0;
             min-height: 0;
         }
-
-        /* ---------- ORDER TAB ---------- */
         .order-list {
             display: flex;
             flex-direction: column;
@@ -207,8 +191,6 @@
         .order-row .status.dnf {
             color: #f87171;
         }
-
-        /* ---------- DRIVER DETAIL (sub-view) ---------- */
         .detail-view {
             padding: 4px 0;
         }
@@ -293,8 +275,6 @@
             font-size: 0.7rem;
             text-align: right;
         }
-
-        /* ---------- INSIGHTS ---------- */
         .insights-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -326,11 +306,6 @@
             font-size: 0.8rem;
             line-height: 1.6;
         }
-        .insight-card .list .highlight {
-            color: #f5a623;
-        }
-
-        /* ---------- DUELS ---------- */
         .duels-panel {
             display: flex;
             flex-direction: column;
@@ -383,7 +358,6 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-
         .duels-charts {
             display: flex;
             flex-direction: column;
@@ -407,8 +381,6 @@
             height: auto !important;
             max-height: 140px;
         }
-
-        /* ---------- EMPTY STATE ---------- */
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -445,11 +417,13 @@
             margin-bottom: 12px;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
-
-        /* ---------- RESPONSIVE ---------- */
         @media (max-width: 640px) {
             .app-header h1 {
                 font-size: 1.1rem;
@@ -503,7 +477,6 @@
                 max-height: 100px;
             }
         }
-
         @media (max-width: 420px) {
             .order-row {
                 grid-template-columns: 24px 1fr 40px 30px 30px;
@@ -532,20 +505,15 @@
 </head>
 <body>
     <div id="app">
-        <!-- HEADER -->
         <header class="app-header">
             <h1>🏎️ F1Debrief</h1>
             <span class="badge">post‑session</span>
         </header>
-
-        <!-- TABS -->
         <div class="tabs" id="tabBar">
             <button class="tab-btn active" data-tab="order">Order</button>
             <button class="tab-btn" data-tab="insights">Insights</button>
             <button class="tab-btn" data-tab="duels">Duels</button>
         </div>
-
-        <!-- SELECTORS -->
         <div class="selectors" id="selectorBar">
             <div class="sel-group">
                 <label for="selYear">Year</label>
@@ -560,8 +528,6 @@
                 <select id="selSession" disabled></select>
             </div>
         </div>
-
-        <!-- CONTENT -->
         <div class="content" id="contentArea">
             <div class="empty-state">
                 <span>🏁</span>
@@ -569,21 +535,17 @@
             </div>
         </div>
     </div>
-
     <script>
         (function() {
             'use strict';
 
-            // ---------- CONSTANTS ----------
             const API_BASE = 'https://api.openf1.org/v1';
 
-            // ---------- STATE ----------
+            // state
             const state = {
-                // selectors
                 year: null,
-                gp: null,
+                gpKey: null, // meeting_key
                 sessionKey: null,
-                // data caches (keyed by sessionKey)
                 cache: {
                     drivers: null,
                     results: null,
@@ -592,15 +554,12 @@
                     laps: {},
                     carData: {},
                 },
-                // UI state
                 activeTab: 'order',
                 detailDriver: null,
                 duelDrivers: [null, null, null, null],
                 duelCharts: [],
-                isLoading: false,
             };
 
-            // ---------- DOM REFS ----------
             const $ = id => document.getElementById(id);
             const elYear = $('selYear');
             const elGP = $('selGP');
@@ -608,10 +567,11 @@
             const content = $('contentArea');
             const tabBtns = document.querySelectorAll('.tab-btn');
 
-            // ---------- HELPERS ----------
+            // helpers
             function safeName(d) { return d?.full_name || d?.name || 'Unknown'; }
+
             function abbrName(d) { return d?.name_acronym || d?.abbreviation || '??'; }
-            
+
             function statusClass(status) {
                 if (!status) return '';
                 const s = String(status).toLowerCase();
@@ -666,7 +626,7 @@
                 content.innerHTML = `<div class="empty-state"><span>📋</span><p>${msg}</p></div>`;
             }
 
-            // ---------- API FETCH ----------
+            // API fetch with logging
             async function fetchAPI(endpoint) {
                 const url = API_BASE + endpoint;
                 console.log('📡 Fetching:', url);
@@ -677,19 +637,16 @@
                 return data;
             }
 
-            // ---------- LOAD YEARS ----------
+            // Load years from sessions
             async function loadYears() {
                 try {
                     const data = await fetchAPI('/sessions');
                     const years = [...new Set(data.map(s => s.year).filter(Boolean))].sort((a, b) => b - a);
-                    
-                    // Ensure 2025 and 2026 are included
+                    // Ensure 2025 and 2026 are present
                     const allYears = new Set([2026, 2025, ...years]);
                     const sortedYears = Array.from(allYears).sort((a, b) => b - a);
-                    
                     elYear.innerHTML = '<option value="">Year</option>' +
                         sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
-                    
                     if (sortedYears.length) {
                         elYear.value = sortedYears[0];
                         await onYearChange();
@@ -702,7 +659,7 @@
                 }
             }
 
-            // ---------- SELECTOR HANDLERS ----------
+            // Year changed: fetch GPs for that year
             async function onYearChange() {
                 const year = elYear.value;
                 if (!year) {
@@ -716,48 +673,39 @@
                 state.year = year;
                 elGP.disabled = false;
                 elGP.innerHTML = '<option value="">Loading…</option>';
-                
+
                 try {
-                    // Get all sessions for this year
+                    // Fetch all sessions for this year
                     const data = await fetchAPI(`/sessions?year=${year}`);
-                    
-                    // Group by meeting_name (this is the GP name in OpenF1)
-                    const gpMap = {};
-                    const gpOrder = [];
+                    // Group by meeting_key, get meeting_name and date_start
+                    const meetingMap = {};
                     data.forEach(s => {
-                        const meetingName = s.meeting_name || s.location || s.country || s.name;
-                        if (meetingName && !gpMap[meetingName]) {
-                            gpMap[meetingName] = true;
-                            gpOrder.push(meetingName);
+                        const mk = s.meeting_key;
+                        if (mk && !meetingMap[mk]) {
+                            meetingMap[mk] = {
+                                meeting_key: mk,
+                                meeting_name: s.meeting_name || s.location || s.country || 'Unknown GP',
+                                date_start: s.date_start || '',
+                            };
                         }
                     });
-                    
-                    // Sort GPs by date (earliest first)
-                    const gpData = {};
-                    data.forEach(s => {
-                        const meetingName = s.meeting_name || s.location || s.country || s.name;
-                        if (meetingName && s.date_start) {
-                            if (!gpData[meetingName] || s.date_start < gpData[meetingName]) {
-                                gpData[meetingName] = s.date_start;
-                            }
-                        }
-                    });
-                    
-                    const sortedGPs = gpOrder.sort((a, b) => {
-                        return (gpData[a] || '').localeCompare(gpData[b] || '');
-                    });
-                    
+                    // Sort by date_start
+                    const sortedMeetings = Object.values(meetingMap)
+                        .sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
+
                     elGP.innerHTML = '<option value="">GP</option>' +
-                        sortedGPs.map(g => `<option value="${g}">${g}</option>`).join('');
-                    
-                    if (sortedGPs.length) {
-                        elGP.value = sortedGPs[0];
+                        sortedMeetings.map(m =>
+                            `<option value="${m.meeting_key}">${m.meeting_name}</option>`
+                        ).join('');
+
+                    if (sortedMeetings.length) {
+                        elGP.value = sortedMeetings[0].meeting_key;
                         await onGPChange();
                     } else {
                         elGP.innerHTML = '<option value="">No GPs</option>';
                         elSession.innerHTML = '<option value="">Session</option>';
                         elSession.disabled = true;
-                        renderEmpty('No Grands Prix found');
+                        renderEmpty('No Grands Prix found for ' + year);
                     }
                 } catch (err) {
                     console.warn('Failed to load GPs', err);
@@ -765,26 +713,24 @@
                 }
             }
 
+            // GP changed: fetch sessions for that meeting
             async function onGPChange() {
-                const gp = elGP.value;
-                if (!gp) {
+                const mk = elGP.value;
+                if (!mk) {
                     elSession.innerHTML = '<option value="">Session</option>';
                     elSession.disabled = true;
                     renderEmpty('Select a GP');
                     return;
                 }
-                state.gp = gp;
+                state.gpKey = Number(mk);
                 elSession.disabled = false;
                 elSession.innerHTML = '<option value="">Loading…</option>';
-                
+
                 try {
-                    const data = await fetchAPI(`/sessions?year=${state.year}`);
-                    
-                    // Filter by meeting_name and sort by date
-                    const sessions = data
-                        .filter(s => (s.meeting_name || s.location || s.country || s.name) === gp)
-                        .sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
-                    
+                    const data = await fetchAPI(`/sessions?meeting_key=${mk}`);
+                    // Sort by date_start
+                    const sessions = data.sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
+
                     if (sessions.length) {
                         elSession.innerHTML = '<option value="">Session</option>' +
                             sessions.map(s => {
@@ -793,12 +739,12 @@
                                 const date = s.date_start ? new Date(s.date_start).toLocaleDateString() : '';
                                 return `<option value="${s.session_key}">${label}${type}${date ? ' - '+date : ''}</option>`;
                             }).join('');
-                        
+
                         elSession.value = sessions[0].session_key;
                         await onSessionChange();
                     } else {
                         elSession.innerHTML = '<option value="">No sessions</option>';
-                        renderEmpty('No sessions available');
+                        renderEmpty('No sessions for this GP');
                     }
                 } catch (err) {
                     console.warn('Failed to load sessions', err);
@@ -806,6 +752,7 @@
                 }
             }
 
+            // Session changed: load data
             async function onSessionChange() {
                 const key = elSession.value;
                 if (!key) {
@@ -815,6 +762,7 @@
                 }
                 const sk = Number(key);
                 state.sessionKey = sk;
+                // Clear caches
                 state.cache.drivers = null;
                 state.cache.results = null;
                 state.cache.stints = null;
@@ -828,27 +776,23 @@
                 renderCurrentTab();
             }
 
-            // ---------- LOAD CORE DATA ----------
+            // Load drivers, results, stints, weather in parallel
             async function loadCoreData(sessionKey) {
                 const cache = state.cache;
                 try {
-                    // Load all data in parallel
                     const [drivers, results, stints, weather] = await Promise.all([
                         fetchAPI(`/drivers?session_key=${sessionKey}`).catch(() => []),
                         fetchAPI(`/session_results?session_key=${sessionKey}`).catch(() => []),
                         fetchAPI(`/stints?session_key=${sessionKey}`).catch(() => []),
                         fetchAPI(`/weather?session_key=${sessionKey}`).catch(() => []),
                     ]);
-                    
                     cache.drivers = drivers;
                     cache.results = results;
                     cache.stints = stints;
                     cache.weather = weather;
-                    
-                    console.log(`📊 Loaded: ${drivers.length} drivers, ${results.length} results, ${stints.length} stints, ${weather.length} weather records`);
-                    
+                    console.log(`📊 Loaded: ${drivers.length} drivers, ${results.length} results, ${stints.length} stints, ${weather.length} weather`);
                     if (!drivers.length && !results.length) {
-                        renderEmpty('No data available for this session');
+                        renderEmpty('No data available for this session (it may be a future session)');
                     }
                 } catch (err) {
                     console.error('Failed to load core data', err);
@@ -856,7 +800,7 @@
                 }
             }
 
-            // ---------- LOAD LAPS ----------
+            // Lazy load laps
             async function loadLapsForDriver(sessionKey, driverNumber) {
                 const cache = state.cache;
                 if (cache.laps[driverNumber]) return cache.laps[driverNumber];
@@ -870,7 +814,7 @@
                 }
             }
 
-            // ---------- LOAD CAR DATA ----------
+            // Lazy load car data
             async function loadCarDataForDriver(sessionKey, driverNumber) {
                 const cache = state.cache;
                 if (cache.carData[driverNumber]) return cache.carData[driverNumber];
@@ -884,7 +828,7 @@
                 }
             }
 
-            // ---------- RENDER FUNCTIONS ----------
+            // Render based on current tab and detail state
             function renderCurrentTab() {
                 if (state.detailDriver) {
                     renderDriverDetail();
@@ -897,22 +841,19 @@
                 else renderEmpty('Unknown tab');
             }
 
-            // ---------- ORDER ----------
+            // Order tab
             function renderOrder() {
                 const results = state.cache.results || [];
                 const drivers = state.cache.drivers || [];
-                
                 if (!results.length) {
                     renderEmpty('No results for this session');
                     return;
                 }
-                
                 const driverMap = {};
                 drivers.forEach(d => { driverMap[d.driver_number] = d; });
 
                 let html = '<div class="order-list">';
                 const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
-                
                 sorted.forEach(r => {
                     const dn = r.driver_number;
                     const d = driverMap[dn] || {};
@@ -922,7 +863,6 @@
                     const gap = r.time || r.gap_to_leader || '';
                     const status = r.status || r.finish_status || '';
                     const cls = statusClass(status);
-                    
                     html += `<div class="order-row" data-driver="${dn}">
                         <span class="pos">${pos}</span>
                         <span class="name">${name}</span>
@@ -945,7 +885,7 @@
                 });
             }
 
-            // ---------- DRIVER DETAIL ----------
+            // Driver detail
             async function renderDriverDetail() {
                 const dn = state.detailDriver;
                 if (!dn) { renderCurrentTab(); return; }
@@ -956,7 +896,7 @@
 
                 const laps = await loadLapsForDriver(state.sessionKey, dn);
                 const stints = (state.cache.stints || []).filter(s => s.driver_number === dn);
-                
+
                 const tyreMap = {};
                 stints.forEach(st => {
                     const start = st.lap_start || 1;
@@ -985,7 +925,6 @@
                         const sector2 = lap.sector2_time ? formatTime(lap.sector2_time * 1000) : '';
                         const sector3 = lap.sector3_time ? formatTime(lap.sector3_time * 1000) : '';
                         const sectors = [sector1, sector2, sector3].filter(Boolean).join(' | ');
-                        
                         html += `<div class="lap-row">
                             <span class="lap-num">Lap ${ln}</span>
                             <span class="lap-time">${time}</span>
@@ -1006,7 +945,7 @@
                 });
             }
 
-            // ---------- INSIGHTS ----------
+            // Insights tab
             function renderInsights() {
                 const results = state.cache.results || [];
                 const drivers = state.cache.drivers || [];
@@ -1033,7 +972,6 @@
                     if (!tyreCounts[dn]) tyreCounts[dn] = {};
                     tyreCounts[dn][comp] = (tyreCounts[dn][comp] || 0) + 1;
                 });
-                
                 let strategySummary = 'No stint data available';
                 const stratEntries = Object.entries(tyreCounts).slice(0, 6);
                 if (stratEntries.length) {
@@ -1081,7 +1019,7 @@
                 content.innerHTML = html;
             }
 
-            // ---------- DUELS ----------
+            // Duels tab
             function renderDuels() {
                 const drivers = state.cache.drivers || [];
                 if (!drivers.length) {
@@ -1126,7 +1064,6 @@
                         alert('Select at least 2 drivers');
                         return;
                     }
-                    
                     const container = document.getElementById('duelChartsContainer');
                     container.innerHTML = '<div style="color:#6a7a88;padding:12px;">Loading telemetry…</div>';
 
@@ -1238,7 +1175,7 @@
                 });
             }
 
-            // ---------- TAB SWITCHING ----------
+            // Tab switching
             function switchTab(tab) {
                 state.activeTab = tab;
                 tabBtns.forEach(btn => {
@@ -1248,7 +1185,7 @@
                 renderCurrentTab();
             }
 
-            // ---------- INIT ----------
+            // Init
             async function init() {
                 tabBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -1261,14 +1198,12 @@
                 elSession.addEventListener('change', onSessionChange);
 
                 await loadYears();
-
                 if (elSession.value) {
                     await onSessionChange();
                 }
             }
 
             document.addEventListener('DOMContentLoaded', init);
-
         })();
     </script>
 </body>
