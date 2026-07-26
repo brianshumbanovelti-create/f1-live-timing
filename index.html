@@ -62,12 +62,12 @@ select.status-done{border-color:var(--muted)!important}
 @keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .driver-row:hover{background:var(--bg1)}
 .driver-row:active{background:var(--bg2)}
-.driver-row.eliminated{opacity:0.4}
-.driver-row.elim-danger .team-bar{box-shadow:0 0 8px var(--red),0 0 0 1px var(--red)}
+
 .row-main{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:9px 10px 4px 12px;gap:4px;align-items:center}
 .pos-block{display:flex;flex-direction:column;align-items:center;gap:1px}
 .pos{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--dim);line-height:1}
 .pos.p1{color:var(--yellow);text-shadow:0 0 12px var(--yellow)}.pos.p2{color:#d8d8d8}.pos.p3{color:#cd7f32}
+.pos.dnf{color:var(--muted);font-size:11px;letter-spacing:0.5px}
 .name-block{display:flex;align-items:center;gap:6px;overflow:hidden}
 .team-bar{width:3px;height:18px;border-radius:2px;flex-shrink:0;transition:box-shadow 0.2s var(--ease)}
 .acronym{font-family:var(--mono);font-size:14px;font-weight:800;letter-spacing:0.5px;white-space:nowrap}
@@ -88,14 +88,12 @@ select.status-done{border-color:var(--muted)!important}
 .tyre-age-col{font-family:var(--mono);font-size:8px;font-weight:700;text-align:center}
 .chip{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;letter-spacing:0.5px;margin-left:3px}
 .chip-pit{background:var(--red);color:#fff;box-shadow:0 0 8px rgba(225,6,0,0.5)}.chip-out{background:#12281a;color:var(--green);border:1px solid var(--green)}
-.elim-divider{display:none;padding:4px 12px;background:#1a0000;border-bottom:1px solid #3a0000;border-top:1px solid #3a0000;font-family:var(--mono);font-size:9px;color:#f87171;letter-spacing:1px}
-.elim-divider.show{display:block}
 
 .feed-subtabs{display:flex;gap:2px;padding:8px 10px;background:var(--bg1);border-bottom:1px solid var(--line);flex-shrink:0}
 .feed-sub{font-family:var(--mono);font-size:10px;font-weight:600;padding:5px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
 .feed-sub.active{background:var(--bg0);color:var(--text);border-color:var(--accent)}
 #feedScroll{flex:1;overflow-y:auto}
-.insights-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:20px 16px;display:flex;align-items:center;justify-content:center}
+.insights-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
 .insights-wrap::-webkit-scrollbar{display:none}
 .insights-export-card{background:linear-gradient(180deg,var(--bg2),var(--bg1));border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 24px;max-width:320px;width:100%;text-align:center;box-shadow:var(--shadow-md);animation:fadeUp 0.35s var(--ease)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -109,6 +107,11 @@ select.status-done{border-color:var(--muted)!important}
 .insights-generate-wrap{text-align:center;width:100%}
 .insights-session-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:12px}
 .insights-unsupported{padding:40px 24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:0.5px;line-height:1.8;max-width:280px}
+
+.notes-section{background:var(--bg2);border-radius:var(--r-md);padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-sm);max-width:520px;width:100%}
+.notes-title{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;margin-bottom:10px}
+.notes-row{display:flex;align-items:flex-start;gap:8px;font-family:var(--sans);font-size:12px;color:var(--text);padding:5px 0;line-height:1.4}
+.notes-icon{flex-shrink:0;font-size:12px}
 
 .duels-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:16px}
 .duels-wrap::-webkit-scrollbar{display:none}
@@ -153,6 +156,8 @@ select.status-done{border-color:var(--muted)!important}
 .driver-subtabs{display:flex;gap:2px;padding:8px 12px;background:var(--bg1);border-bottom:1px solid var(--line);flex-shrink:0}
 .subtab-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:5px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
 .subtab-btn.active{background:var(--bg0);color:var(--text);border-color:var(--accent)}
+.stint-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.stint-pill{font-family:var(--mono);font-size:10px;font-weight:700;padding:6px 10px;border-radius:999px;border:1px solid;white-space:nowrap}
 .stint-card{background:var(--bg2);border-radius:var(--r-md);padding:12px;margin-bottom:10px;border-left:3px solid;box-shadow:var(--shadow-sm);transition:transform 0.15s var(--ease),box-shadow 0.15s var(--ease)}
 .stint-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .stint-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
@@ -218,7 +223,7 @@ select.status-done{border-color:var(--muted)!important}
   <div class="tab-panel active" id="panelTiming">
     <div class="timing-scroll">
       <div class="col-header">
-        <span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:center">TYR</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span>
+        <span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:center">TYR</span><span style="text-align:right" id="colHeaderLast">LAST</span><span style="text-align:right">BEST</span>
       </div>
       <div id="driverList"><div class="placeholder">SELECT A GRAND PRIX TO BEGIN</div></div>
     </div>
@@ -294,7 +299,7 @@ let duelsLoading=false;
 let duelsCharts=[]; // active Chart.js instances, destroyed on re-render
 let newsLoading=false;
 let latestPos=new Map();
-let latestIv=new Map();
+let cachedSessionResult=new Map(); // driver_number -> session_result row (position, gap_to_leader, number_of_laps, dnf/dns/dsq)
 let currentAudio=null;
 
 let feedEntries=[];
@@ -320,12 +325,11 @@ let lastStintMap=new Map(); // driver_number -> stints[] from the one-time sessi
 let massIncidentActive = false;
 let massIncidentSuppressUntilLap = 0;
 
-// Qualifying phase tracking using chequered flag count
-let chequeredFlagCount = 0;
-let qPhaseEliminatedData = { q1: null, q2: null };
-let q1Captured = false;
-let q2Captured = false;
-let sessionEnded = false;  // Track if session has ended (chequered flag received)
+// Every session viewed in this app is already finished by the time it's
+// selected — this app is a post-session analysis tool, not a live viewer.
+// sessionEnded stays true always; kept as a variable (not inlined) since
+// a few feed-generation checks below still reference it by name.
+let sessionEnded = true;
 
 
 const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
@@ -380,6 +384,106 @@ function classifySessionType(){
   return null;
 }
 
+// ========== INSIGHTS: NOTES ==========
+// Quick, directly-derivable facts — no judgment calls, no hedged
+// inference (that stays in the Claude Project's analytical narrative).
+// Eliminations/gaps, flag timeline, DNFs, and fastest-overall are all
+// straightforward reads off session_result / race_control / laps data.
+
+function computeQuickNotes(){
+  const branch=classifySessionType();
+  const notes={eliminations:[],flags:[],dnfs:[],fastestOverall:null};
+
+  // Fastest overall — every branch
+  if(overallBestDriver&&overallBestLap!==Infinity){
+    const meta=driverMeta.get(overallBestDriver);
+    notes.fastestOverall={driver:meta?.acronym||'?',time:overallBestLap};
+  }
+
+  // Flag timeline — every branch. Same filter as filteredRaceControlEvents
+  // (flags/SC/VSC/penalties only), presented as a simple list here rather
+  // than the fuller export shape.
+  for(const m of (allRCMessages||[])){
+    const cat=(m.category||'').toLowerCase();
+    const flag=(m.flag||'').toUpperCase();
+    const msg=(m.message||'').toUpperCase();
+    let label=null;
+    if(cat==='flag'&&flag==='RED')label='RED FLAG';
+    else if(cat==='flag'&&flag==='DOUBLE YELLOW')label='DOUBLE YELLOW';
+    else if(cat==='flag'&&flag==='YELLOW')label='YELLOW FLAG';
+    else if(cat==='safetycar'&&msg.includes('VIRTUAL'))label='VIRTUAL SAFETY CAR';
+    else if(cat==='safetycar')label='SAFETY CAR';
+    if(label)notes.flags.push({lap:m.lap_number??null,label});
+  }
+
+  // DNFs — Race/Sprint only, straight from session_result's explicit
+  // dnf/dns/dsq booleans (OpenF1: "can be true only for qualifying and
+  // race sessions" — sprint counts as a race-type session here).
+  if(branch==='race'||branch==='sprint'){
+    for(const[dn,r]of cachedSessionResult){
+      if(r.dnf||r.dns||r.dsq){
+        const meta=driverMeta.get(dn);
+        notes.dnfs.push({driver:meta?.acronym||'?',status:r.dsq?'DSQ':r.dns?'DNS':'DNF'});
+      }
+    }
+  }
+
+  // Eliminations — Qualifying only, straight from session_result's
+  // per-phase duration array. Q1 cuts to 15, Q2 cuts to 10 (standard
+  // format) — drivers whose Q-phase array has only 1 or 2 non-null
+  // entries were eliminated in that phase. Gap is measured to the last
+  // driver who advanced (P15 for Q1, P10 for Q2), among drivers who set
+  // a time in that phase.
+  if(branch==='qualifying'){
+    const rows=[...cachedSessionResult.entries()].map(([dn,r])=>({dn,r}));
+    for(const cutoff of[{phaseIdx:0,advanceCount:15,phaseLabel:'Q1'},{phaseIdx:1,advanceCount:10,phaseLabel:'Q2'}]){
+      const withPhaseTime=rows.filter(({r})=>Array.isArray(r.duration)&&r.duration[cutoff.phaseIdx]!=null);
+      if(withPhaseTime.length<=cutoff.advanceCount)continue; // no one was eliminated in this phase
+      const sortedByPhase=[...withPhaseTime].sort((a,b)=>a.r.duration[cutoff.phaseIdx]-b.r.duration[cutoff.phaseIdx]);
+      const cutoffTime=sortedByPhase[cutoff.advanceCount-1]?.r.duration[cutoff.phaseIdx];
+      const eliminated=sortedByPhase.slice(cutoff.advanceCount);
+      for(const{dn,r}of eliminated){
+        const meta=driverMeta.get(dn);
+        const gap=cutoffTime!=null?+(r.duration[cutoff.phaseIdx]-cutoffTime).toFixed(3):null;
+        notes.eliminations.push({driver:meta?.acronym||'?',phase:cutoff.phaseLabel,gap});
+      }
+    }
+  }
+
+  return notes;
+}
+
+function renderNotesSection(notes){
+  const hasAnything=notes.eliminations.length||notes.flags.length||notes.dnfs.length||notes.fastestOverall;
+  if(!hasAnything)return'';
+
+  let html='<div class="notes-section"><div class="notes-title">NOTES</div>';
+
+  if(notes.fastestOverall){
+    html+=`<div class="notes-row"><span class="notes-icon">⚡</span><span>Fastest overall: <b>${notes.fastestOverall.driver}</b> — ${fmtTime(notes.fastestOverall.time)}</span></div>`;
+  }
+
+  if(notes.eliminations.length){
+    const byPhase={};
+    for(const e of notes.eliminations){(byPhase[e.phase]=byPhase[e.phase]||[]).push(e)}
+    for(const phase of Object.keys(byPhase)){
+      const list=byPhase[phase].map(e=>`${e.driver}${e.gap!=null?` (+${e.gap}s)`:''}`).join(', ');
+      html+=`<div class="notes-row"><span class="notes-icon">🔴</span><span>Eliminated in ${phase}: ${list}</span></div>`;
+    }
+  }
+
+  for(const f of notes.flags){
+    html+=`<div class="notes-row"><span class="notes-icon">🚩</span><span>${f.label}${f.lap?` — Lap ${f.lap}`:''}</span></div>`;
+  }
+
+  for(const d of notes.dnfs){
+    html+=`<div class="notes-row"><span class="notes-icon">⛔</span><span><b>${d.driver}</b> — ${d.status}</span></div>`;
+  }
+
+  html+='</div>';
+  return html;
+}
+
 function renderInsightsTab(){
   const wrap=document.getElementById('insightsWrap');
   if(!wrap)return;
@@ -401,8 +505,10 @@ function renderInsightsTab(){
     return;
   }
 
+  const notesHtml=renderNotesSection(computeQuickNotes());
+
   if(insightsDownloading){
-    wrap.innerHTML=`<div class="insights-export-card">
+    wrap.innerHTML=`${notesHtml}<div class="insights-export-card">
       <div class="insights-export-icon">⏳</div>
       <div class="insights-export-title">PREPARING ${branch.toUpperCase()} DATA</div>
       <div class="insights-export-sub">Pulling telemetry — this can take a moment</div>
@@ -411,7 +517,7 @@ function renderInsightsTab(){
   }
 
   const already=downloadedSessions.has(sessionKey);
-  wrap.innerHTML=`<div class="insights-export-card">
+  wrap.innerHTML=`${notesHtml}<div class="insights-export-card">
     <div class="insights-export-icon">📄</div>
     <div class="insights-export-title">${branch.toUpperCase()} DATA EXPORT</div>
     <div class="insights-export-sub">${label}</div>
@@ -879,7 +985,7 @@ function computeStintStats(driverStints,driverLaps){
     const stintLaps=med?afterKnownCauses.filter(l=>l.lap_duration<=med*STINT_OUTLIER_MULTIPLIER):afterKnownCauses;
     const excludedLaps=inStint.length-stintLaps.length;
 
-    if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:null,deg_per_lap:null,laps:0,excluded_outlier_laps:excludedLaps};
+    if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,tyre_age_at_start:s.tyre_age_at_start??null,avg_lap:null,deg_per_lap:null,laps:0,excluded_outlier_laps:excludedLaps};
     const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
     let deg=null;
     if(stintLaps.length>=2){
@@ -887,7 +993,7 @@ function computeStintStats(driverStints,driverLaps){
       for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
       deg=den>0?+(num/den).toFixed(3):0;
     }
-    return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:+avg.toFixed(3),deg_per_lap:deg,laps:stintLaps.length,excluded_outlier_laps:excludedLaps};
+    return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,tyre_age_at_start:s.tyre_age_at_start??null,avg_lap:+avg.toFixed(3),deg_per_lap:deg,laps:stintLaps.length,excluded_outlier_laps:excludedLaps};
   });
 }
 
@@ -905,7 +1011,7 @@ function filteredRaceControlEvents(){
 }
 
 function sortedDriversByPosition(){
-  return[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+  return[...positionOrder].sort((a,b)=>(cachedSessionResult.get(a)?.position??latestPos.get(a)?.position??99)-(cachedSessionResult.get(b)?.position??latestPos.get(b)?.position??99));
 }
 
 // ---- Straight-line speed helper ----
@@ -942,8 +1048,8 @@ async function buildRacePayload(){
   for(const dn of sortedByPos){
     const meta=driverMeta.get(dn);
     if(!meta)continue;
-    const pos=latestPos.get(dn)?.position??null;
-    const iv=latestIv.get(dn);
+    const result=cachedSessionResult.get(dn);
+    const pos=result?.position??latestPos.get(dn)?.position??null;
     const driverLaps=lapsByDriver.get(dn)||[];
 
     let bestLap=null;
@@ -957,7 +1063,11 @@ async function buildRacePayload(){
       position:pos,
       driver:meta.acronym,
       team:meta.teamName,
-      gap_to_leader:(iv&&iv.gap_to_leader!=null)?iv.gap_to_leader:(pos===1?0:null),
+      gap_to_leader:result?.gap_to_leader??(pos===1?0:null),
+      number_of_laps:result?.number_of_laps??null,
+      dnf:result?.dnf??false,
+      dns:result?.dns??false,
+      dsq:result?.dsq??false,
       fastest_lap:bestLap?+bestLap.toFixed(3):null,
       stints:stints.map(({laps,...rest})=>rest)
     });
@@ -993,43 +1103,26 @@ async function buildSprintPayload(){
 // phases directly. This is inferred from data structure, not from driver
 // behavior — a defensible inference, unlike traffic/tow calls.
 
+// ---- Qualifying data-shaper ----
+// Uses session_result's per-phase duration array (index 0=Q1, 1=Q2,
+// 2=Q3) — this is OpenF1's own authoritative phase data, confirmed
+// directly from their docs, not an inference. This replaced an earlier
+// approach that guessed phase boundaries from chequered-flag lap numbers
+// before this endpoint's real per-phase data was known to exist.
+
 async function buildQualifyingPayload(){
-  const lapsByDriver=lapsByDriverMap();
-  const chequered=(allRCMessages||[])
-    .filter(m=>(m.category||'').toLowerCase()==='flag'&&(m.flag||'').toUpperCase()==='CHEQUERED')
-    .map(m=>m.lap_number)
-    .filter(n=>n!=null)
-    .sort((a,b)=>a-b);
-
-  // Phase boundaries: [0, chequered[0]] = Q1, (chequered[0], chequered[1]] = Q2, etc.
-  const phaseBounds=[];
-  let prev=0;
-  for(const c of chequered){phaseBounds.push([prev,c]);prev=c}
-  if(!phaseBounds.length){
-    // No chequered-flag data available — fall back to one undivided phase.
-    phaseBounds.push([0,lastKnownLapNum||9999]);
-  }
-  const phaseNames=['Q1','Q2','Q3'].slice(0,phaseBounds.length);
-
-  const phases=phaseBounds.map(([start,end],i)=>{
+  const phaseNames=['Q1','Q2','Q3'];
+  const phases=phaseNames.map((name,idx)=>{
     const driversInPhase=[];
-    for(const dn of positionOrder){
+    for(const[dn,r]of cachedSessionResult){
       const meta=driverMeta.get(dn);
       if(!meta)continue;
-      const driverLaps=(lapsByDriver.get(dn)||[]).filter(l=>l.lap_number>start&&l.lap_number<=end);
-      if(!driverLaps.length)continue;
-      let bestLap=null,bestSectors={s1:null,s2:null,s3:null};
-      for(const l of driverLaps){
-        if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap)){
-          bestLap=l.lap_duration;
-          bestSectors={s1:l.duration_sector_1||null,s2:l.duration_sector_2||null,s3:l.duration_sector_3||null};
-        }
-      }
-      if(bestLap==null)continue;
-      driversInPhase.push({driver:meta.acronym,team:meta.teamName,best_lap:+bestLap.toFixed(3),sectors:bestSectors});
+      const t=Array.isArray(r.duration)?r.duration[idx]:null;
+      if(t==null)continue; // driver didn't set a time in this phase (eliminated earlier, or DNS)
+      driversInPhase.push({driver:meta.acronym,team:meta.teamName,best_lap:+t.toFixed(3)});
     }
     driversInPhase.sort((a,b)=>a.best_lap-b.best_lap);
-    return{phase:phaseNames[i]||`Phase ${i+1}`,results:driversInPhase};
+    return{phase:name,results:driversInPhase};
   });
 
   const topSpeeds=await fetchTopSpeeds();
@@ -1041,7 +1134,6 @@ async function buildQualifyingPayload(){
   return{
     session_type:'qualifying',
     session:getSessionLabel()||'Qualifying',
-    phase_boundaries_inferred_from:'chequered flag lap numbers in race control data',
     top_speed_note:'top_speed_kmh (max speed recorded across the session) is only attached to the final phase results, since that is the most representative sample',
     phases,
     pole:phases[phases.length-1]?.results[0]||null,
@@ -1078,6 +1170,7 @@ async function buildPracticePayload(){
       compound:s.compound,
       lap_start:s.lap_start,
       lap_end:s.lap_end,
+      tyre_age_at_start:s.tyre_age_at_start,
       laps:s.laps,
       avg_lap:s.avg_lap,
       deg_per_lap:s.deg_per_lap,
@@ -1199,7 +1292,7 @@ async function onSessionSelected(forceKey){
   cachedPitStops.clear();
   cachedWeather=[];
   cachedRaceControl=[];
-  latestPos.clear();latestIv.clear();
+  latestPos.clear();cachedSessionResult.clear();
   lastStintMap.clear();
   duelsSelectedDrivers=[];
   duelsCharts.forEach(c=>c.destroy());duelsCharts=[];
@@ -1209,11 +1302,7 @@ async function onSessionSelected(forceKey){
   massIncidentSuppressUntilLap = 0;
   
   // Reset qualifying tracking
-  chequeredFlagCount = 0;
-  qPhaseEliminatedData = { q1: null, q2: null };
-  q1Captured = false;
-  q2Captured = false;
-  sessionEnded = false;
+
 
   document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
   const insightsWrap=document.getElementById('insightsWrap');
@@ -1280,17 +1369,43 @@ function startTimer(){
 
 function setSelectStatus(s){const sel=document.getElementById('sessionSelect');sel.className='';if(s)sel.classList.add('status-'+s);}
 
+// Determines sort order for the driver list based on session type:
+//  - Race/Sprint: final classification order (session_result.position),
+//    since that's the actual result — fastest-lap ranking doesn't matter.
+//  - Practice/Qualifying/Sprint Qualifying: ordered by fastest lap time,
+//    since there's no "final classification" concept and live position
+//    was always a live-timing artifact that doesn't apply to a finished
+//    session being reviewed after the fact.
+function isRaceOrSprintSession(){
+  const t=(sessionType||'').toLowerCase();
+  return t.includes('race')||(t.includes('sprint')&&!t.includes('qualif'));
+}
+
 async function buildCards(){
-  const positions=await api(`position?session_key=${sessionKey}`);
-  const latestPos=new Map();
-  for(const p of positions){
-    const dn=p.driver_number;
-    if(!latestPos.has(dn)||new Date(p.date)>new Date(latestPos.get(dn).date))latestPos.set(dn,p);
+  const isRaceLike=isRaceOrSprintSession();
+
+  if(isRaceLike){
+    // Final classification order. session_result may not be populated yet
+    // this early (loadSessionData's fetch-and-merge rounds fill it in
+    // shortly after), so fall back to driver list order for the very
+    // first paint — renderSessionData re-sorts once session_result lands.
+    const result=await api(`session_result?session_key=${sessionKey}`);
+    const withResult=[...result].sort((a,b)=>(a.position??99)-(b.position??99));
+    const allDns=new Set([...driverMeta.keys()]);
+    const withResultDns=new Set(withResult.map(r=>r.driver_number));
+    positionOrder=[...withResult.map(r=>r.driver_number),...[...allDns].filter(dn=>!withResultDns.has(dn))].filter(dn=>driverMeta.has(dn));
+  } else {
+    // No reliable ordering exists yet (laps haven't loaded) — use driver
+    // list order for first paint; renderSessionData re-sorts by fastest
+    // lap once laps have loaded.
+    positionOrder=[...driverMeta.keys()];
   }
-  const withPos=[...latestPos.values()].sort((a,b)=>a.position-b.position);
-  const allDns=new Set([...driverMeta.keys()]);
-  const withPosDns=new Set(withPos.map(p=>p.driver_number));
-  positionOrder=[...withPos.map(p=>p.driver_number),...[...allDns].filter(dn=>!withPosDns.has(dn))].filter(dn=>driverMeta.has(dn));
+
+  // Update column header for non-race sessions: LAPS (total completed)
+  // replaces LAST (a live-timing "most recent lap" concept that doesn't
+  // apply to a finished session).
+  const lastHeader=document.getElementById('colHeaderLast');
+  if(lastHeader)lastHeader.textContent=isRaceLike?'LAST':'LAPS';
 
   const list=document.getElementById('driverList');
   list.innerHTML='';
@@ -1328,9 +1443,9 @@ async function buildCards(){
 // lose whatever the previous round got right; merging only fills gaps that
 // are still empty, so three fetches strictly accumulate completeness.
 async function fetchAndMergeSessionData(){
-  const[newLaps,intervals,positions,pitStops,raceControl,stints,weather]=await Promise.all([
+  const[newLaps,sessionResult,positions,pitStops,raceControl,stints,weather]=await Promise.all([
     api(`laps?session_key=${sessionKey}`),
-    api(`intervals?session_key=${sessionKey}`),
+    api(`session_result?session_key=${sessionKey}`),
     api(`position?session_key=${sessionKey}`),
     api(`pit?session_key=${sessionKey}`),
     api(`race_control?session_key=${sessionKey}`),
@@ -1360,9 +1475,14 @@ async function fetchAndMergeSessionData(){
     if(!latestPos.has(dn)||new Date(p.date)>new Date(latestPos.get(dn).date))latestPos.set(dn,p);
   }
 
-  for(const iv of intervals){
-    const dn=iv.driver_number;
-    if(!latestIv.has(dn)||new Date(iv.date)>new Date(latestIv.get(dn).date))latestIv.set(dn,iv);
+  // session_result is the correct source for post-session standings — it
+  // gives real gap_to_leader, number_of_laps, and explicit dnf/dns/dsq
+  // flags for a FINISHED session, unlike /intervals (race-only, live-only,
+  // see fetchAndMergeSessionData's earlier design notes — this replaced it
+  // entirely). One row per driver; safe to just overwrite each entry since
+  // this endpoint returns the final, settled result, not a live stream.
+  if(sessionResult&&sessionResult.length){
+    for(const r of sessionResult)cachedSessionResult.set(r.driver_number,r);
   }
 
   const latestPit=new Map(cachedPitStops);
@@ -1394,85 +1514,128 @@ function renderSessionData(){
   updateWeather(cachedWeather);
   updateRaceControl(cachedRaceControl);
 
-  const bestLapMap=new Map(),lastLapMap=new Map();
+  const bestLapMap=new Map(),bestLapSectorsMap=new Map();
   overallBestLap=Infinity;overallBestDriver=null;
 
   for(const lap of laps){
     const dn=lap.driver_number,dur=lap.lap_duration;
     if(dur&&dur>0){
-      if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration)bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
+      if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration){
+        bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
+        // Sector times shown in ORDER now come from each driver's actual
+        // fastest lap, not their most recent lap — "last lap" was a
+        // live-timing concept and this is a finished-session review tool.
+        // Still fall back to a previous non-null value per sector in case
+        // this exact lap has a gap in one field (same defensive pattern
+        // as before, just anchored to the fastest lap instead of the
+        // latest one).
+        const prevBest=bestLapSectorsMap.get(dn)||{};
+        bestLapSectorsMap.set(dn,{
+          s1:lap.duration_sector_1||prevBest.s1||null,
+          s2:lap.duration_sector_2||prevBest.s2||null,
+          s3:lap.duration_sector_3||prevBest.s3||null
+        });
+      }
       if(dur<overallBestLap){overallBestLap=dur;overallBestDriver=dn}
     }
-    // Track the most recent lap overall (for lap time/tyre age), but track
-    // each sector's most recent NON-NULL value independently — OpenF1 can
-    // post a driver's final lap before every sector has finished timing
-    // (S3 in particular completes last, at the finish line), so tying every
-    // sector to one single "last lap" object can leave a real, earlier value
-    // blank even though it's sitting right there in the data.
-    const prev=lastLapMap.get(dn)||{};
-    lastLapMap.set(dn,{
-      duration:dur,
-      lapNum:lap.lap_number,
-      s1:lap.duration_sector_1||prev.s1||null,
-      s2:lap.duration_sector_2||prev.s2||null,
-      s3:lap.duration_sector_3||prev.s3||null
-    });
   }
 
-  const vals=l=>[...lastLapMap.values()].map(x=>x[l]).filter(Boolean);
+  const vals=l=>[...bestLapSectorsMap.values()].map(x=>x[l]).filter(Boolean);
   const bestS1=Math.min(...vals('s1'));
   const bestS2=Math.min(...vals('s2'));
   const bestS3=Math.min(...vals('s3'));
 
   const stintMap=lastStintMap;
-
-  let leaderDn=null;
-  for(const[dn,iv]of latestIv){if(iv.gap_to_leader===0||iv.gap_to_leader===null||iv.gap_to_leader==='0'){leaderDn=dn;break}}
-  if(!leaderDn)for(const[dn,p]of latestPos){if(p.position===1){leaderDn=dn;break}}
-
   const latestPit=cachedPitStops;
+  const isRaceLike=isRaceOrSprintSession();
 
+  // Sort order: Race/Sprint by final classification (session_result); all
+  // other sessions by fastest lap time, since there's no "final position"
+  // concept for Practice/Qualifying — a driver's fastest lap is the real,
+  // static fact about how their session went.
   const container=document.getElementById('driverList');
-  const sorted=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+  let sorted;
+  if(isRaceLike){
+    sorted=[...positionOrder].sort((a,b)=>{
+      const ra=cachedSessionResult.get(a)?.position??99;
+      const rb=cachedSessionResult.get(b)?.position??99;
+      return ra-rb;
+    });
+  } else {
+    sorted=[...positionOrder].sort((a,b)=>{
+      const la=bestLapMap.get(a)?.duration??Infinity;
+      const lb=bestLapMap.get(b)?.duration??Infinity;
+      return la-lb;
+    });
+  }
   for(const dn of sorted){const el=document.getElementById(`row-${dn}`);if(el)container.appendChild(el)}
 
-  const elimThreshold=getElimThreshold();
+  // Leader/reference for gap column: the driver in P1 of session_result
+  // (settled final result), not a live "who currently has gap 0" guess.
+  let leaderDn=null;
+  for(const[dn,r]of cachedSessionResult){if(r.position===1){leaderDn=dn;break}}
 
-  for(const dn of positionOrder){
-    const pos=latestPos.get(dn)?.position??null;
-    const iv=latestIv.get(dn);
-    const lastLap=lastLapMap.get(dn);
+  for(let i=0;i<sorted.length;i++){
+    const dn=sorted[i];
+    const result=cachedSessionResult.get(dn);
     const bestLap=bestLapMap.get(dn);
+    const bestSectors=bestLapSectorsMap.get(dn);
     const pit=latestPit.get(dn);
     const driverStints=stintMap.get(dn)||[];
-    const lapNum=lastLap?.lapNum||0;
+    const lapNum=bestLap?.lapNum||0;
 
-    const row=document.getElementById(`row-${dn}`);
-    if(row&&elimThreshold&&pos){
-      row.classList.toggle('eliminated',pos>=elimThreshold+5);
-      row.classList.toggle('elim-danger',pos>=elimThreshold&&pos<elimThreshold+5);
+    // Display position: session_result's settled position for Race/Sprint;
+    // otherwise just the row's rank by fastest lap (1-indexed).
+    const pos=isRaceLike?(result?.position??null):(i+1);
+
+    const posEl=document.getElementById(`pos-${dn}`);
+    if(posEl){
+      if(result?.dnf){posEl.textContent='DNF';posEl.className='pos dnf'}
+      else if(result?.dns){posEl.textContent='DNS';posEl.className='pos dnf'}
+      else if(result?.dsq){posEl.textContent='DSQ';posEl.className='pos dnf'}
+      else{posEl.textContent=pos??'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`}
     }
 
-    const posEl=document.getElementById(`pos-${dn}`);if(posEl){posEl.textContent=pos??'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`}
-    const gapEl=document.getElementById(`gap-${dn}`);if(gapEl){if(dn===leaderDn){gapEl.textContent='LEADER';gapEl.className='gap-leader leader'}else if(iv?.gap_to_leader!=null){const g=iv.gap_to_leader;gapEl.textContent=typeof g==='number'?`+${g.toFixed(3)}`:String(g);gapEl.className='gap-leader'}else{gapEl.textContent='—';}}
-    const aheadEl=document.getElementById(`ahead-${dn}`);if(aheadEl){if(iv?.interval!=null&&dn!==leaderDn){const g=iv.interval;aheadEl.textContent=`△ ${typeof g==='number'?g.toFixed(3):String(g)}`}else aheadEl.textContent='';}
-    const lastEl=document.getElementById(`last-${dn}`);if(lastEl)lastEl.textContent=lastLap?fmtTime(lastLap.duration):'—';
+    const gapEl=document.getElementById(`gap-${dn}`);
+    if(gapEl){
+      if(dn===leaderDn){gapEl.textContent='LEADER';gapEl.className='gap-leader leader'}
+      else if(result?.gap_to_leader!=null){
+        const g=result.gap_to_leader;
+        gapEl.textContent=typeof g==='number'?`+${g.toFixed(3)}`:String(g);
+        gapEl.className='gap-leader';
+      } else {
+        gapEl.textContent='—';
+        gapEl.className='gap-leader';
+      }
+    }
+    const aheadEl=document.getElementById(`ahead-${dn}`);if(aheadEl)aheadEl.textContent='';
+
+    const lastEl=document.getElementById(`last-${dn}`);
+    if(lastEl){
+      if(isRaceLike){
+        lastEl.textContent=bestLap?fmtTime(bestLap.duration):'—';
+      } else {
+        // LAPS column: total laps completed in the session, from
+        // session_result's number_of_laps — a real post-session fact,
+        // not a live "most recent lap" concept.
+        lastEl.textContent=result?.number_of_laps??'—';
+      }
+    }
+
     const bestEl=document.getElementById(`best-${dn}`);if(bestEl){bestEl.textContent=bestLap?fmtTime(bestLap.duration):'—';bestEl.className=dn===overallBestDriver?'lap-cell purple':'lap-cell';}
-    if(lastLap){
-      setSector(`s1-${dn}`,lastLap.s1,bestS1);
-      setSector(`s2-${dn}`,lastLap.s2,bestS2);
-      setSector(`s3-${dn}`,lastLap.s3,bestS3);
+
+    if(bestSectors){
+      setSector(`s1-${dn}`,bestSectors.s1,bestS1);
+      setSector(`s2-${dn}`,bestSectors.s2,bestS2);
+      setSector(`s3-${dn}`,bestSectors.s3,bestS3);
     }
-    
+
     updateTyreCol(dn,driverStints,lapNum);
     updatePit(dn,pit);
   }
-  updateElimDivider(sorted,elimThreshold);
-  generateFeed(laps,latestPos,latestIv,[...cachedPitStops.values()],stintMap,cachedRaceControl);
+  generateFeed(laps,latestPos,cachedSessionResult,[...cachedPitStops.values()],stintMap,cachedRaceControl);
 
-  const now=new Date();
-  if(sessionEnd&&now>sessionEnd)setSelectStatus('done');
-  else if(sessionStart&&now>=sessionStart)setSelectStatus('live');
+  setSelectStatus('done');
 }
 
 // Orchestrates the one-shot load: fetch+merge, render, then up to two more
@@ -1502,8 +1665,7 @@ function getCurrentTyre(stints,lapNum){
   return{compound:current.compound||null,age:Math.max(1,lapNum-current.lap_start+1)};
 }
 
-function getElimThreshold(){if(!sessionType)return null;if(sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual'))return 16;return null;}
-function updateElimDivider(sorted,threshold){let existing=document.getElementById('elimDivider');if(!threshold){if(existing)existing.classList.remove('show');return}if(!existing){existing=document.createElement('div');existing.id='elimDivider';existing.className='elim-divider';existing.textContent='── ELIMINATION ZONE ──';document.getElementById('driverList').appendChild(existing);}existing.classList.add('show');const container=document.getElementById('driverList');const firstElim=sorted.find(dn=>{const r=document.getElementById(`row-${dn}`);return r&&r.classList.contains('eliminated')});if(firstElim){const el=document.getElementById(`row-${firstElim}`);if(el)container.insertBefore(existing,el)}}
+
 function setSector(id,val,bestVal){const el=document.getElementById(id);if(!el)return;if(!val){el.textContent='—';el.className='sector-val';return;}el.textContent=fmtTime(val);el.className=(isFinite(bestVal)&&val===bestVal)?'sector-val purple':'sector-val';}
 
 function updateTyreCol(dn,stints,lapNum){const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;const{compound,age}=getCurrentTyre(stints,lapNum);if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}const col=tyreColor(compound);el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;}
@@ -1518,59 +1680,12 @@ function updateRaceControl(data){
   allRCMessages=data;
   activeYellowSectors.clear();
   let scActive=false;
-  
-  // Track session ended state
-  const isQualifying = sessionType.toLowerCase().includes('qualif') || sessionType.toLowerCase().includes('sprint qual');
-  
+
   for(const m of data){
     const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
     if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);
     if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;
     if(f==='GREEN')activeYellowSectors.clear();
-    
-    // Detect chequered flag for qualifying phases
-    if(isQualifying && (f==='CHEQUERED' || msg.includes('CHEQUERED'))){
-      chequeredFlagCount++;
-      sessionEnded = true;
-      
-      if(chequeredFlagCount === 1 && qPhaseEliminatedData.q1){
-        addToFeedBuffer('c-info', qPhaseEliminatedData.q1);
-      } else if(chequeredFlagCount === 2 && qPhaseEliminatedData.q2){
-        addToFeedBuffer('c-info', qPhaseEliminatedData.q2);
-      } else if(chequeredFlagCount === 3){
-        // Get pole position from final order
-        if(latestPos.size > 0){
-          const sortedPos = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99);
-          if(sortedPos.length >= 3){
-            const p1 = sortedPos[0];
-            const p2 = sortedPos[1];
-            const p3 = sortedPos[2];
-            const p1Driver = driverMeta.get(p1[0])?.acronym || '#?';
-            const p2Driver = driverMeta.get(p2[0])?.acronym || '#?';
-            const p3Driver = driverMeta.get(p3[0])?.acronym || '#?';
-            const poleTime = overallBestLap !== Infinity ? fmtTime(overallBestLap) : '?';
-            // Get gaps from best laps if available
-            const qualBest = new Map();
-            for(const lap of cachedLaps.values()){
-              if(lap.lap_duration && lap.lap_duration > 0){
-                if(!qualBest.has(lap.driver_number) || lap.lap_duration < qualBest.get(lap.driver_number).duration){
-                  qualBest.set(lap.driver_number, {duration: lap.lap_duration, lap: lap.lap_number});
-                }
-              }
-            }
-            const bestOrder = [...qualBest.entries()].sort((a,b)=>a[1].duration - b[1].duration);
-            if(bestOrder.length >= 3){
-              const poleGap2 = (bestOrder[1][1].duration - bestOrder[0][1].duration).toFixed(3);
-              const poleGap3 = (bestOrder[2][1].duration - bestOrder[0][1].duration).toFixed(3);
-              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(bestOrder[0][0])} <b style="color:var(--purple)">${fmtTime(bestOrder[0][1].duration)}</b>. ${driverTag(bestOrder[1][0])} +${poleGap2}s. ${driverTag(bestOrder[2][0])} +${poleGap3}s.`);
-            } else {
-              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(p1[0])}. ${driverTag(p2[0])} P2. ${driverTag(p3[0])} P3.`);
-            }
-          }
-        }
-        addToFeedBuffer('c-info', `Q3 ENDED. Pole position determined.`);
-      }
-    }
   }
   if(scActive)setSelectStatus('sc');
   if(!data.length)return;
@@ -1596,7 +1711,7 @@ function addToFeedBuffer(category, text){
   });
 }
 
-function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
+function generateFeed(laps,latestPos,sessionResult,allPitStops,stintMap,raceControl){
   const isRace=sessionType.toLowerCase().includes('race');
   const isFP=sessionType.toLowerCase().includes('practice');
   const isQual=sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual');
@@ -1682,48 +1797,6 @@ function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
     for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
 
     // QUALIFYING: Personal best lap time
-    if(isQual && !sessionEnded){
-      for(const lap of lapDrivers){
-        if(lap.lap_duration&&lap.lap_duration>0){
-          const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
-          const prevBest=driverLaps.filter(l=>l.lap_duration&&l.lap_number<lap.lap_number)
-            .reduce((best,l)=>Math.min(best,l.lap_duration),Infinity);
-          if(prevBest!==Infinity && lap.lap_duration<prevBest){
-            newEntries.push({
-              lap:lapNum,ts:lapSortKey+250+lap.driver_number,sortKey:lapSortKey+250+lap.driver_number,
-              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
-              category:'c-fastest',isRC:false,
-              text:`${driverTag(lap.driver_number)} personal best — ${fmtTime(lap.lap_duration)}`
-            });
-          }
-        }
-      }
-      
-      // Capture elimination data for Q1 and Q2 phases (only if not already captured)
-      if(sortedPos.length >= 20 && !q1Captured){
-        const eliminatedQ1 = sortedPos.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
-        const fastestEliminatedQ1 = sortedPos[15]?.[0];
-        const p15Pos = sortedPos[14]?.[1];
-        const p16Pos = sortedPos[15]?.[1];
-        const gapToP15Q1 = p15Pos - p16Pos;
-        if(eliminatedQ1.length === 5 && gapToP15Q1 > 0){
-          qPhaseEliminatedData.q1 = `Q1 ENDED. ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
-          q1Captured = true;
-        }
-      }
-      
-      if(sortedPos.length >= 15 && !q2Captured && q1Captured){
-        const eliminatedQ2 = sortedPos.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
-        const fastestEliminatedQ2 = sortedPos[10]?.[0];
-        const p10Pos = sortedPos[9]?.[1];
-        const p11Pos = sortedPos[10]?.[1];
-        const gapToP10Q2 = p10Pos - p11Pos;
-        if(eliminatedQ2.length === 5 && gapToP10Q2 > 0){
-          qPhaseEliminatedData.q2 = `Q2 ENDED. ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
-          q2Captured = true;
-        }
-      }
-    }
 
     // RACE: Fastest lap (overall session best)
     if(isRace){
@@ -2082,7 +2155,21 @@ function renderDriverTab(tab){
     let bestCompound=null,bestDeg=Infinity;
     for(const s of stintStats){if(s.deg<bestDeg&&s.compound){bestDeg=s.deg;bestCompound=s.compound}}
 
-    let html='';
+    // Compact pill layout: compound + tyre age at start (NEW if the tyre
+    // set had zero prior laps before this stint began, otherwise the real
+    // number) + lap range. tyre_age_at_start comes straight from OpenF1's
+    // stints endpoint — it's the age of the physical tyre set, which can
+    // be >0 if a set used earlier in the session was refitted later.
+    let pillsHtml='<div class="stint-pills">';
+    for(const s of stintStats){
+      const col=tyreColor(s.compound||'');
+      const age=s.tyre_age_at_start;
+      const ageLabel=(age===0||age==null)?'NEW':String(age);
+      pillsHtml+=`<span class="stint-pill" style="background:${col}22;color:${col};border-color:${col}55">${s.compound||'?'} (${ageLabel}) L${s.lap_start}-${s.lap_end||'?'}</span>`;
+    }
+    pillsHtml+='</div>';
+
+    let html=pillsHtml;
     for(const s of stintStats){
       const col=tyreColor(s.compound||'');
       const letter=tyreLetter(s.compound||'');
