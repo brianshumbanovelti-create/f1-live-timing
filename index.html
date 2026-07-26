@@ -644,20 +644,32 @@
             // ---------- LOAD YEARS ----------
             async function loadYears() {
                 try {
-                    // OpenF1: get unique years from sessions
+                    // Get all available years from sessions (2018-2026)
                     const data = await fetchAPI('/sessions?year_min=2018&year_max=2026');
                     const years = [...new Set(data.map(s => s.year).filter(Boolean))].sort((a, b) => b - a);
+                    
+                    // Ensure 2025 and 2026 are included even if no data yet
+                    const allYears = new Set([2026, 2025, ...years]);
+                    const sortedYears = Array.from(allYears).sort((a, b) => b - a);
+                    
                     elYear.innerHTML = '<option value="">Year</option>' +
-                        years.map(y => `<option value="${y}">${y}</option>`).join('');
-                    if (years.length) {
-                        elYear.value = years[0];
+                        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+                    
+                    // Auto-select the most recent year with data, or 2026 if available
+                    if (sortedYears.length) {
+                        // Prefer 2026 if it exists in the set
+                        if (sortedYears.includes(2026)) {
+                            elYear.value = '2026';
+                        } else {
+                            elYear.value = sortedYears[0];
+                        }
                         await onYearChange();
                     }
                 } catch (err) {
                     console.warn('Failed to load years, using defaults', err);
-                    // fallback
-                    elYear.innerHTML = '<option value="2025">2025</option><option value="2024">2024</option>';
-                    elYear.value = '2025';
+                    // fallback with 2025 and 2026
+                    elYear.innerHTML = '<option value="">Year</option><option value="2026">2026</option><option value="2025">2025</option>';
+                    elYear.value = '2026';
                     await onYearChange();
                 }
             }
@@ -670,6 +682,8 @@
                     elGP.disabled = true;
                     elSession.innerHTML = '<option value="">Session</option>';
                     elSession.disabled = true;
+                    state.sessionKey = null;
+                    renderEmpty('Select a year');
                     return;
                 }
                 state.year = year;
@@ -677,20 +691,29 @@
                 elGP.innerHTML = '<option value="">Loading GPs…</option>';
                 try {
                     const data = await fetchAPI(`/sessions?year=${year}`);
-                    const gps = [...new Set(data.map(s => s.location || s.country || s.name).filter(Boolean))].sort();
+                    // Group by location/country for GP names
+                    const gpMap = {};
+                    data.forEach(s => {
+                        const name = s.location || s.country || s.name;
+                        if (name) gpMap[name] = true;
+                    });
+                    const gps = Object.keys(gpMap).sort();
+                    
                     elGP.innerHTML = '<option value="">GP</option>' +
                         gps.map(g => `<option value="${g}">${g}</option>`).join('');
+                    
                     if (gps.length) {
                         elGP.value = gps[0];
                         await onGPChange();
                     } else {
-                        elGP.innerHTML = '<option value="">No GPs</option>';
+                        elGP.innerHTML = '<option value="">No GPs found</option>';
                         elSession.innerHTML = '<option value="">Session</option>';
                         elSession.disabled = true;
+                        renderEmpty('No Grands Prix found for this year');
                     }
                 } catch (err) {
                     console.warn('Failed to load GPs', err);
-                    elGP.innerHTML = '<option value="">GP</option>';
+                    elGP.innerHTML = '<option value="">Error loading GPs</option>';
                 }
             }
 
@@ -699,6 +722,8 @@
                 if (!gp) {
                     elSession.innerHTML = '<option value="">Session</option>';
                     elSession.disabled = true;
+                    state.sessionKey = null;
+                    renderEmpty('Select a GP');
                     return;
                 }
                 state.gp = gp;
@@ -709,18 +734,26 @@
                     const sessions = data
                         .filter(s => (s.location || s.country || s.name) === gp)
                         .sort((a, b) => (a.session_key || 0) - (b.session_key || 0));
-                    elSession.innerHTML = '<option value="">Session</option>' +
-                        sessions.map(s => `<option value="${s.session_key}">${s.session_name || s.name || 'Race'}</option>`)
-                        .join('');
+                    
                     if (sessions.length) {
+                        // Show session name with type
+                        elSession.innerHTML = '<option value="">Select session</option>' +
+                            sessions.map(s => {
+                                const label = s.session_name || s.name || 'Session';
+                                const type = s.session_type ? ` (${s.session_type})` : '';
+                                return `<option value="${s.session_key}">${label}${type}</option>`;
+                            }).join('');
+                        
+                        // Auto-select the first session
                         elSession.value = sessions[0].session_key;
                         await onSessionChange();
                     } else {
-                        elSession.innerHTML = '<option value="">No sessions</option>';
+                        elSession.innerHTML = '<option value="">No sessions found</option>';
+                        renderEmpty('No sessions available for this GP');
                     }
                 } catch (err) {
                     console.warn('Failed to load sessions', err);
-                    elSession.innerHTML = '<option value="">Session</option>';
+                    elSession.innerHTML = '<option value="">Error loading sessions</option>';
                 }
             }
 
