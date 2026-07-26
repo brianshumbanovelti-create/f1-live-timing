@@ -424,6 +424,30 @@
             font-size: 2.4rem;
             margin-bottom: 8px;
         }
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6a7a88;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 20px;
+        }
+        .loading-state .spinner {
+            border: 3px solid #1f2a36;
+            border-top: 3px solid #e10600;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 640px) {
@@ -574,6 +598,7 @@
                 // duels
                 duelDrivers: [null, null, null, null],
                 duelCharts: [],
+                isLoading: false,
             };
 
             // ---------- DOM REFS ----------
@@ -633,12 +658,24 @@
                 return result;
             }
 
+            function showLoading() {
+                content.innerHTML = `
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading session data…</p>
+                    </div>
+                `;
+            }
+
             // ---------- API FETCH (with caching) ----------
             async function fetchAPI(endpoint) {
                 const url = API_BASE + endpoint;
+                console.log('Fetching:', url);
                 const res = await fetch(url);
                 if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-                return res.json();
+                const data = await res.json();
+                console.log('Data received:', data?.length || 'empty');
+                return data;
             }
 
             // ---------- LOAD YEARS ----------
@@ -782,6 +819,7 @@
                 state.detailDriver = null;
 
                 // load core data
+                showLoading();
                 await loadCoreData(sk);
                 renderCurrentTab();
             }
@@ -790,24 +828,55 @@
             async function loadCoreData(sessionKey) {
                 const cache = state.cache;
                 try {
-                    const [drivers, results, stints] = await Promise.all([
-                        fetchAPI(`/drivers?session_key=${sessionKey}`),
-                        fetchAPI(`/session_results?session_key=${sessionKey}`),
-                        fetchAPI(`/stints?session_key=${sessionKey}`),
-                    ]);
+                    // Try loading drivers first - if this fails, session might not have data
+                    let drivers = [];
+                    let results = [];
+                    let stints = [];
+                    
+                    try {
+                        drivers = await fetchAPI(`/drivers?session_key=${sessionKey}`);
+                        console.log(`Loaded ${drivers.length} drivers`);
+                    } catch (e) {
+                        console.warn('Failed to load drivers:', e);
+                    }
+                    
+                    try {
+                        results = await fetchAPI(`/session_results?session_key=${sessionKey}`);
+                        console.log(`Loaded ${results.length} results`);
+                    } catch (e) {
+                        console.warn('Failed to load results:', e);
+                    }
+                    
+                    try {
+                        stints = await fetchAPI(`/stints?session_key=${sessionKey}`);
+                        console.log(`Loaded ${stints.length} stints`);
+                    } catch (e) {
+                        console.warn('Failed to load stints:', e);
+                    }
+                    
                     cache.drivers = drivers;
                     cache.results = results;
                     cache.stints = stints;
+                    
+                    // If no data at all, show message
+                    if (!drivers.length && !results.length) {
+                        renderEmpty('No data available for this session');
+                        return;
+                    }
+                    
                 } catch (err) {
                     console.warn('Failed to load core data', err);
                     cache.drivers = [];
                     cache.results = [];
                     cache.stints = [];
+                    renderEmpty('Error loading session data');
                 }
+                
                 // optional weather
                 try {
                     const weather = await fetchAPI(`/weather?session_key=${sessionKey}`);
                     cache.weather = weather;
+                    console.log(`Loaded ${weather.length} weather records`);
                 } catch (_) { cache.weather = null; }
             }
 
