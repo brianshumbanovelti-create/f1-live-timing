@@ -1,1210 +1,2141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>F1Debrief</title>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
-    </script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html,
-        body {
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: #0a0e14;
-            color: #e8edf3;
-        }
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        * {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        #app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 12px 12px 12px;
-            background: #0a0e14;
-        }
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 0 8px 0;
-            border-bottom: 1px solid #1f2a36;
-            flex-shrink: 0;
-        }
-        .app-header h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            background: linear-gradient(135deg, #e10600, #ff4d4d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .app-header .badge {
-            font-size: 0.6rem;
-            background: #1f2a36;
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: #8a9aa8;
-            letter-spacing: 0.3px;
-        }
-        .tabs {
-            display: flex;
-            gap: 4px;
-            margin: 12px 0 10px 0;
-            flex-shrink: 0;
-            border-bottom: 1px solid #1f2a36;
-            padding-bottom: 6px;
-        }
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: #6a7a88;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 6px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.3px;
-        }
-        .tab-btn:hover {
-            color: #c0d0dc;
-            background: #141c24;
-        }
-        .tab-btn.active {
-            color: #fff;
-            background: #1f2a36;
-        }
-        .selectors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 12px;
-            padding: 8px 0 10px 0;
-            flex-shrink: 0;
-            border-bottom: 1px solid #1a232e;
-        }
-        .selectors .sel-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 1 1 100px;
-            min-width: 100px;
-        }
-        .selectors label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #6a7a88;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-        .selectors select {
-            background: #141c24;
-            border: 1px solid #1f2a36;
-            color: #e8edf3;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            flex: 1;
-            min-width: 60px;
-            outline: none;
-            cursor: pointer;
-        }
-        .selectors select:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .selectors select option {
-            background: #0a0e14;
-        }
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 12px 0 8px 0;
-            min-height: 0;
-        }
-        .order-list {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .order-row {
-            display: grid;
-            grid-template-columns: 36px 1fr 80px 60px 60px;
-            align-items: center;
-            padding: 6px 10px;
-            border-radius: 6px;
-            background: #11181f;
-            transition: background 0.15s;
-            cursor: pointer;
-            font-size: 0.85rem;
-            gap: 4px;
-        }
-        .order-row:hover {
-            background: #1a2430;
-        }
-        .order-row .pos {
-            font-weight: 700;
-            color: #6a7a88;
-            text-align: center;
-        }
-        .order-row .name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .order-row .abbr {
-            color: #8a9aa8;
-            font-size: 0.7rem;
-            text-align: center;
-        }
-        .order-row .gap {
-            color: #8a9aa8;
-            font-size: 0.75rem;
-            text-align: right;
-        }
-        .order-row .status {
-            font-size: 0.7rem;
-            text-align: right;
-            color: #6a7a88;
-        }
-        .order-row .status.finished {
-            color: #4ade80;
-        }
-        .order-row .status.dnf {
-            color: #f87171;
-        }
-        .detail-view {
-            padding: 4px 0;
-        }
-        .detail-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .detail-header h2 {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-        .detail-header .back-btn {
-            background: #1f2a36;
-            border: none;
-            color: #e8edf3;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .detail-header .back-btn:hover {
-            background: #2a3a4a;
-        }
-        .detail-laps {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            font-size: 0.8rem;
-        }
-        .detail-laps .lap-row {
-            display: grid;
-            grid-template-columns: 50px 60px 1fr 60px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            background: #11181f;
-            gap: 6px;
-        }
-        .detail-laps .lap-row .lap-num {
-            color: #6a7a88;
-        }
-        .detail-laps .lap-row .lap-time {
-            font-weight: 500;
-        }
-        .detail-laps .lap-row .tyre {
-            font-size: 0.7rem;
-            padding: 1px 10px;
-            border-radius: 12px;
-            background: #1a2430;
-            display: inline-block;
-            width: fit-content;
-        }
-        .detail-laps .lap-row .tyre.soft {
-            background: #e10600;
-            color: #fff;
-        }
-        .detail-laps .lap-row .tyre.medium {
-            background: #f5a623;
-            color: #0a0e14;
-        }
-        .detail-laps .lap-row .tyre.hard {
-            background: #4a7a9a;
-            color: #fff;
-        }
-        .detail-laps .lap-row .tyre.intermediate {
-            background: #2b7a4a;
-            color: #fff;
-        }
-        .detail-laps .lap-row .tyre.wet {
-            background: #2a5a7a;
-            color: #fff;
-        }
-        .detail-laps .lap-row .tyre.unknown {
-            background: #2a2a2a;
-            color: #8a8a8a;
-        }
-        .detail-laps .lap-row .sector {
-            color: #8a9aa8;
-            font-size: 0.7rem;
-            text-align: right;
-        }
-        .insights-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .insight-card {
-            background: #11181f;
-            border-radius: 8px;
-            padding: 14px 16px;
-            border-left: 3px solid #1f2a36;
-        }
-        .insight-card h3 {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #6a7a88;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-        .insight-card .value {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .insight-card .value small {
-            font-weight: 400;
-            color: #8a9aa8;
-            font-size: 0.7rem;
-        }
-        .insight-card .list {
-            font-size: 0.8rem;
-            line-height: 1.6;
-        }
-        .duels-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        .duels-selectors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 14px;
-            align-items: center;
-        }
-        .duels-selectors .driver-pick {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #11181f;
-            padding: 4px 12px 4px 8px;
-            border-radius: 20px;
-        }
-        .duels-selectors .driver-pick label {
-            font-size: 0.7rem;
-            color: #6a7a88;
-        }
-        .duels-selectors .driver-pick select {
-            background: #141c24;
-            border: 1px solid #1f2a36;
-            color: #e8edf3;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            outline: none;
-            max-width: 80px;
-        }
-        .duels-selectors .compare-btn {
-            background: #e10600;
-            border: none;
-            color: #fff;
-            padding: 6px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-left: auto;
-        }
-        .duels-selectors .compare-btn:hover {
-            background: #ff1a1a;
-        }
-        .duels-selectors .compare-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        .duels-charts {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 4px;
-        }
-        .duels-charts .chart-box {
-            background: #11181f;
-            border-radius: 8px;
-            padding: 12px 10px 6px 10px;
-        }
-        .duels-charts .chart-box h4 {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: #6a7a88;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .duels-charts .chart-box canvas {
-            width: 100% !important;
-            height: auto !important;
-            max-height: 140px;
-        }
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #4a5a68;
-            font-size: 0.9rem;
-            text-align: center;
-            padding: 20px;
-        }
-        .empty-state span {
-            font-size: 2.4rem;
-            margin-bottom: 8px;
-        }
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #6a7a88;
-            font-size: 0.9rem;
-            text-align: center;
-            padding: 20px;
-        }
-        .loading-state .spinner {
-            border: 3px solid #1f2a36;
-            border-top: 3px solid #e10600;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 12px;
-        }
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        @media (max-width: 640px) {
-            .app-header h1 {
-                font-size: 1.1rem;
-            }
-            .app-header .badge {
-                font-size: 0.5rem;
-                padding: 2px 10px;
-            }
-            .tab-btn {
-                font-size: 0.75rem;
-                padding: 4px 12px;
-            }
-            .selectors {
-                gap: 4px 8px;
-            }
-            .selectors .sel-group {
-                flex: 1 1 70px;
-                min-width: 70px;
-            }
-            .selectors select {
-                font-size: 0.7rem;
-                padding: 4px 4px;
-            }
-            .order-row {
-                grid-template-columns: 28px 1fr 50px 40px 40px;
-                font-size: 0.7rem;
-                padding: 5px 6px;
-            }
-            .order-row .gap {
-                font-size: 0.65rem;
-            }
-            .order-row .status {
-                font-size: 0.6rem;
-            }
-            .insights-grid {
-                grid-template-columns: 1fr;
-            }
-            .detail-laps .lap-row {
-                grid-template-columns: 40px 50px 1fr 40px;
-                font-size: 0.7rem;
-                padding: 3px 6px;
-            }
-            .duels-selectors .driver-pick {
-                padding: 2px 8px 2px 6px;
-            }
-            .duels-selectors .compare-btn {
-                font-size: 0.7rem;
-                padding: 4px 14px;
-            }
-            .duels-charts .chart-box canvas {
-                max-height: 100px;
-            }
-        }
-        @media (max-width: 420px) {
-            .order-row {
-                grid-template-columns: 24px 1fr 40px 30px 30px;
-                font-size: 0.65rem;
-                gap: 2px;
-            }
-            .order-row .gap {
-                font-size: 0.55rem;
-            }
-            .order-row .status {
-                font-size: 0.5rem;
-            }
-            .selectors .sel-group {
-                flex: 1 1 50px;
-                min-width: 50px;
-            }
-            .selectors label {
-                font-size: 0.55rem;
-            }
-            .selectors select {
-                font-size: 0.6rem;
-                padding: 3px 2px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>F1 Timing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#e10600;--purple:#a855f7;--green:#22c55e;--yellow:#eab308;
+  --blue:#60a5fa;--orange:#f97316;
+  --accent:#7c5cff;--accent-dim:#7c5cff33;--accent-glow:#7c5cff55;
+  --bg0:#08080a;--bg1:#0e0e11;--bg2:#151519;--bg3:#1c1c21;
+  --line:#242429;--muted:#5a5a63;--dim:#8a8a93;--text:#ededf0;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --ease:cubic-bezier(0.2,0.8,0.2,1);
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.3),0 1px 1px rgba(0,0,0,0.2);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.35),0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.45),0 2px 8px rgba(0,0,0,0.3);
+  --shadow-glow:0 0 0 1px var(--accent-dim),0 4px 20px var(--accent-glow);
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg0);color:var(--text);font-family:var(--sans);font-size:13px;display:flex;flex-direction:column;background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(124,92,255,0.06),transparent)}
+::selection{background:var(--accent-dim);color:var(--text)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--line)}
+
+header{background:rgba(14,14,17,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:10px 12px;flex-shrink:0;z-index:20;box-shadow:var(--shadow-sm)}
+.header-top{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;padding:10px 12px 0}
+.brand{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--red);letter-spacing:1px;flex-shrink:0}
+.tabs{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;flex:1;min-width:0}
+.tab-btn{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.5px;padding:7px 4px;border:none;background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:color 0.2s var(--ease),background 0.2s var(--ease);white-space:nowrap;flex:1;min-width:0;text-align:center}
+.tab-btn.active{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+.selectors{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:8px 12px 10px;scrollbar-width:none;-ms-overflow-style:none}
+.selectors::-webkit-scrollbar{display:none}
+select{background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:6px 22px 6px 9px;border-radius:var(--r-sm);font-family:var(--sans);font-size:11px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;transition:border-color 0.2s var(--ease),box-shadow 0.2s var(--ease);flex-shrink:0}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+select.status-live{border-color:var(--green)!important}
+select.status-loading{border-color:var(--blue)!important}
+select.status-red{border-color:var(--red)!important}
+select.status-sc{border-color:var(--yellow)!important}
+select.status-done{border-color:var(--muted)!important}
+#yearSelect{flex:0 0 58px;min-width:58px}
+#meetingSelect{flex:1;min-width:0}
+#sessionSelect{flex:0 0 auto;min-width:0}
+
+.main-area{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tab-panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+.tab-panel.active{display:flex}
+
+.timing-scroll{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.timing-scroll::-webkit-scrollbar{display:none}
+.col-header{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:6px 10px 6px 12px;border-bottom:1px solid var(--line);font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;gap:4px;align-items:center;position:sticky;top:0;background:rgba(14,14,17,0.92);backdrop-filter:blur(8px);z-index:5}
+
+.driver-row{border-bottom:1px solid var(--line);cursor:pointer;transition:background 0.15s var(--ease),transform 0.4s var(--ease),opacity 0.3s var(--ease);user-select:none;position:relative}
+@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.driver-row:hover{background:var(--bg1)}
+.driver-row:active{background:var(--bg2)}
+.driver-row.eliminated{opacity:0.4}
+.driver-row.elim-danger .team-bar{box-shadow:0 0 8px var(--red),0 0 0 1px var(--red)}
+.row-main{display:grid;grid-template-columns:32px 48px 1fr 72px 38px 62px 68px;padding:9px 10px 4px 12px;gap:4px;align-items:center}
+.pos-block{display:flex;flex-direction:column;align-items:center;gap:1px}
+.pos{font-family:var(--mono);font-size:15px;font-weight:800;color:var(--dim);line-height:1}
+.pos.p1{color:var(--yellow);text-shadow:0 0 12px var(--yellow)}.pos.p2{color:#d8d8d8}.pos.p3{color:#cd7f32}
+.name-block{display:flex;align-items:center;gap:6px;overflow:hidden}
+.team-bar{width:3px;height:18px;border-radius:2px;flex-shrink:0;transition:box-shadow 0.2s var(--ease)}
+.acronym{font-family:var(--mono);font-size:14px;font-weight:800;letter-spacing:0.5px;white-space:nowrap}
+.gap-block{display:flex;flex-direction:column;gap:1px}
+.gap-leader{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gap-leader.leader{color:var(--yellow);font-weight:700;font-size:10px}
+.gap-ahead{font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap}
+.lap-cell{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:right;white-space:nowrap}
+.lap-cell.purple{color:var(--purple);font-weight:700;text-shadow:0 0 8px var(--purple)}
+
+.row-sectors{display:flex;align-items:center;gap:8px;padding:0 10px 8px 42px;flex-wrap:wrap}
+.sector-group{display:flex;align-items:center;gap:3px}
+.sector-label{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.sector-val{font-family:var(--mono);font-size:10px;min-width:46px;font-weight:600;color:var(--dim);transition:color 0.2s var(--ease)}
+.sector-val.purple{color:var(--purple);font-weight:700;text-shadow:0 0 6px var(--purple)}
+.tyre-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tyre-icon{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:7px;font-weight:700;flex-shrink:0;border:2px solid currentColor;box-shadow:0 0 6px currentColor}
+.tyre-age-col{font-family:var(--mono);font-size:8px;font-weight:700;text-align:center}
+.chip{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;letter-spacing:0.5px;margin-left:3px}
+.chip-pit{background:var(--red);color:#fff;box-shadow:0 0 8px rgba(225,6,0,0.5)}.chip-out{background:#12281a;color:var(--green);border:1px solid var(--green)}
+.elim-divider{display:none;padding:4px 12px;background:#1a0000;border-bottom:1px solid #3a0000;border-top:1px solid #3a0000;font-family:var(--mono);font-size:9px;color:#f87171;letter-spacing:1px}
+.elim-divider.show{display:block}
+
+.feed-subtabs{display:flex;gap:2px;padding:8px 10px;background:var(--bg1);border-bottom:1px solid var(--line);flex-shrink:0}
+.feed-sub{font-family:var(--mono);font-size:10px;font-weight:600;padding:5px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
+.feed-sub.active{background:var(--bg0);color:var(--text);border-color:var(--accent)}
+#feedScroll{flex:1;overflow-y:auto}
+.insights-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:20px 16px;display:flex;align-items:center;justify-content:center}
+.insights-wrap::-webkit-scrollbar{display:none}
+.insights-export-card{background:linear-gradient(180deg,var(--bg2),var(--bg1));border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 24px;max-width:320px;width:100%;text-align:center;box-shadow:var(--shadow-md);animation:fadeUp 0.35s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.insights-export-icon{width:48px;height:48px;margin:0 auto 16px;border-radius:var(--r-md);background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:22px}
+.insights-export-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:6px}
+.insights-export-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;margin-bottom:20px}
+.insights-generate-btn{display:block;width:100%;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;padding:13px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;transition:transform 0.15s var(--ease),box-shadow 0.15s var(--ease),opacity 0.15s var(--ease);box-shadow:var(--shadow-sm)}
+.insights-generate-btn:hover{box-shadow:var(--shadow-glow);transform:translateY(-1px)}
+.insights-generate-btn:active{transform:translateY(0)}
+.insights-generate-btn:disabled{opacity:0.5;cursor:default;transform:none;box-shadow:none}
+.insights-generate-wrap{text-align:center;width:100%}
+.insights-session-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:12px}
+.insights-unsupported{padding:40px 24px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:0.5px;line-height:1.8;max-width:280px}
+
+.duels-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:16px}
+.duels-wrap::-webkit-scrollbar{display:none}
+.duels-content{max-width:520px;margin:0 auto}
+.duels-picker{background:var(--bg2);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow-sm)}
+.duels-picker-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:10px}
+.duels-picker-grid{display:flex;flex-wrap:wrap;gap:6px}
+.duels-driver-chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg3);color:var(--dim);cursor:pointer;transition:all 0.15s var(--ease)}
+.duels-driver-chip.selected{background:var(--chip-color,var(--accent));color:#fff;border-color:var(--chip-color,var(--accent));box-shadow:0 0 10px color-mix(in srgb,var(--chip-color,var(--accent)) 50%,transparent)}
+.duels-chart-card{background:var(--bg2);border-radius:var(--r-md);padding:14px;margin-top:12px;box-shadow:var(--shadow-sm)}
+.duels-chart-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
+
+.news-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:16px}
+.news-wrap::-webkit-scrollbar{display:none}
+.news-list{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.news-item{display:block;background:var(--bg2);border-radius:var(--r-md);padding:12px 14px;text-decoration:none;color:var(--text);box-shadow:var(--shadow-sm);transition:transform 0.15s var(--ease),box-shadow 0.15s var(--ease)}
+.news-item:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.news-flair{display:inline-block;font-family:var(--mono);font-size:8px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:2px 6px;border-radius:4px;letter-spacing:0.5px;margin-bottom:6px}
+.news-title{font-family:var(--sans);font-size:13px;font-weight:600;line-height:1.4;margin-bottom:6px}
+.news-meta{display:flex;gap:12px;font-family:var(--mono);font-size:9px;color:var(--muted)}
+.feed-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line)}
+.feed-time{font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;padding-top:2px;min-width:48px}
+.feed-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:14px}
+.feed-text{font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--dim);flex:1}
+.feed-text b{color:var(--text)}
+.feed-text strong.red{color:#e10600;font-weight:bold;text-transform:uppercase}
+.feed-text strong.yellow{color:#eab308;font-weight:bold;text-transform:uppercase}
+.feed-text .t-soft{color:#f97316}.feed-text .t-med{color:var(--yellow)}.feed-text .t-hard{color:#ccc}.feed-text .t-inter{color:var(--green)}.feed-text .t-wet{color:var(--blue)}
+.feed-entry.c-incident .feed-bar{background:var(--red)}
+.feed-entry.c-strategy .feed-bar{background:var(--yellow)}
+.feed-entry.c-fastest .feed-bar{background:var(--purple)}
+.feed-entry.c-lap .feed-bar{background:var(--line)}
+.feed-entry.c-info .feed-bar{background:var(--blue)}
+.feed-entry.c-sc .feed-bar{background:var(--orange)}
+.feed-entry.c-rc .feed-bar{background:var(--green)}
+.feed-entry.c-rc-warn .feed-bar{background:var(--yellow)}
+.feed-entry.c-rc-red .feed-bar{background:var(--red)}
+.feed-lap-marker{padding:5px 12px;background:var(--bg2);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;font-weight:600;margin-top:4px}
+.feed-placeholder{padding:40px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:1px}
+.placeholder{padding:50px 20px;text-align:center;color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:1px}
+
+.driver-subtabs{display:flex;gap:2px;padding:8px 12px;background:var(--bg1);border-bottom:1px solid var(--line);flex-shrink:0}
+.subtab-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:5px 10px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
+.subtab-btn.active{background:var(--bg0);color:var(--text);border-color:var(--accent)}
+.stint-card{background:var(--bg2);border-radius:var(--r-md);padding:12px;margin-bottom:10px;border-left:3px solid;box-shadow:var(--shadow-sm);transition:transform 0.15s var(--ease),box-shadow 0.15s var(--ease)}
+.stint-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.stint-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.stint-compound{font-family:var(--mono);font-size:12px;font-weight:700}
+.stint-meta{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.stint-stats{display:flex;gap:16px;margin-top:6px}
+.stint-stat{display:flex;flex-direction:column}
+.stint-stat-label{font-family:var(--mono);font-size:7px;color:var(--muted);letter-spacing:1px}
+.stint-stat-val{font-family:var(--mono);font-size:11px;font-weight:600}
+.stint-verdict{font-family:var(--mono);font-size:9px;color:var(--green);margin-top:8px;padding-top:6px;border-top:1px solid var(--line)}
+.analysis-card{background:var(--bg2);border-radius:var(--r-md);padding:12px;margin-top:10px;box-shadow:var(--shadow-sm)}
+.analysis-card-head{padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.analysis-card-title{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--dim);letter-spacing:1px}
+.analysis-row{display:flex;justify-content:space-between;padding:4px 0;font-family:var(--mono);font-size:10px}
+.analysis-label{color:var(--dim)}
+.analysis-value{font-weight:600}
+.braking-placeholder{padding:30px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;background:var(--bg1);border-radius:var(--r-md);margin:10px}
+
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;overflow-y:auto;padding:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-backdrop.open{display:flex;align-items:flex-start;justify-content:center;animation:fadeIn 0.2s var(--ease)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--bg1);border:1px solid var(--line);border-top:2px solid var(--accent);border-radius:var(--r-lg);width:100%;max-width:560px;margin-top:16px;box-shadow:var(--shadow-lg);animation:fadeUp 0.25s var(--ease)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.modal-title{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:1px}
+.modal-close{background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:2px 6px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:12px 16px;max-height:70vh;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none}
+.modal-body::-webkit-scrollbar{display:none}
+.rc-entry{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid #111}
+.rc-entry:last-child{border-bottom:none}
+.rc-time{font-family:var(--mono);font-size:9px;color:var(--muted);flex-shrink:0;padding-top:1px;min-width:48px}
+.rc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.rc-message{font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.5}
+.modal-section{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:10px 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.lap-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.lap-table th{color:var(--muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 5px;border-bottom:1px solid var(--line);text-align:left;font-weight:400}
+.lap-table td{padding:4px 5px;border-bottom:1px solid #111;color:var(--dim)}
+.lap-table td:first-child{color:var(--text)}
+.lap-table td.lt{color:var(--text)}.lap-table td.pb{color:var(--green)}.lap-table td.ob{color:var(--purple);font-weight:700}
+.lap-table td.t-soft{color:#f97316}.lap-table td.t-med{color:var(--yellow)}.lap-table td.t-hard{color:#aaa}.lap-table td.t-inter{color:var(--green)}.lap-table td.t-wet{color:var(--blue)}
+</style>
 </head>
 <body>
-    <div id="app">
-        <header class="app-header">
-            <h1>🏎️ F1Debrief</h1>
-            <span class="badge">post‑session</span>
-        </header>
-        <div class="tabs" id="tabBar">
-            <button class="tab-btn active" data-tab="order">Order</button>
-            <button class="tab-btn" data-tab="insights">Insights</button>
-            <button class="tab-btn" data-tab="duels">Duels</button>
-        </div>
-        <div class="selectors" id="selectorBar">
-            <div class="sel-group">
-                <label for="selYear">Year</label>
-                <select id="selYear"></select>
-            </div>
-            <div class="sel-group">
-                <label for="selGP">GP</label>
-                <select id="selGP" disabled></select>
-            </div>
-            <div class="sel-group">
-                <label for="selSession">Session</label>
-                <select id="selSession" disabled></select>
-            </div>
-        </div>
-        <div class="content" id="contentArea">
-            <div class="empty-state">
-                <span>🏁</span>
-                <p>Select a year, GP and session to begin</p>
-            </div>
-        </div>
+
+<header>
+  <div class="header-top">
+    <span class="brand">F1</span>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabTiming" onclick="switchTab('timing')">ORDER</button>
+      <button class="tab-btn" id="tabFeed" onclick="switchTab('feed')">INSIGHTS</button>
+      <button class="tab-btn" id="tabDuels" onclick="switchTab('duels')">DUELS</button>
+      <button class="tab-btn" id="tabNews" onclick="switchTab('news')">NEWS</button>
     </div>
-    <script>
-        (function() {
-            'use strict';
+  </div>
+  <div class="selectors">
+    <select id="yearSelect"><option value="2026" selected>2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
+    <select id="meetingSelect"><option value="">— GP —</option></select>
+    <select id="sessionSelect"><option value="">— Session —</option></select>
+  </div>
+</header>
 
-            const API_BASE = 'https://api.openf1.org/v1';
+<div class="main-area">
+  <div class="tab-panel active" id="panelTiming">
+    <div class="timing-scroll">
+      <div class="col-header">
+        <span>POS</span><span>DRV</span><span></span><span>GAP / △</span><span style="text-align:center">TYR</span><span style="text-align:right">LAST</span><span style="text-align:right">BEST</span>
+      </div>
+      <div id="driverList"><div class="placeholder">SELECT A GRAND PRIX TO BEGIN</div></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="panelFeed">
+    <div class="insights-wrap" id="insightsWrap">
+      <div class="insights-export-card">
+        <div class="insights-export-icon">📦</div>
+        <div class="insights-export-title">NO SESSION SELECTED</div>
+        <div class="insights-export-sub">Pick a Grand Prix and session above to export its data</div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="panelDuels">
+    <div class="duels-wrap" id="duelsWrap">
+      <div class="insights-export-card">
+        <div class="insights-export-icon">🏎️</div>
+        <div class="insights-export-title">NO SESSION SELECTED</div>
+        <div class="insights-export-sub">Pick a Grand Prix and session above to compare telemetry</div>
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="panelNews">
+    <div class="news-wrap" id="newsWrap">
+      <div class="insights-export-card">
+        <div class="insights-export-icon">📰</div>
+        <div class="insights-export-title">R/FORMULA1</div>
+        <button class="insights-generate-btn" onclick="loadNews()">LOAD LATEST</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-            // state
-            const state = {
-                year: null,
-                gpKey: null, // meeting_key
-                sessionKey: null,
-                cache: {
-                    drivers: null,
-                    results: null,
-                    stints: null,
-                    weather: null,
-                    laps: {},
-                    carData: {},
-                },
-                activeTab: 'order',
-                detailDriver: null,
-                duelDrivers: [null, null, null, null],
-                duelCharts: [],
-            };
 
-            const $ = id => document.getElementById(id);
-            const elYear = $('selYear');
-            const elGP = $('selGP');
-            const elSession = $('selSession');
-            const content = $('contentArea');
-            const tabBtns = document.querySelectorAll('.tab-btn');
+<div class="modal-backdrop" id="lapModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title" id="lapModalTitle">Driver Analysis</span>
+      <button class="modal-close" onclick="closeModal('lapModal')">✕</button>
+    </div>
+    <div class="driver-subtabs">
+      <button class="subtab-btn active" id="subtabLaps" onclick="switchDriverTab('laps')">LAPS</button>
+      <button class="subtab-btn" id="subtabStints" onclick="switchDriverTab('stints')">STINTS</button>
+      <button class="subtab-btn" id="subtabBraking" onclick="switchDriverTab('braking')">BRAKING</button>
+      <button class="subtab-btn" id="subtabSpeed" onclick="switchDriverTab('speed')">SPEED</button>
+    </div>
+    <div class="modal-body" id="lapModalBody"></div>
+  </div>
+</div>
 
-            // helpers
-            function safeName(d) { return d?.full_name || d?.name || 'Unknown'; }
+<script>
+// ========== STATE ==========
+let sessionKey=null,sessionType='',timerInterval=null;
+let sessionEnd=null,sessionStart=null,activeTab='timing';
+let driverMeta=new Map(),positionOrder=[];
+let overallBestLap=Infinity,overallBestDriver=null;
+let pitFlash=new Map(),allRCMessages=[];
+let locationData=new Map(),scLocation=null,activeYellowSectors=new Set();
+let cachedLaps=new Map();
+let cachedPitStops=new Map();
+let cachedWeather=[];
+let cachedRaceControl=[];
 
-            function abbrName(d) { return d?.name_acronym || d?.abbreviation || '??'; }
+// Backend service — see /backend in this repo. Handles FastF1 telemetry
+// (Python-only, can't run in a browser) and Reddit r/formula1 posts.
+// Free-tier Render service: spins down after 15 min idle, first request
+// after that can take 30-60s to wake up. Expected, not a bug.
+const BACKEND_URL='https://f1-app-backend-qau8.onrender.com';
 
-            function statusClass(status) {
-                if (!status) return '';
-                const s = String(status).toLowerCase();
-                if (s.includes('finish') || s === 'finished') return 'finished';
-                if (s.includes('dnf') || s.includes('retired') || s.includes('accident')) return 'dnf';
-                return '';
-            }
+let duelsSelectedDrivers=[];
+let duelsTelemetryCache=new Map(); // sessionKey -> merged telemetry-by-driver
+let duelsLoading=false;
+let duelsCharts=[]; // active Chart.js instances, destroyed on re-render
+let newsLoading=false;
+let latestPos=new Map();
+let latestIv=new Map();
+let currentAudio=null;
 
-            function getTyreClass(compound) {
-                if (!compound) return 'unknown';
-                const c = String(compound).toLowerCase();
-                if (c.includes('soft')) return 'soft';
-                if (c.includes('medium')) return 'medium';
-                if (c.includes('hard')) return 'hard';
-                if (c.includes('intermediate') || c.includes('inter')) return 'intermediate';
-                if (c.includes('wet')) return 'wet';
-                return 'unknown';
-            }
+let feedEntries=[];
+let lastKnownPositions=new Map();
+let lastKnownLapNum=0;
+let processedLaps=new Set();
+let stintHistory=new Map();
+let lastLapTimes=new Map();
+let currentFastestLap=null;
+let processedPits=new Set();
+let processedQualiEvents=new Set();
+let currentDriverDn=null;
+let currentDriverTab='laps';
+let cachedDriverLaps=null;
+let cachedDriverStints=null;
 
-            function formatTime(ms) {
-                if (!ms) return '—';
-                const sec = ms / 1000;
-                if (sec < 60) return sec.toFixed(2) + 's';
-                const m = Math.floor(sec / 60);
-                const s = (sec % 60).toFixed(2);
-                return m + ':' + (s < 10 ? '0' : '') + s;
-            }
+// INSIGHTS state
+let downloadedSessions=new Set(); // sessionKey -> already downloaded a data file this session
+let insightsDownloading=false;
+let lastStintMap=new Map(); // driver_number -> stints[] from the one-time session load
 
-            function downsampleTelemetry(data, maxPoints = 180) {
-                if (!data || data.length <= maxPoints) return data || [];
-                const step = Math.ceil(data.length / maxPoints);
-                const result = [];
-                for (let i = 0; i < data.length; i += step) {
-                    result.push(data[i]);
+// Mass incident detection state
+let massIncidentActive = false;
+let massIncidentSuppressUntilLap = 0;
+
+// Qualifying phase tracking using chequered flag count
+let chequeredFlagCount = 0;
+let qPhaseEliminatedData = { q1: null, q2: null };
+let q1Captured = false;
+let q2Captured = false;
+let sessionEnded = false;  // Track if session has ended (chequered flag received)
+
+
+const TYRE_COLORS={SOFT:'#e8002d',MEDIUM:'#eab308',HARD:'#d4d4d4',INTERMEDIATE:'#22c55e',WET:'#60a5fa'};
+const TEAM_COLORS={
+  'Red Bull':'#3671C6','Oracle Red Bull Racing':'#3671C6',
+  'Mercedes':'#27F4D2','Ferrari':'#e8002d','Scuderia Ferrari':'#e8002d',
+  'McLaren':'#FF8000','Aston Martin':'#229971','Alpine':'#0093CC',
+  'Williams':'#64C4FF','RB':'#6692FF','Visa Cash App RB':'#6692FF',
+  'Kick Sauber':'#52E252','Sauber':'#52E252','Haas':'#B6BABD',
+  'MoneyGram Haas':'#B6BABD','AlphaTauri':'#5E8FAA'
+};
+
+function teamColor(n){if(!n)return'#444';for(const[k,v]of Object.entries(TEAM_COLORS)){if(n.includes(k)||k.includes(n))return v}return'#444'}
+function tyreColor(c){if(!c)return'#888';const u=c.toUpperCase();if(u.includes('SOFT'))return TYRE_COLORS.SOFT;if(u.includes('MED'))return TYRE_COLORS.MEDIUM;if(u.includes('HARD'))return TYRE_COLORS.HARD;if(u.includes('INTER'))return TYRE_COLORS.INTERMEDIATE;if(u.includes('WET'))return TYRE_COLORS.WET;return'#888'}
+function tyreLetter(c){if(!c)return'?';const u=c.toUpperCase();if(u.includes('SOFT'))return'S';if(u.includes('MED'))return'M';if(u.includes('HARD'))return'H';if(u.includes('INTER'))return'I';if(u.includes('WET'))return'W';return c[0]}
+function tyreClass(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
+function flagColor(f){if(!f)return'#555';const u=f.toUpperCase();if(u==='RED')return'#e10600';if(u.includes('YELLOW')||u==='SC'||u==='VSC')return'#eab308';if(u==='GREEN')return'#22c55e';if(u==='CHEQUERED')return'#fff';if(u==='BLUE')return'#60a5fa';return'#555'}
+
+async function api(endpoint){
+  try{const r=await fetch(`https://api.openf1.org/v1/${endpoint}`);if(!r.ok)return[];return await r.json()}
+  catch{return[]}
+}
+
+function fmtTime(s){if(!s||s<=0)return'—';const m=Math.floor(s/60),sec=(s%60).toFixed(3).padStart(6,'0');return m>0?`${m}:${sec}`:`${s.toFixed(3)}`}
+function fmtDelta(d){if(d===null||d===undefined||isNaN(d))return'—';if(d===0)return'0.000';return(d>0?'+':'')+d.toFixed(3)}
+function fmtCountdown(ms){if(ms<=0)return'FINISHED';const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);if(h>0)return`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+function fmtTimeLabel(iso){if(!iso)return'';try{const d=new Date(iso);return d.toTimeString().slice(0,5)}catch{return''}}
+function driverTag(dn){const m=driverMeta.get(dn);return m?`<b style="color:${m.teamColor}">${m.acronym}</b>`:`<b>#${dn}</b>`}
+
+let activeFeedTab='all';
+
+function switchTab(tab){
+  activeTab=tab;
+  ['timing','feed','duels','news'].forEach(t=>{
+    const btn=document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`);
+    const panel=document.getElementById(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`);
+    if(btn)btn.classList.toggle('active',t===tab);
+    if(panel)panel.classList.toggle('active',t===tab);
+  });
+  if(tab==='feed')renderInsightsTab();
+  if(tab==='duels')renderDuelsTab();
+}
+
+// ========== INSIGHTS ==========
+
+function classifySessionType(){
+  const t=(sessionType||'').toLowerCase();
+  if(t.includes('race')&&!t.includes('sprint'))return'race';
+  if(t.includes('sprint')&&!t.includes('qualif')&&!t.includes('shootout'))return'sprint';
+  if(t.includes('qualif')||t.includes('shootout'))return'qualifying';
+  if(t.includes('practice'))return'practice';
+  return null;
+}
+
+function renderInsightsTab(){
+  const wrap=document.getElementById('insightsWrap');
+  if(!wrap)return;
+
+  if(!sessionKey){
+    wrap.innerHTML=`<div class="insights-export-card">
+      <div class="insights-export-icon">📦</div>
+      <div class="insights-export-title">NO SESSION SELECTED</div>
+      <div class="insights-export-sub">Pick a Grand Prix and session above to export its data</div>
+    </div>`;
+    return;
+  }
+
+  const branch=classifySessionType();
+  const label=getSessionLabel()||'this session';
+
+  if(!branch){
+    wrap.innerHTML=`<div class="insights-unsupported">Could not determine session type for ${label}.</div>`;
+    return;
+  }
+
+  if(insightsDownloading){
+    wrap.innerHTML=`<div class="insights-export-card">
+      <div class="insights-export-icon">⏳</div>
+      <div class="insights-export-title">PREPARING ${branch.toUpperCase()} DATA</div>
+      <div class="insights-export-sub">Pulling telemetry — this can take a moment</div>
+    </div>`;
+    return;
+  }
+
+  const already=downloadedSessions.has(sessionKey);
+  wrap.innerHTML=`<div class="insights-export-card">
+    <div class="insights-export-icon">📄</div>
+    <div class="insights-export-title">${branch.toUpperCase()} DATA EXPORT</div>
+    <div class="insights-export-sub">${label}</div>
+    <div class="insights-generate-wrap">
+      <button class="insights-generate-btn" onclick="downloadSessionData()">DOWNLOAD .JSON</button>
+    </div>
+    ${already?'<div class="insights-session-label">Already downloaded — click again for a fresh copy</div>':''}
+  </div>`;
+}
+
+function slugify(s){
+  return(s||'session').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'session';
+}
+
+const BRANCH_BUILDERS={
+  race:buildRacePayload,
+  sprint:buildSprintPayload,
+  qualifying:buildQualifyingPayload,
+  practice:buildPracticePayload
+};
+
+async function downloadSessionData(){
+  if(!sessionKey||insightsDownloading)return;
+  const branch=classifySessionType();
+  const builder=BRANCH_BUILDERS[branch];
+  if(!builder)return;
+
+  const thisSessionKey=sessionKey;
+  insightsDownloading=true;
+  renderInsightsTab();
+
+  try{
+    const payload=await builder();
+    const filename=`f1-${branch}-${slugify(getSessionLabel())}-${sessionKey}.json`;
+
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    downloadedSessions.add(sessionKey);
+  }catch(err){
+    console.error('Insights download failed:',err);
+  }finally{
+    insightsDownloading=false;
+    if(sessionKey===thisSessionKey)renderInsightsTab();
+  }
+}
+
+// ========== DUELS ==========
+// Speed/gear/RPM/throttle line charts + braking markers, vs distance,
+// for up to 4 freeform-selected drivers. Data comes from the backend
+// (FastF1, merged with this session's OpenF1 payload) — see /backend.
+// No track map (X/Y position) — deliberately out of scope for now.
+
+const DUELS_MAX_DRIVERS=4;
+const DUELS_COLORS=['#7c5cff','#22c55e','#eab308','#f87171'];
+
+function renderDuelsTab(){
+  const wrap=document.getElementById('duelsWrap');
+  if(!wrap)return;
+
+  if(!sessionKey){
+    wrap.innerHTML=`<div class="insights-export-card">
+      <div class="insights-export-icon">🏎️</div>
+      <div class="insights-export-title">NO SESSION SELECTED</div>
+      <div class="insights-export-sub">Pick a Grand Prix and session above to compare telemetry</div>
+    </div>`;
+    return;
+  }
+
+  const branch=classifySessionType();
+  if(!branch){
+    wrap.innerHTML=`<div class="insights-unsupported">Could not determine session type.</div>`;
+    return;
+  }
+
+  if(duelsLoading){
+    wrap.innerHTML=`<div class="insights-export-card">
+      <div class="insights-export-icon">⏳</div>
+      <div class="insights-export-title">FETCHING TELEMETRY</div>
+      <div class="insights-export-sub">Pulling car data from OpenF1</div>
+    </div>`;
+    return;
+  }
+
+  const cached=duelsTelemetryCache.get(sessionKey);
+
+  // Driver picker — always shown once a session is selected, freeform up to 4
+  const pickerHtml=`<div class="duels-picker">
+    <div class="duels-picker-label">SELECT UP TO ${DUELS_MAX_DRIVERS} DRIVERS</div>
+    <div class="duels-picker-grid">
+      ${positionOrder.map(dn=>{
+        const meta=driverMeta.get(dn);
+        if(!meta)return'';
+        const checked=duelsSelectedDrivers.includes(meta.acronym);
+        return `<button class="duels-driver-chip${checked?' selected':''}" style="--chip-color:${meta.teamColor}" onclick="toggleDuelsDriver('${meta.acronym}')">${meta.acronym}</button>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  if(!cached){
+    wrap.innerHTML=`<div class="duels-content">
+      ${pickerHtml}
+      <div class="insights-generate-wrap" style="margin-top:16px">
+        <button class="insights-generate-btn" onclick="fetchDuelsTelemetry()" ${duelsSelectedDrivers.length?'':'disabled'}>FETCH TELEMETRY</button>
+        <div class="insights-session-label">${duelsSelectedDrivers.length||'0'} of ${DUELS_MAX_DRIVERS} selected</div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Have data — render picker + charts for currently selected drivers
+  wrap.innerHTML=`<div class="duels-content">
+    ${pickerHtml}
+    <div class="insights-generate-wrap" style="margin:12px 0">
+      <button class="insights-generate-btn" onclick="fetchDuelsTelemetry()" ${duelsSelectedDrivers.length?'':'disabled'}>REFETCH FOR NEW SELECTION</button>
+    </div>
+    <div id="duelsCharts"></div>
+  </div>`;
+  renderDuelsCharts(cached);
+}
+
+function toggleDuelsDriver(acronym){
+  const idx=duelsSelectedDrivers.indexOf(acronym);
+  if(idx>=0){
+    duelsSelectedDrivers.splice(idx,1);
+  } else {
+    if(duelsSelectedDrivers.length>=DUELS_MAX_DRIVERS)return; // cap enforced, freeform below that
+    duelsSelectedDrivers.push(acronym);
+  }
+  renderDuelsTab();
+}
+
+// Fetches car_data directly from OpenF1 for each selected driver — no
+// backend needed. car_data gives speed/rpm/gear/throttle/brake/drs at
+// ~3.7Hz, keyed by driver_number and timestamped by `date` (NOT distance —
+// OpenF1 doesn't expose distance-along-lap, so these charts plot vs time
+// elapsed within the lap instead of vs track distance, unlike the earlier
+// FastF1-based version). Restricted to the driver's fastest lap's time
+// window, using the same lap data the app already has cached.
+async function fetchDuelsTelemetry(){
+  if(!sessionKey||!duelsSelectedDrivers.length)return;
+
+  const thisSessionKey=sessionKey;
+  duelsLoading=true;
+  renderDuelsTab();
+
+  try{
+    const byDriver={};
+    await Promise.all(duelsSelectedDrivers.map(async acr=>{
+      const dn=acronymToDriverNumber(acr);
+      if(dn==null)return;
+
+      const lapWindow=fastestLapTimeWindow(dn);
+      if(!lapWindow)return;
+
+      const rows=await api(`car_data?session_key=${sessionKey}&driver_number=${dn}&date>=${encodeURIComponent(lapWindow.start)}&date<=${encodeURIComponent(lapWindow.end)}`);
+      if(!rows.length)return;
+
+      byDriver[acr]={
+        fastest_lap_time:lapWindow.lapDuration,
+        top_speed_kmh:Math.max(...rows.map(r=>r.speed||0)),
+        braking_points:detectBrakingPoints(rows,lapWindow.startMs),
+        telemetry_trace:sampledTrace(rows,lapWindow.startMs)
+      };
+    }));
+
+    duelsTelemetryCache.set(thisSessionKey,byDriver);
+  }catch(err){
+    console.error('Duels telemetry fetch failed:',err);
+    alert(`Couldn't fetch telemetry: ${err.message||'unknown error'}.`);
+  }finally{
+    duelsLoading=false;
+    if(sessionKey===thisSessionKey)renderDuelsTab();
+  }
+}
+
+function acronymToDriverNumber(acronym){
+  for(const[dn,meta]of driverMeta){
+    if(meta.acronym===acronym)return dn;
+  }
+  return null;
+}
+
+// Finds the driver's fastest recorded lap in cachedLaps and returns the
+// ISO start/end timestamps to scope the car_data fetch to just that lap,
+// rather than pulling the whole session's telemetry.
+function fastestLapTimeWindow(driverNumber){
+  let best=null;
+  for(const lap of cachedLaps.values()){
+    if(lap.driver_number!==driverNumber)continue;
+    if(!lap.lap_duration||lap.lap_duration<=0)continue;
+    if(!lap.date_start)continue;
+    if(!best||lap.lap_duration<best.lap_duration)best=lap;
+  }
+  if(!best)return null;
+  const startMs=new Date(best.date_start).getTime();
+  const endMs=startMs+best.lap_duration*1000;
+  return{
+    start:new Date(startMs).toISOString(),
+    end:new Date(endMs).toISOString(),
+    startMs,
+    lapDuration:best.lap_duration
+  };
+}
+
+// Braking onset points — same logic as the old FastF1 backend, just reading
+// OpenF1's `brake` field (0 or 100) instead of FastF1's boolean. Marks the
+// start of each braking zone, not every sample while braking. Uses
+// milliseconds elapsed since lap start instead of track distance, since
+// OpenF1 doesn't expose distance-along-lap.
+function detectBrakingPoints(rows,startMs){
+  const points=[];
+  let wasBraking=false;
+  const sorted=[...rows].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  for(const r of sorted){
+    const isBraking=(r.brake||0)>0;
+    if(isBraking&&!wasBraking){
+      points.push({
+        time_ms:Math.round(new Date(r.date).getTime()-startMs),
+        speed_kmh:r.speed??null
+      });
+    }
+    wasBraking=isBraking;
+  }
+  return points;
+}
+
+// Reduces the ~3.7Hz car_data stream to a fixed-interval sample (every
+// ~250ms) instead of every raw point — same "reduce to what's useful"
+// approach as the FastF1 version's distance-based sampling.
+function sampledTrace(rows,startMs){
+  const sorted=[...rows].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const trace=[];
+  let lastMarker=-250;
+  for(const r of sorted){
+    const t=Math.round(new Date(r.date).getTime()-startMs);
+    if(t-lastMarker>=250){
+      trace.push({
+        time_ms:t,
+        speed_kmh:r.speed??null,
+        gear:r.n_gear??null,
+        rpm:r.rpm??null,
+        throttle_pct:r.throttle??null,
+        drs:r.drs??null
+      });
+      lastMarker=t;
+    }
+  }
+  return trace;
+}
+
+function renderDuelsCharts(byDriver){
+  duelsCharts.forEach(c=>c.destroy());
+  duelsCharts=[];
+
+  const container=document.getElementById('duelsCharts');
+  if(!container)return;
+
+  const selected=duelsSelectedDrivers.filter(a=>byDriver[a]);
+  if(!selected.length){
+    container.innerHTML='<div class="insights-unsupported">No telemetry available for the selected drivers.</div>';
+    return;
+  }
+
+  const metrics=[
+    {key:'speed_kmh',label:'SPEED (KM/H)',id:'speed'},
+    {key:'gear',label:'GEAR',id:'gear',stepped:true},
+    {key:'rpm',label:'RPM',id:'rpm'},
+    {key:'throttle_pct',label:'THROTTLE (%)',id:'throttle'}
+  ];
+
+  container.innerHTML=metrics.map(m=>`
+    <div class="duels-chart-card">
+      <div class="duels-chart-title">${m.label} VS TIME IN LAP</div>
+      <canvas id="duelsChart-${m.id}"></canvas>
+    </div>`).join('');
+
+  for(const m of metrics){
+    const canvas=document.getElementById(`duelsChart-${m.id}`);
+    if(!canvas)continue;
+
+    const datasets=selected.map((acr,i)=>{
+      const trace=byDriver[acr]?.telemetry_trace||[];
+      return{
+        label:acr,
+        data:trace.map(p=>({x:+(p.time_ms/1000).toFixed(2),y:p[m.key]})),
+        borderColor:DUELS_COLORS[i],
+        backgroundColor:DUELS_COLORS[i],
+        borderWidth:2,
+        pointRadius:0,
+        stepped:m.stepped||false,
+        tension:m.stepped?0:0.15
+      };
+    });
+
+    // Braking markers overlay only on the speed chart — onset points, not
+    // every sample while braking (see detectBrakingPoints above)
+    if(m.id==='speed'){
+      selected.forEach((acr,i)=>{
+        const points=byDriver[acr]?.braking_points||[];
+        if(points.length){
+          datasets.push({
+            label:`${acr} braking`,
+            data:points.map(p=>({x:+(p.time_ms/1000).toFixed(2),y:p.speed_kmh})),
+            borderColor:DUELS_COLORS[i],
+            backgroundColor:'#fff',
+            pointRadius:4,
+            pointStyle:'triangle',
+            showLine:false
+          });
+        }
+      });
+    }
+
+    const chart=new Chart(canvas,{
+      type:'line',
+      data:{datasets},
+      options:{
+        responsive:true,
+        animation:false,
+        scales:{
+          x:{type:'linear',title:{display:true,text:'Time in lap (s)',color:'#8a8a93'},ticks:{color:'#5a5a63'},grid:{color:'#242429'}},
+          y:{ticks:{color:'#5a5a63'},grid:{color:'#242429'}}
+        },
+        plugins:{
+          legend:{labels:{color:'#ededf0',font:{family:'JetBrains Mono',size:9}}}
+        }
+      }
+    });
+    duelsCharts.push(chart);
+  }
+}
+
+// ========== NEWS ==========
+
+async function loadNews(){
+  if(newsLoading)return;
+  newsLoading=true;
+  const wrap=document.getElementById('newsWrap');
+  if(wrap)wrap.innerHTML=`<div class="insights-export-card">
+    <div class="insights-export-icon">⏳</div>
+    <div class="insights-export-title">LOADING R/FORMULA1</div>
+    <div class="insights-export-sub">First request after idle can take up to a minute</div>
+  </div>`;
+
+  try{
+    const resp=await fetch(`${BACKEND_URL}/reddit`);
+    if(!resp.ok)throw new Error(`Backend returned ${resp.status}`);
+    const data=await resp.json();
+    renderNewsFeed(data.posts||[]);
+  }catch(err){
+    console.error('News fetch failed:',err);
+    if(wrap)wrap.innerHTML=`<div class="insights-error">Couldn't load r/formula1: ${err.message||'unknown error'}. The backend may still be waking up — try again in a moment.</div>
+      <div class="insights-generate-wrap" style="margin-top:16px"><button class="insights-generate-btn" onclick="loadNews()">RETRY</button></div>`;
+  }finally{
+    newsLoading=false;
+  }
+}
+
+function renderNewsFeed(posts){
+  const wrap=document.getElementById('newsWrap');
+  if(!wrap)return;
+  if(!posts.length){
+    wrap.innerHTML='<div class="insights-unsupported">No posts found.</div>';
+    return;
+  }
+  wrap.innerHTML=`<div class="news-list">
+    ${posts.map(p=>`
+      <a class="news-item" href="${p.url}" target="_blank" rel="noopener">
+        ${p.link_flair_text?`<span class="news-flair">${escapeHtml(p.link_flair_text)}</span>`:''}
+        <div class="news-title">${escapeHtml(p.title||'')}</div>
+        <div class="news-meta">
+          <span>u/${escapeHtml(p.author||'unknown')}</span>
+          <span>${p.score??0} pts</span>
+          <span>${p.num_comments??0} comments</span>
+        </div>
+      </a>`).join('')}
+  </div>`;
+}
+
+function escapeHtml(s){
+  const d=document.createElement('div');
+  d.textContent=s;
+  return d.innerHTML;
+}
+
+// ---- Race data-shaper ----
+// Builds a compact, hard-data-only payload from live app state. No telemetry,
+// no traffic/tow inference — only what's directly observable in the data.
+
+// ---- Shared helpers ----
+
+function lapsByDriverMap(){
+  const m=new Map();
+  for(const lap of cachedLaps.values()){
+    if(!m.has(lap.driver_number))m.set(lap.driver_number,[]);
+    m.get(lap.driver_number).push(lap);
+  }
+  for(const arr of m.values())arr.sort((a,b)=>a.lap_number-b.lap_number);
+  return m;
+}
+
+function median(nums){
+  if(!nums.length)return null;
+  const s=[...nums].sort((a,b)=>a-b);
+  const mid=Math.floor(s.length/2);
+  return s.length%2?s[mid]:(s[mid-1]+s[mid])/2;
+}
+
+// Builds [startLap, endLap] ranges covering Safety Car / VSC periods, so
+// those laps can be excluded from stint pace/degradation math the same way
+// pit-transit laps are. OpenF1's race_control doesn't label individual
+// messages as "deployed" vs "ending" with a documented, stable message
+// format, so rather than pattern-match message text we haven't verified,
+// we pair consecutive category==='SafetyCar' messages by sequence: the
+// first marks the start of a period, the next marks its end, and so on.
+// This is deliberately conservative — if messages don't pair up evenly
+// (unclosed period at data cutoff, etc.) the trailing one is left open to
+// the end of the session rather than dropped, since excluding too much is
+// safer here than silently including SC-affected laps in the pace numbers.
+function safetyCarLapRanges(){
+  const scLaps=(allRCMessages||[])
+    .filter(m=>(m.category||'').toLowerCase()==='safetycar')
+    .map(m=>m.lap_number)
+    .filter(n=>n!=null)
+    .sort((a,b)=>a-b);
+  const ranges=[];
+  for(let i=0;i<scLaps.length;i+=2){
+    ranges.push([scLaps[i],scLaps[i+1]??(lastKnownLapNum||scLaps[i])]);
+  }
+  return ranges;
+}
+
+function inAnyRange(lapNumber,ranges){
+  return ranges.some(([start,end])=>lapNumber>=start&&lapNumber<=end);
+}
+
+// Excludes non-representative laps from stint pace/degradation math:
+//  1. Pit-in/pit-out laps — via OpenF1's own is_pit_out_lap flag (ground
+//     truth from the source, not a guess) plus the lap immediately after
+//     a stint's recorded lap_start where a pit-out lap boundary sits.
+//  2. Safety Car / VSC laps — via the paired lap ranges above.
+//  3. Anything else anomalously slow (red flag stoppage, stationary
+//     penalty served mid-lap, etc.) that isn't caught by 1 or 2 — a
+//     fallback median-based filter catches these, since we can't name
+//     every possible cause but can still recognize "not real pace."
+const STINT_OUTLIER_MULTIPLIER=1.15;
+
+function computeStintStats(driverStints,driverLaps){
+  const scRanges=safetyCarLapRanges();
+  return driverStints.map(s=>{
+    const end=s.lap_end||lastKnownLapNum;
+    const inStint=driverLaps.filter(l=>l.lap_duration&&l.lap_duration>0&&l.lap_number>=s.lap_start&&l.lap_number<=end);
+
+    const afterKnownCauses=inStint.filter(l=>!l.is_pit_out_lap&&!inAnyRange(l.lap_number,scRanges));
+
+    const med=median(afterKnownCauses.map(l=>l.lap_duration));
+    const stintLaps=med?afterKnownCauses.filter(l=>l.lap_duration<=med*STINT_OUTLIER_MULTIPLIER):afterKnownCauses;
+    const excludedLaps=inStint.length-stintLaps.length;
+
+    if(!stintLaps.length)return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:null,deg_per_lap:null,laps:0,excluded_outlier_laps:excludedLaps};
+    const avg=stintLaps.reduce((a,b)=>a+b.lap_duration,0)/stintLaps.length;
+    let deg=null;
+    if(stintLaps.length>=2){
+      const n=stintLaps.length,xMean=(n-1)/2;let num=0,den=0;
+      for(let i=0;i<n;i++){num+=(i-xMean)*(stintLaps[i].lap_duration-avg);den+=(i-xMean)**2}
+      deg=den>0?+(num/den).toFixed(3):0;
+    }
+    return{compound:s.compound||'UNKNOWN',lap_start:s.lap_start,lap_end:s.lap_end||null,avg_lap:+avg.toFixed(3),deg_per_lap:deg,laps:stintLaps.length,excluded_outlier_laps:excludedLaps};
+  });
+}
+
+// Flags, safety cars, and penalties only — no traffic/tow inference, no full RC feed.
+function filteredRaceControlEvents(){
+  return(allRCMessages||[]).filter(m=>{
+    const cat=(m.category||'').toLowerCase();
+    const flag=(m.flag||'').toUpperCase();
+    const msg=(m.message||'').toUpperCase();
+    if(cat==='flag'&&['YELLOW','DOUBLE YELLOW','RED','CHEQUERED'].includes(flag))return true;
+    if(cat==='safetycar')return true;
+    if(/PENALTY|DRIVE THROUGH|DRIVE-THROUGH|STOP\/GO|STOP AND GO|DISQUALIFI/.test(msg))return true;
+    return false;
+  }).map(m=>({lap:m.lap_number??null,message:m.message||''}));
+}
+
+function sortedDriversByPosition(){
+  return[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+}
+
+// ---- Straight-line speed helper ----
+// Pulls max recorded speed per driver from car_data. Filtered server-side
+// (speed>=280) so we only pull the fast tail of the ~3.7Hz telemetry stream
+// instead of the full session trace — this is a summary stat, not raw
+// telemetry, and only runs once per download click, not on every tick.
+const SPEED_FLOOR=280;
+
+async function fetchTopSpeeds(){
+  const speeds=new Map(); // acronym -> max speed
+  const dns=[...driverMeta.keys()];
+  await Promise.all(dns.map(async dn=>{
+    const rows=await api(`car_data?session_key=${sessionKey}&driver_number=${dn}&speed>=${SPEED_FLOOR}`);
+    let max=null;
+    for(const r of rows){if(typeof r.speed==='number'&&(max===null||r.speed>max))max=r.speed;}
+    if(max!==null){
+      const acr=driverMeta.get(dn)?.acronym;
+      if(acr)speeds.set(acr,max);
+    }
+  }));
+  return speeds;
+}
+
+// ---- Race data-shaper ----
+// Builds a compact, hard-data-only payload from live app state. No telemetry,
+// no traffic/tow inference — only what's directly observable in the data.
+
+async function buildRacePayload(){
+  const drivers=[];
+  const sortedByPos=sortedDriversByPosition();
+  const lapsByDriver=lapsByDriverMap();
+
+  for(const dn of sortedByPos){
+    const meta=driverMeta.get(dn);
+    if(!meta)continue;
+    const pos=latestPos.get(dn)?.position??null;
+    const iv=latestIv.get(dn);
+    const driverLaps=lapsByDriver.get(dn)||[];
+
+    let bestLap=null;
+    for(const l of driverLaps){
+      if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap))bestLap=l.lap_duration;
+    }
+
+    const stints=computeStintStats(lastStintMap.get(dn)||[],driverLaps);
+
+    drivers.push({
+      position:pos,
+      driver:meta.acronym,
+      team:meta.teamName,
+      gap_to_leader:(iv&&iv.gap_to_leader!=null)?iv.gap_to_leader:(pos===1?0:null),
+      fastest_lap:bestLap?+bestLap.toFixed(3):null,
+      stints:stints.map(({laps,...rest})=>rest)
+    });
+  }
+
+  const topSpeeds=await fetchTopSpeeds();
+  for(const d of drivers)d.top_speed_kmh=topSpeeds.has(d.driver)?topSpeeds.get(d.driver):null;
+
+  return{
+    session_type:'race',
+    session:getSessionLabel()||'Race',
+    classification:drivers,
+    fastest_overall:overallBestDriver?{driver:driverMeta.get(overallBestDriver)?.acronym,time:overallBestLap!==Infinity?+overallBestLap.toFixed(3):null}:null,
+    race_control_events:filteredRaceControlEvents()
+  };
+}
+
+// ---- Sprint data-shaper ----
+// Structurally identical to Race (classification, stints, pit-relevant stops,
+// flags/SC/penalties). Strategy is usually a non-factor in a sprint (near
+// zero-stop), so no separate "strategy story" field — same hard-data shape,
+// the branch label itself signals to the analyst that pit strategy narrative
+// should be downweighted.
+
+async function buildSprintPayload(){
+  const base=await buildRacePayload();
+  return{...base,session_type:'sprint',session:getSessionLabel()||'Sprint'};
+}
+
+// ---- Qualifying data-shaper ----
+// Splits laps into Q1/Q2/Q3 using chequered-flag lap numbers from race control
+// (each chequered flag marks the end of a phase), since OpenF1 doesn't label
+// phases directly. This is inferred from data structure, not from driver
+// behavior — a defensible inference, unlike traffic/tow calls.
+
+async function buildQualifyingPayload(){
+  const lapsByDriver=lapsByDriverMap();
+  const chequered=(allRCMessages||[])
+    .filter(m=>(m.category||'').toLowerCase()==='flag'&&(m.flag||'').toUpperCase()==='CHEQUERED')
+    .map(m=>m.lap_number)
+    .filter(n=>n!=null)
+    .sort((a,b)=>a-b);
+
+  // Phase boundaries: [0, chequered[0]] = Q1, (chequered[0], chequered[1]] = Q2, etc.
+  const phaseBounds=[];
+  let prev=0;
+  for(const c of chequered){phaseBounds.push([prev,c]);prev=c}
+  if(!phaseBounds.length){
+    // No chequered-flag data available — fall back to one undivided phase.
+    phaseBounds.push([0,lastKnownLapNum||9999]);
+  }
+  const phaseNames=['Q1','Q2','Q3'].slice(0,phaseBounds.length);
+
+  const phases=phaseBounds.map(([start,end],i)=>{
+    const driversInPhase=[];
+    for(const dn of positionOrder){
+      const meta=driverMeta.get(dn);
+      if(!meta)continue;
+      const driverLaps=(lapsByDriver.get(dn)||[]).filter(l=>l.lap_number>start&&l.lap_number<=end);
+      if(!driverLaps.length)continue;
+      let bestLap=null,bestSectors={s1:null,s2:null,s3:null};
+      for(const l of driverLaps){
+        if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap)){
+          bestLap=l.lap_duration;
+          bestSectors={s1:l.duration_sector_1||null,s2:l.duration_sector_2||null,s3:l.duration_sector_3||null};
+        }
+      }
+      if(bestLap==null)continue;
+      driversInPhase.push({driver:meta.acronym,team:meta.teamName,best_lap:+bestLap.toFixed(3),sectors:bestSectors});
+    }
+    driversInPhase.sort((a,b)=>a.best_lap-b.best_lap);
+    return{phase:phaseNames[i]||`Phase ${i+1}`,results:driversInPhase};
+  });
+
+  const topSpeeds=await fetchTopSpeeds();
+  const lastPhase=phases[phases.length-1];
+  if(lastPhase){
+    for(const r of lastPhase.results)r.top_speed_kmh=topSpeeds.has(r.driver)?topSpeeds.get(r.driver):null;
+  }
+
+  return{
+    session_type:'qualifying',
+    session:getSessionLabel()||'Qualifying',
+    phase_boundaries_inferred_from:'chequered flag lap numbers in race control data',
+    top_speed_note:'top_speed_kmh (max speed recorded across the session) is only attached to the final phase results, since that is the most representative sample',
+    phases,
+    pole:phases[phases.length-1]?.results[0]||null,
+    race_control_events:filteredRaceControlEvents()
+  };
+}
+
+// ---- Practice data-shaper ----
+// The hardest branch: OpenF1 doesn't label a stint as a "fuel run" (long-run
+// race pace) vs a "quali sim" (short, low-fuel banzai lap). We infer it from
+// stint length only — short stints (<=3 laps) are labeled quali-sim-like,
+// longer stints are labeled long-run-like — and every inferred field is
+// explicitly marked as an inference so the downstream analysis doesn't
+// state it as fact. No traffic/tow claims are made at all.
+
+const QUALI_SIM_MAX_LAPS=3;
+
+async function buildPracticePayload(){
+  const lapsByDriver=lapsByDriverMap();
+  const drivers=[];
+
+  for(const dn of positionOrder){
+    const meta=driverMeta.get(dn);
+    if(!meta)continue;
+    const driverLaps=lapsByDriver.get(dn)||[];
+    const stints=computeStintStats(lastStintMap.get(dn)||[],driverLaps);
+
+    let bestLap=null;
+    for(const l of driverLaps){
+      if(l.lap_duration&&l.lap_duration>0&&(!bestLap||l.lap_duration<bestLap))bestLap=l.lap_duration;
+    }
+
+    const labeledStints=stints.map(s=>({
+      compound:s.compound,
+      lap_start:s.lap_start,
+      lap_end:s.lap_end,
+      laps:s.laps,
+      avg_lap:s.avg_lap,
+      deg_per_lap:s.deg_per_lap,
+      inferred_run_type:s.laps===0?null:(s.laps<=QUALI_SIM_MAX_LAPS?'likely_quali_sim (inferred from short stint length)':'likely_long_run (inferred from stint length)')
+    }));
+
+    drivers.push({
+      driver:meta.acronym,
+      team:meta.teamName,
+      best_lap:bestLap?+bestLap.toFixed(3):null,
+      stints:labeledStints
+    });
+  }
+
+  drivers.sort((a,b)=>(a.best_lap??Infinity)-(b.best_lap??Infinity));
+
+  const topSpeeds=await fetchTopSpeeds();
+  for(const d of drivers)d.top_speed_kmh=topSpeeds.has(d.driver)?topSpeeds.get(d.driver):null;
+
+  return{
+    session_type:'practice',
+    session:getSessionLabel()||'Practice',
+    note:'stint run-type labels (quali_sim vs long_run) are inferred from stint length only, not confirmed — treat as a hint, not a fact',
+    drivers,
+    race_control_events:filteredRaceControlEvents()
+  };
+}
+
+function switchFeedTab(sub){
+  activeFeedTab=sub;
+  ['all','track','rc'].forEach(s=>{
+    const btn=document.getElementById(`feedSub${s.charAt(0).toUpperCase()+s.slice(1)}`);
+    if(btn)btn.classList.toggle('active',s===sub);
+  });
+  renderFeed();
+}
+
+async function autoLoadCurrent(){
+  const year=document.getElementById('yearSelect').value;
+  const [meetings,sessions]=await Promise.all([
+    api(`meetings?year=${year}`),
+    api(`sessions?year=${year}`)
+  ]);
+  if(!sessions.length)return;
+
+  const now=new Date();
+  sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+
+  let target=sessions.find(s=>new Date(s.date_start)<=now&&new Date(s.date_end||'9999')>=now);
+  if(!target)target=sessions.find(s=>new Date(s.date_start)>now);
+  if(!target)target=sessions[sessions.length-1];
+  if(!target)return;
+
+  meetings.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  const mSel=document.getElementById('meetingSelect');
+  mSel.innerHTML='<option value="">— GP —</option>';
+  for(const m of meetings){
+    const o=document.createElement('option');
+    o.value=m.meeting_key;
+    o.textContent=m.meeting_name||m.circuit_short_name||`Meeting ${m.meeting_key}`;
+    if(m.meeting_key===target.meeting_key)o.selected=true;
+    mSel.appendChild(o);
+  }
+
+  const meetingSessions=sessions.filter(s=>s.meeting_key===target.meeting_key);
+  meetingSessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  const sSel=document.getElementById('sessionSelect');
+  sSel.innerHTML='<option value="">— Session —</option>';
+  for(const s of meetingSessions){
+    const o=document.createElement('option');
+    o.value=s.session_key;
+    o.textContent=s.session_name||`Session ${s.session_key}`;
+    if(s.session_key===target.session_key)o.selected=true;
+    sSel.appendChild(o);
+  }
+
+  if(new Date(target.date_start)>now){
+    sessionStart=new Date(target.date_start);
+    sessionEnd=new Date(target.date_end||target.date_start);
+    startCountdownOnly();
+    return;
+  }
+  await onSessionSelected(target.session_key);
+}
+
+async function loadMeetings(){
+  const year=document.getElementById('yearSelect').value;
+  const meetings=await api(`meetings?year=${year}`);
+  meetings.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  const sel=document.getElementById('meetingSelect');
+  sel.innerHTML='<option value="">— GP —</option>';
+  for(const m of meetings)sel.appendChild(new Option(m.meeting_name||m.circuit_short_name||`Meeting ${m.meeting_key}`,m.meeting_key));
+  document.getElementById('sessionSelect').innerHTML='<option value="">— Session —</option>';
+}
+
+async function loadSessions(){
+  const mk=document.getElementById('meetingSelect').value;
+  if(!mk)return;
+  const sessions=await api(`sessions?meeting_key=${mk}`);
+  sessions.sort((a,b)=>new Date(a.date_start)-new Date(b.date_start));
+  const sel=document.getElementById('sessionSelect');
+  sel.innerHTML='<option value="">— Session —</option>';
+  for(const s of sessions)sel.appendChild(new Option(s.session_name||`Session ${s.session_key}`,s.session_key));
+}
+
+async function onSessionSelected(forceKey){
+  const val=forceKey||document.getElementById('sessionSelect').value;
+  if(!val)return;
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null}
+
+  sessionKey=parseInt(val);
+  driverMeta.clear();positionOrder=[];pitFlash.clear();
+  allRCMessages=[];locationData.clear();scLocation=null;
+  activeYellowSectors.clear();overallBestLap=Infinity;overallBestDriver=null;
+  feedEntries=[];lastKnownPositions.clear();lastKnownLapNum=0;
+  processedLaps.clear();processedPits.clear();processedQualiEvents.clear();stintHistory.clear();lastLapTimes.clear();
+  currentFastestLap=null;
+  cachedLaps.clear();
+  cachedPitStops.clear();
+  cachedWeather=[];
+  cachedRaceControl=[];
+  latestPos.clear();latestIv.clear();
+  lastStintMap.clear();
+  duelsSelectedDrivers=[];
+  duelsCharts.forEach(c=>c.destroy());duelsCharts=[];
+  
+  // Reset mass incident state
+  massIncidentActive = false;
+  massIncidentSuppressUntilLap = 0;
+  
+  // Reset qualifying tracking
+  chequeredFlagCount = 0;
+  qPhaseEliminatedData = { q1: null, q2: null };
+  q1Captured = false;
+  q2Captured = false;
+  sessionEnded = false;
+
+  document.getElementById('driverList').innerHTML='<div class="placeholder">LOADING...</div>';
+  const insightsWrap=document.getElementById('insightsWrap');
+  if(insightsWrap)insightsWrap.innerHTML=`<div class="insights-export-card">
+      <div class="insights-export-icon">📦</div>
+      <div class="insights-export-title">NO SESSION SELECTED</div>
+      <div class="insights-export-sub">Pick a Grand Prix and session above to export its data</div>
+    </div>`;
+  if(activeTab==='feed')renderInsightsTab();
+  if(activeTab==='duels')renderDuelsTab();
+  setSelectStatus('');
+
+  const[sessionInfo,drivers]=await Promise.all([
+    api(`sessions?session_key=${sessionKey}`),
+    api(`drivers?session_key=${sessionKey}`)
+  ]);
+
+  if(sessionInfo[0]){
+    const si=sessionInfo[0];
+    sessionType=si.session_name||'';
+    sessionStart=si.date_start?new Date(si.date_start):null;
+    sessionEnd=si.date_end?new Date(si.date_end):null;
+    startTimer();
+  }
+
+  for(const d of drivers){
+    driverMeta.set(d.driver_number,{
+      acronym:d.name_acronym||String(d.driver_number),
+      fullName:d.full_name||d.name_acronym||String(d.driver_number),
+      teamColor:teamColor(d.team_name),
+      teamName:d.team_name||''
+    });
+  }
+
+  await buildCards();
+  await loadSessionData();
+}
+
+function getSessionLabel(){
+  const meeting=document.getElementById('meetingSelect');
+  const session=document.getElementById('sessionSelect');
+  const mText=meeting.options[meeting.selectedIndex]?.text||'';
+  const sText=session.options[session.selectedIndex]?.text||'';
+  if(mText&&mText!=='— GP —'&&sText&&sText!=='— Session —')return`${mText.toUpperCase()} · ${sText.toUpperCase()}`;
+  if(mText&&mText!=='— GP —')return mText.toUpperCase();
+  return'';
+}
+
+function startCountdownOnly(){
+  // Post-session analysis tool — sessions are always already finished by
+  // the time they're selected, so there's no live countdown to show.
+  // Kept as a no-op rather than deleted outright, since onSessionSelected
+  // still calls this for a session that hasn't started yet (rare, but
+  // possible if browsing an upcoming weekend's schedule).
+}
+
+function startTimer(){
+  // Same as startCountdownOnly — no live/countdown UI anymore. Flag/SC
+  // status still shows via setSelectStatus() on the session dropdown
+  // border, which reflects real historical events, not a live state.
+  if(timerInterval)clearInterval(timerInterval);
+  if(sessionEnd&&new Date()>sessionEnd)setSelectStatus('done');
+}
+
+function setSelectStatus(s){const sel=document.getElementById('sessionSelect');sel.className='';if(s)sel.classList.add('status-'+s);}
+
+async function buildCards(){
+  const positions=await api(`position?session_key=${sessionKey}`);
+  const latestPos=new Map();
+  for(const p of positions){
+    const dn=p.driver_number;
+    if(!latestPos.has(dn)||new Date(p.date)>new Date(latestPos.get(dn).date))latestPos.set(dn,p);
+  }
+  const withPos=[...latestPos.values()].sort((a,b)=>a.position-b.position);
+  const allDns=new Set([...driverMeta.keys()]);
+  const withPosDns=new Set(withPos.map(p=>p.driver_number));
+  positionOrder=[...withPos.map(p=>p.driver_number),...[...allDns].filter(dn=>!withPosDns.has(dn))].filter(dn=>driverMeta.has(dn));
+
+  const list=document.getElementById('driverList');
+  list.innerHTML='';
+  positionOrder.forEach((dn,i)=>{
+    const meta=driverMeta.get(dn);
+    const row=document.createElement('div');
+    row.className='driver-row';row.id=`row-${dn}`;
+    row.style.animation=`rowIn 0.3s ${Math.min(i*0.02,0.4)}s both var(--ease)`;
+    row.onclick=()=>showLapHistory(dn);
+    row.innerHTML=`
+      <div class="row-main">
+        <div class="pos-block"><span class="pos" id="pos-${dn}">—</span></div>
+        <div class="name-block"><div class="team-bar" style="background:${meta.teamColor}"></div><span class="acronym">${meta.acronym}</span></div>
+        <span></span>
+        <div class="gap-block"><span class="gap-leader" id="gap-${dn}">—</span><span class="gap-ahead" id="ahead-${dn}"></span></div>
+        <div class="tyre-col" id="tyreCol-${dn}"></div>
+        <span class="lap-cell" id="last-${dn}">—</span>
+        <span class="lap-cell" id="best-${dn}">—</span>
+      </div>
+      <div class="row-sectors">
+        <div class="sector-group"><span class="sector-label">S1</span><span class="sector-val" id="s1-${dn}">—</span></div>
+        <div class="sector-group"><span class="sector-label">S2</span><span class="sector-val" id="s2-${dn}">—</span></div>
+        <div class="sector-group"><span class="sector-label">S3</span><span class="sector-val" id="s3-${dn}">—</span></div>
+        <span id="pit-${dn}"></span>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+// Fetches one round of session data and MERGES it into the persistent
+// caches — never replaces them wholesale. This matters because OpenF1 can
+// post different drivers' data at different times: a single fetch might
+// have complete stints for driver A but nothing yet for driver B, and the
+// next fetch could be the reverse. Overwriting fully on each fetch would
+// lose whatever the previous round got right; merging only fills gaps that
+// are still empty, so three fetches strictly accumulate completeness.
+async function fetchAndMergeSessionData(){
+  const[newLaps,intervals,positions,pitStops,raceControl,stints,weather]=await Promise.all([
+    api(`laps?session_key=${sessionKey}`),
+    api(`intervals?session_key=${sessionKey}`),
+    api(`position?session_key=${sessionKey}`),
+    api(`pit?session_key=${sessionKey}`),
+    api(`race_control?session_key=${sessionKey}`),
+    api(`stints?session_key=${sessionKey}`),
+    api(`weather?session_key=${sessionKey}`)
+  ]);
+
+  for(const lap of newLaps){
+    const key=`${lap.driver_number}:${lap.lap_number}`;
+    cachedLaps.set(key,lap);
+  }
+
+  // Merge stints per-driver: only replace a driver's stint list if the new
+  // fetch actually returned something for them, or if we had nothing before.
+  const newStintsByDriver=new Map();
+  for(const s of stints){
+    const dn=s.driver_number;
+    if(!newStintsByDriver.has(dn))newStintsByDriver.set(dn,[]);
+    newStintsByDriver.get(dn).push(s);
+  }
+  for(const[dn,list]of newStintsByDriver){
+    if(list.length)lastStintMap.set(dn,list);
+  }
+
+  for(const p of positions){
+    const dn=p.driver_number;
+    if(!latestPos.has(dn)||new Date(p.date)>new Date(latestPos.get(dn).date))latestPos.set(dn,p);
+  }
+
+  for(const iv of intervals){
+    const dn=iv.driver_number;
+    if(!latestIv.has(dn)||new Date(iv.date)>new Date(latestIv.get(dn).date))latestIv.set(dn,iv);
+  }
+
+  const latestPit=new Map(cachedPitStops);
+  for(const p of pitStops){
+    const dn=p.driver_number;
+    if(!latestPit.has(dn)||new Date(p.pit_in_time)>new Date(latestPit.get(dn).pit_in_time))latestPit.set(dn,p);
+  }
+  cachedPitStops=latestPit;
+
+  if(weather&&weather.length)cachedWeather=weather;
+  if(raceControl&&raceControl.length)cachedRaceControl=mergeRCMessages(cachedRaceControl,raceControl);
+}
+
+function mergeRCMessages(existing,fresh){
+  const seen=new Set(existing.map(m=>`${m.date}|${m.message}`));
+  const merged=[...existing];
+  for(const m of fresh){
+    const key=`${m.date}|${m.message}`;
+    if(!seen.has(key)){merged.push(m);seen.add(key)}
+  }
+  return merged;
+}
+
+// Renders the driver list from whatever is currently in the persistent
+// caches — safe to call repeatedly after each fetch-and-merge round.
+function renderSessionData(){
+  const laps=[...cachedLaps.values()].sort((a,b)=>a.lap_number-b.lap_number);
+
+  updateWeather(cachedWeather);
+  updateRaceControl(cachedRaceControl);
+
+  const bestLapMap=new Map(),lastLapMap=new Map();
+  overallBestLap=Infinity;overallBestDriver=null;
+
+  for(const lap of laps){
+    const dn=lap.driver_number,dur=lap.lap_duration;
+    if(dur&&dur>0){
+      if(!bestLapMap.has(dn)||dur<bestLapMap.get(dn).duration)bestLapMap.set(dn,{duration:dur,lapNum:lap.lap_number});
+      if(dur<overallBestLap){overallBestLap=dur;overallBestDriver=dn}
+    }
+    // Track the most recent lap overall (for lap time/tyre age), but track
+    // each sector's most recent NON-NULL value independently — OpenF1 can
+    // post a driver's final lap before every sector has finished timing
+    // (S3 in particular completes last, at the finish line), so tying every
+    // sector to one single "last lap" object can leave a real, earlier value
+    // blank even though it's sitting right there in the data.
+    const prev=lastLapMap.get(dn)||{};
+    lastLapMap.set(dn,{
+      duration:dur,
+      lapNum:lap.lap_number,
+      s1:lap.duration_sector_1||prev.s1||null,
+      s2:lap.duration_sector_2||prev.s2||null,
+      s3:lap.duration_sector_3||prev.s3||null
+    });
+  }
+
+  const vals=l=>[...lastLapMap.values()].map(x=>x[l]).filter(Boolean);
+  const bestS1=Math.min(...vals('s1'));
+  const bestS2=Math.min(...vals('s2'));
+  const bestS3=Math.min(...vals('s3'));
+
+  const stintMap=lastStintMap;
+
+  let leaderDn=null;
+  for(const[dn,iv]of latestIv){if(iv.gap_to_leader===0||iv.gap_to_leader===null||iv.gap_to_leader==='0'){leaderDn=dn;break}}
+  if(!leaderDn)for(const[dn,p]of latestPos){if(p.position===1){leaderDn=dn;break}}
+
+  const latestPit=cachedPitStops;
+
+  const container=document.getElementById('driverList');
+  const sorted=[...positionOrder].sort((a,b)=>(latestPos.get(a)?.position??99)-(latestPos.get(b)?.position??99));
+  for(const dn of sorted){const el=document.getElementById(`row-${dn}`);if(el)container.appendChild(el)}
+
+  const elimThreshold=getElimThreshold();
+
+  for(const dn of positionOrder){
+    const pos=latestPos.get(dn)?.position??null;
+    const iv=latestIv.get(dn);
+    const lastLap=lastLapMap.get(dn);
+    const bestLap=bestLapMap.get(dn);
+    const pit=latestPit.get(dn);
+    const driverStints=stintMap.get(dn)||[];
+    const lapNum=lastLap?.lapNum||0;
+
+    const row=document.getElementById(`row-${dn}`);
+    if(row&&elimThreshold&&pos){
+      row.classList.toggle('eliminated',pos>=elimThreshold+5);
+      row.classList.toggle('elim-danger',pos>=elimThreshold&&pos<elimThreshold+5);
+    }
+
+    const posEl=document.getElementById(`pos-${dn}`);if(posEl){posEl.textContent=pos??'—';posEl.className=`pos${pos===1?' p1':pos===2?' p2':pos===3?' p3':''}`}
+    const gapEl=document.getElementById(`gap-${dn}`);if(gapEl){if(dn===leaderDn){gapEl.textContent='LEADER';gapEl.className='gap-leader leader'}else if(iv?.gap_to_leader!=null){const g=iv.gap_to_leader;gapEl.textContent=typeof g==='number'?`+${g.toFixed(3)}`:String(g);gapEl.className='gap-leader'}else{gapEl.textContent='—';}}
+    const aheadEl=document.getElementById(`ahead-${dn}`);if(aheadEl){if(iv?.interval!=null&&dn!==leaderDn){const g=iv.interval;aheadEl.textContent=`△ ${typeof g==='number'?g.toFixed(3):String(g)}`}else aheadEl.textContent='';}
+    const lastEl=document.getElementById(`last-${dn}`);if(lastEl)lastEl.textContent=lastLap?fmtTime(lastLap.duration):'—';
+    const bestEl=document.getElementById(`best-${dn}`);if(bestEl){bestEl.textContent=bestLap?fmtTime(bestLap.duration):'—';bestEl.className=dn===overallBestDriver?'lap-cell purple':'lap-cell';}
+    if(lastLap){
+      setSector(`s1-${dn}`,lastLap.s1,bestS1);
+      setSector(`s2-${dn}`,lastLap.s2,bestS2);
+      setSector(`s3-${dn}`,lastLap.s3,bestS3);
+    }
+    
+    updateTyreCol(dn,driverStints,lapNum);
+    updatePit(dn,pit);
+  }
+  updateElimDivider(sorted,elimThreshold);
+  generateFeed(laps,latestPos,latestIv,[...cachedPitStops.values()],stintMap,cachedRaceControl);
+
+  const now=new Date();
+  if(sessionEnd&&now>sessionEnd)setSelectStatus('done');
+  else if(sessionStart&&now>=sessionStart)setSelectStatus('live');
+}
+
+// Orchestrates the one-shot load: fetch+merge, render, then up to two more
+// fetch+merge+render rounds a few seconds apart to backfill anything OpenF1
+// hadn't finished posting on the first pass. Each round only fills gaps
+// (see fetchAndMergeSessionData) — it never discards data already fetched.
+// Stops after 3 rounds regardless of completeness, so this can't turn into
+// the old indefinite polling loop.
+async function loadSessionData(){
+  if(!sessionKey)return;
+  const thisSessionKey=sessionKey;
+  setSelectStatus('loading');
+
+  for(let round=0;round<3;round++){
+    if(sessionKey!==thisSessionKey)return; // user switched sessions mid-backfill
+    await fetchAndMergeSessionData();
+    renderSessionData();
+    if(round<2)await new Promise(r=>setTimeout(r,3000));
+  }
+}
+
+function getCurrentTyre(stints,lapNum){
+  if(!stints.length||!lapNum)return{compound:null,age:0};
+  let current=null;
+  for(const s of stints){if(lapNum>=s.lap_start&&lapNum<=(s.lap_end||9999)){current=s;break}}
+  if(!current)current=stints.reduce((a,b)=>a.lap_start>b.lap_start?a:b);
+  return{compound:current.compound||null,age:Math.max(1,lapNum-current.lap_start+1)};
+}
+
+function getElimThreshold(){if(!sessionType)return null;if(sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual'))return 16;return null;}
+function updateElimDivider(sorted,threshold){let existing=document.getElementById('elimDivider');if(!threshold){if(existing)existing.classList.remove('show');return}if(!existing){existing=document.createElement('div');existing.id='elimDivider';existing.className='elim-divider';existing.textContent='── ELIMINATION ZONE ──';document.getElementById('driverList').appendChild(existing);}existing.classList.add('show');const container=document.getElementById('driverList');const firstElim=sorted.find(dn=>{const r=document.getElementById(`row-${dn}`);return r&&r.classList.contains('eliminated')});if(firstElim){const el=document.getElementById(`row-${firstElim}`);if(el)container.insertBefore(existing,el)}}
+function setSector(id,val,bestVal){const el=document.getElementById(id);if(!el)return;if(!val){el.textContent='—';el.className='sector-val';return;}el.textContent=fmtTime(val);el.className=(isFinite(bestVal)&&val===bestVal)?'sector-val purple':'sector-val';}
+
+function updateTyreCol(dn,stints,lapNum){const el=document.getElementById(`tyreCol-${dn}`);if(!el)return;const{compound,age}=getCurrentTyre(stints,lapNum);if(!compound){el.innerHTML='<span style="color:var(--muted);font-family:var(--mono);font-size:9px">—</span>';return}const col=tyreColor(compound);el.innerHTML=`<div class="tyre-icon" style="color:${col};background:${col}22">${tyreLetter(compound)}</div><span class="tyre-age-col" style="color:${col}">${String(age).padStart(2,'0')}</span>`;}
+function updatePit(dn,pit){const el=document.getElementById(`pit-${dn}`);if(!el)return;if(!pit){el.innerHTML='';return}const inTime=pit.pit_in_time,outTime=pit.pit_out_time,dur=pit.pit_duration??pit.stop_duration;if(inTime&&!outTime){el.innerHTML='<span class="chip chip-pit">PIT</span>'}else if(outTime&&dur!=null){const key=`${dn}-${inTime}`;if(!pitFlash.has(key)){el.innerHTML=`<span class="chip chip-out">${parseFloat(dur).toFixed(1)}s</span>`;const tid=setTimeout(()=>{const e=document.getElementById(`pit-${dn}`);if(e)e.innerHTML='';pitFlash.delete(key)},8000);pitFlash.set(key,tid);}} else el.innerHTML='';}
+function updateWeather(data){
+  // Weather strip removed — session has already ended, live conditions
+  // aren't meaningful context for post-session analysis. This function is
+  // kept as a no-op call site (still invoked from renderSessionData) so
+  // nothing else needs to change, but it no longer renders anything.
+}
+function updateRaceControl(data){
+  allRCMessages=data;
+  activeYellowSectors.clear();
+  let scActive=false;
+  
+  // Track session ended state
+  const isQualifying = sessionType.toLowerCase().includes('qualif') || sessionType.toLowerCase().includes('sprint qual');
+  
+  for(const m of data){
+    const f=(m.flag||'').toUpperCase(),msg=(m.message||'').toUpperCase();
+    if(f==='YELLOW'&&m.sector)activeYellowSectors.add(m.sector);
+    if(f==='SC'||msg.includes('SAFETY CAR'))scActive=true;
+    if(f==='GREEN')activeYellowSectors.clear();
+    
+    // Detect chequered flag for qualifying phases
+    if(isQualifying && (f==='CHEQUERED' || msg.includes('CHEQUERED'))){
+      chequeredFlagCount++;
+      sessionEnded = true;
+      
+      if(chequeredFlagCount === 1 && qPhaseEliminatedData.q1){
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q1);
+      } else if(chequeredFlagCount === 2 && qPhaseEliminatedData.q2){
+        addToFeedBuffer('c-info', qPhaseEliminatedData.q2);
+      } else if(chequeredFlagCount === 3){
+        // Get pole position from final order
+        if(latestPos.size > 0){
+          const sortedPos = [...latestPos.entries()].sort((a,b)=>a[1]?.position??99 - b[1]?.position??99);
+          if(sortedPos.length >= 3){
+            const p1 = sortedPos[0];
+            const p2 = sortedPos[1];
+            const p3 = sortedPos[2];
+            const p1Driver = driverMeta.get(p1[0])?.acronym || '#?';
+            const p2Driver = driverMeta.get(p2[0])?.acronym || '#?';
+            const p3Driver = driverMeta.get(p3[0])?.acronym || '#?';
+            const poleTime = overallBestLap !== Infinity ? fmtTime(overallBestLap) : '?';
+            // Get gaps from best laps if available
+            const qualBest = new Map();
+            for(const lap of cachedLaps.values()){
+              if(lap.lap_duration && lap.lap_duration > 0){
+                if(!qualBest.has(lap.driver_number) || lap.lap_duration < qualBest.get(lap.driver_number).duration){
+                  qualBest.set(lap.driver_number, {duration: lap.lap_duration, lap: lap.lap_number});
                 }
-                if (result[result.length - 1] !== data[data.length - 1]) {
-                    result.push(data[data.length - 1]);
+              }
+            }
+            const bestOrder = [...qualBest.entries()].sort((a,b)=>a[1].duration - b[1].duration);
+            if(bestOrder.length >= 3){
+              const poleGap2 = (bestOrder[1][1].duration - bestOrder[0][1].duration).toFixed(3);
+              const poleGap3 = (bestOrder[2][1].duration - bestOrder[0][1].duration).toFixed(3);
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(bestOrder[0][0])} <b style="color:var(--purple)">${fmtTime(bestOrder[0][1].duration)}</b>. ${driverTag(bestOrder[1][0])} +${poleGap2}s. ${driverTag(bestOrder[2][0])} +${poleGap3}s.`);
+            } else {
+              addToFeedBuffer('c-fastest', `🏆 POLE POSITION: ${driverTag(p1[0])}. ${driverTag(p2[0])} P2. ${driverTag(p3[0])} P3.`);
+            }
+          }
+        }
+        addToFeedBuffer('c-info', `Q3 ENDED. Pole position determined.`);
+      }
+    }
+  }
+  if(scActive)setSelectStatus('sc');
+  if(!data.length)return;
+  const last=data[data.length-1];
+  if((last.flag||'').toUpperCase()==='RED')setSelectStatus('red');
+  // RC bar removed from the UI — race control messages are still fully
+  // processed above (allRCMessages, yellow sectors, SC/red flag status)
+  // for use in the INSIGHTS export and stint outlier exclusion; they're
+  // just no longer rendered as a persistent banner across every tab.
+}
+
+let pendingBufferEntries = [];
+function addToFeedBuffer(category, text){
+  pendingBufferEntries.push({
+    ts: Date.now(),
+    sortKey: Date.now(),
+    isoTime: new Date().toISOString(),
+    timeLabel: new Date().toLocaleTimeString().slice(0,5),
+    category: category,
+    text: text,
+    isRC: false,
+    isLapMarker: false
+  });
+}
+
+function generateFeed(laps,latestPos,latestIv,allPitStops,stintMap,raceControl){
+  const isRace=sessionType.toLowerCase().includes('race');
+  const isFP=sessionType.toLowerCase().includes('practice');
+  const isQual=sessionType.toLowerCase().includes('qualif')||sessionType.toLowerCase().includes('sprint qual');
+  const newEntries=[];
+
+  const lapsByNumber=new Map();
+  for(const lap of laps){
+    if(!lapsByNumber.has(lap.lap_number))lapsByNumber.set(lap.lap_number,[]);
+    lapsByNumber.get(lap.lap_number).push(lap);
+  }
+
+  const allLapsByDriver=new Map();
+  for(const lap of laps){
+    const dn=lap.driver_number;
+    if(!allLapsByDriver.has(dn))allLapsByDriver.set(dn,[]);
+    allLapsByDriver.get(dn).push(lap);
+  }
+
+  const lapNums=[...lapsByNumber.keys()].sort((a,b)=>a-b);
+
+  for(const lapNum of lapNums){
+    if(processedLaps.has(lapNum))continue;
+    const lapDrivers=lapsByNumber.get(lapNum);
+    if(lapDrivers.length<Math.min(3,driverMeta.size*0.3))continue;
+
+    processedLaps.add(lapNum);
+    if(lapNum>lastKnownLapNum)lastKnownLapNum=lapNum;
+
+    const lapTimeISO=lapDrivers.find(l=>l.date_start)?.date_start||null;
+    const lapTimeLabel=lapTimeISO?fmtTimeLabel(lapTimeISO):`L${lapNum}`;
+    const lapSortKey=lapTimeISO?new Date(lapTimeISO).getTime():lapNum*100000;
+
+    const posAtLap=new Map();
+    for(const[dn]of latestPos)posAtLap.set(dn,latestPos.get(dn)?.position??99);
+
+    // LAP SUMMARY - ALL SESSION TYPES
+    const sortedPos=[...posAtLap.entries()].sort((a,b)=>a[1]-b[1]);
+    const top5Names=sortedPos.slice(0,5).map(([dn])=>{
+      const m=driverMeta.get(dn);return m?.acronym||String(dn);
+    }).join(', ');
+    
+    newEntries.push({
+      lap:lapNum,ts:lapSortKey,sortKey:lapSortKey,
+      isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+      category:'c-lap',isLapMarker:true,
+      isRC:false,
+      text:`LAP ${lapNum} — ${top5Names}`
+    });
+
+    // Position changes
+    const leaderNow=sortedPos[0]?.[0];
+    const leaderPrev=[...lastKnownPositions.entries()].find(([,p])=>p===1)?.[0];
+    if(leaderPrev&&leaderNow&&leaderNow!==leaderPrev){
+      newEntries.push({
+        lap:lapNum,ts:lapSortKey+100,sortKey:lapSortKey+100,
+        isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+        category:'c-info',isRC:false,
+        text:`${driverTag(leaderNow)} takes the lead`
+      });
+    }
+    
+    for(const[dn,pos]of posAtLap){
+      const prev=lastKnownPositions.get(dn);
+      if(!prev||prev===pos)continue;
+      const gain=prev-pos;
+      if(gain>0){
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} gains ${gain} to P${pos}`
+        });
+      } else if(gain<0){
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+200+dn,sortKey:lapSortKey+200+dn,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-info',isRC:false,
+          text:`${driverTag(dn)} drops to P${pos}`
+        });
+      }
+    }
+
+    for(const[dn,pos]of posAtLap)lastKnownPositions.set(dn,pos);
+
+    // QUALIFYING: Personal best lap time
+    if(isQual && !sessionEnded){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          const driverLaps=allLapsByDriver.get(lap.driver_number)||[];
+          const prevBest=driverLaps.filter(l=>l.lap_duration&&l.lap_number<lap.lap_number)
+            .reduce((best,l)=>Math.min(best,l.lap_duration),Infinity);
+          if(prevBest!==Infinity && lap.lap_duration<prevBest){
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+250+lap.driver_number,sortKey:lapSortKey+250+lap.driver_number,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} personal best — ${fmtTime(lap.lap_duration)}`
+            });
+          }
+        }
+      }
+      
+      // Capture elimination data for Q1 and Q2 phases (only if not already captured)
+      if(sortedPos.length >= 20 && !q1Captured){
+        const eliminatedQ1 = sortedPos.slice(15,20).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ1 = sortedPos[15]?.[0];
+        const p15Pos = sortedPos[14]?.[1];
+        const p16Pos = sortedPos[15]?.[1];
+        const gapToP15Q1 = p15Pos - p16Pos;
+        if(eliminatedQ1.length === 5 && gapToP15Q1 > 0){
+          qPhaseEliminatedData.q1 = `Q1 ENDED. ELIMINATED IN Q1: ${eliminatedQ1.join(', ')}. ${driverTag(fastestEliminatedQ1)} missed Q2 by ${Math.abs(gapToP15Q1).toFixed(3)}s.`;
+          q1Captured = true;
+        }
+      }
+      
+      if(sortedPos.length >= 15 && !q2Captured && q1Captured){
+        const eliminatedQ2 = sortedPos.slice(10,15).map(([dn])=>driverMeta.get(dn)?.acronym||'?');
+        const fastestEliminatedQ2 = sortedPos[10]?.[0];
+        const p10Pos = sortedPos[9]?.[1];
+        const p11Pos = sortedPos[10]?.[1];
+        const gapToP10Q2 = p10Pos - p11Pos;
+        if(eliminatedQ2.length === 5 && gapToP10Q2 > 0){
+          qPhaseEliminatedData.q2 = `Q2 ENDED. ELIMINATED IN Q2: ${eliminatedQ2.join(', ')}. ${driverTag(fastestEliminatedQ2)} missed Q3 by ${Math.abs(gapToP10Q2).toFixed(3)}s.`;
+          q2Captured = true;
+        }
+      }
+    }
+
+    // RACE: Fastest lap (overall session best)
+    if(isRace){
+      for(const lap of lapDrivers){
+        if(lap.lap_duration&&lap.lap_duration>0){
+          if(lap.lap_duration<overallBestLap){
+            overallBestLap=lap.lap_duration;
+            overallBestDriver=lap.driver_number;
+            newEntries.push({
+              lap:lapNum,ts:lapSortKey+300,sortKey:lapSortKey+300,
+              isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+              category:'c-fastest',isRC:false,
+              text:`${driverTag(lap.driver_number)} goes quickest — ${fmtTime(lap.lap_duration)}`
+            });
+          }
+        }
+      }
+    }
+    
+    // RACE: Final lap
+    if(isRace){
+      const totalLaps=lapNums[lapNums.length-1];
+      if(lapNum===totalLaps){
+        const leaderNowFinal=sortedPos[0]?.[0];
+        newEntries.push({
+          lap:lapNum,ts:lapSortKey+500,sortKey:lapSortKey+500,
+          isoTime:lapTimeISO||'',timeLabel:lapTimeLabel,
+          category:'c-fastest',isRC:false,
+          text:`🏁 FINAL LAP — ${driverTag(leaderNowFinal)} leads`
+        });
+      }
+    }
+  }
+
+  // PIT STOPS
+  for(const pit of allPitStops){
+    const dn=pit.driver_number;
+    const pitKey=`pit-${dn}-${pit.pit_in_time}`;
+    const lapIn=pit.lap_number||lastKnownLapNum||0;
+    const lapOut=lapIn+1;
+    const pitInTime=pit.pit_in_time?new Date(pit.pit_in_time).getTime():0;
+    const pitOutTime=pit.pit_out_time?new Date(pit.pit_out_time).getTime():0;
+
+    if(pit.pit_in_time&&!processedPits.has(pitKey+'in')){
+      const pos=lastKnownPositions.get(dn)??'?';
+      if(pos!=='?'||lastKnownLapNum>0){
+        processedPits.add(pitKey+'in');
+        newEntries.push({
+          lap:lapIn,ts:pitInTime,sortKey:pitInTime,
+          isoTime:pit.pit_in_time||'',timeLabel:fmtTimeLabel(pit.pit_in_time),
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} pits from P${pos}`
+        });
+      }
+    }
+
+    if(pit.pit_out_time&&!processedPits.has(pitKey+'out')){
+      const dur=pit.pit_duration??pit.stop_duration;
+      const pos=lastKnownPositions.get(dn)??'?';
+      const ds=stintMap.get(dn)||[];
+      const{compound}=getCurrentTyre(ds,lapOut);
+      const tyreStr=compound?` on ${tyreLetter(compound)}`:'';
+      if(pos!=='?'||lastKnownLapNum>0){
+        processedPits.add(pitKey+'out');
+        newEntries.push({
+          lap:lapOut,ts:pitOutTime+50,sortKey:pitOutTime+50,
+          isoTime:pit.pit_out_time||'',timeLabel:fmtTimeLabel(pit.pit_out_time),
+          category:'c-strategy',isRC:false,
+          text:`${driverTag(dn)} rejoins P${pos}${tyreStr}`
+        });
+      }
+    }
+  }
+
+  // ========== SECTOR ANOMALY REPORTING WITH MASS INCIDENT SUPPRESSION ==========
+  // Only report anomalies if session has not ended (no cooldown lap spam)
+  let criticalLossCount = 0;
+  let criticalLossDrivers = new Set();
+  
+  for(const lapNum of lapNums){
+    const lapDrivers = lapsByNumber.get(lapNum) || [];
+    if(lapDrivers.length < Math.min(3, driverMeta.size*0.3)) continue;
+    
+    const recentRC = allRCMessages.filter(m => (m.lap_number||0) >= lapNum-5);
+    const flagActive = activeYellowSectors.size > 0 ||
+      recentRC.some(m => {
+        const f = (m.flag||'').toUpperCase(), msg = (m.message||'').toUpperCase();
+        return f === 'VSC' || msg.includes('SAFETY CAR DEPLOYED') || msg.includes('VIRTUAL SAFETY CAR DEPLOYED');
+      });
+    
+    const lapTimeISO = lapDrivers.find(l=>l.date_start)?.date_start||null;
+    const lapSortKey = lapTimeISO ? new Date(lapTimeISO).getTime() : lapNum*100000;
+    const lapTimeLabel = lapTimeISO ? fmtTimeLabel(lapTimeISO) : `L${lapNum}`;
+    
+    let lapCriticalCount = 0;
+    
+    // Skip anomaly reporting if session has ended (cooldown laps after chequered flag)
+    if(!sessionEnded && !flagActive && lapNum > massIncidentSuppressUntilLap){
+      for(const lap of lapDrivers){
+        const dn = lap.driver_number;
+        if(!lap.duration_sector_1 && !lap.duration_sector_2 && !lap.duration_sector_3) continue;
+        const history = lastLapTimes.get(dn) || [];
+        
+        for(let si = 0; si < 3; si++){
+          const val = [lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3][si];
+          if(!val) continue;
+          const prevVals = history.map(h => h[si]).filter(Boolean);
+          if(prevVals.length >= 3){
+            const avg = prevVals.reduce((a,b) => a+b, 0) / prevVals.length;
+            const loss = val - avg;
+            
+            if(loss >= 0.5){
+              // Count critical losses (2.0s+) for mass incident detection
+              if(loss >= 2.0){
+                lapCriticalCount++;
+                criticalLossDrivers.add(dn);
+              }
+              
+              // Only report individual incidents if NOT in mass incident suppression mode
+              if(!massIncidentActive || loss < 2.0){
+                let severityText = '';
+                if(loss >= 2.0){
+                  severityText = `${driverTag(dn)} has a critical issue in S${si+1}, lost ${loss.toFixed(2)}s. Major car problem or off-track.`;
+                } else if(loss >= 1.0){
+                  severityText = `${driverTag(dn)} has a significant issue in S${si+1}, lost ${loss.toFixed(2)}s. Car issue or driver error.`;
+                } else if(loss >= 0.5){
+                  severityText = `${driverTag(dn)} had a small moment in S${si+1}, lost ${loss.toFixed(2)}s.`;
                 }
-                return result;
-            }
-
-            function showLoading(msg = 'Loading session data…') {
-                content.innerHTML = `
-                    <div class="loading-state">
-                        <div class="spinner"></div>
-                        <p>${msg}</p>
-                    </div>
-                `;
-            }
-
-            function renderEmpty(msg = 'No data') {
-                content.innerHTML = `<div class="empty-state"><span>📋</span><p>${msg}</p></div>`;
-            }
-
-            // API fetch with logging
-            async function fetchAPI(endpoint) {
-                const url = API_BASE + endpoint;
-                console.log('📡 Fetching:', url);
-                const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                console.log(`✅ Received ${data?.length || 0} items`);
-                return data;
-            }
-
-            // Load years from sessions
-            async function loadYears() {
-                try {
-                    const data = await fetchAPI('/sessions');
-                    const years = [...new Set(data.map(s => s.year).filter(Boolean))].sort((a, b) => b - a);
-                    // Ensure 2025 and 2026 are present
-                    const allYears = new Set([2026, 2025, ...years]);
-                    const sortedYears = Array.from(allYears).sort((a, b) => b - a);
-                    elYear.innerHTML = '<option value="">Year</option>' +
-                        sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
-                    if (sortedYears.length) {
-                        elYear.value = sortedYears[0];
-                        await onYearChange();
-                    }
-                } catch (err) {
-                    console.warn('Failed to load years', err);
-                    elYear.innerHTML = '<option value="">Year</option><option value="2026">2026</option><option value="2025">2025</option>';
-                    elYear.value = '2026';
-                    await onYearChange();
+                
+                if(severityText){
+                  newEntries.push({
+                    lap:lapNum, ts:lapSortKey + si*10, sortKey:lapSortKey + si*10,
+                    isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
+                    category:'c-incident', isRC:false,
+                    text: severityText
+                  });
                 }
+              }
             }
+          }
+        }
+        
+        const entry = [lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3];
+        history.push(entry);
+        if(history.length > 5) history.shift();
+        lastLapTimes.set(dn, history);
+      }
+      
+      // MASS INCIDENT DETECTION: 3+ drivers losing 2.0s+ in same lap
+      if(lapCriticalCount >= 3 && !massIncidentActive){
+        massIncidentActive = true;
+        massIncidentSuppressUntilLap = lapNum + 5;
+        
+        newEntries.push({
+          lap:lapNum, ts:lapSortKey + 450, sortKey:lapSortKey + 450,
+          isoTime:lapTimeISO||'', timeLabel:lapTimeLabel,
+          category:'c-sc', isRC:false,
+          text: `⚠️ Multiple drivers affected by a track incident, losing critical time. Checking race control.`
+        });
+        
+        // Cross-reference with race control messages for this lap
+        const rcThisLap = allRCMessages.filter(m => {
+          const rcLap = m.lap_number || 0;
+          return rcLap === lapNum || rcLap === lapNum - 1 || rcLap === lapNum + 1;
+        });
+        
+        for(const rc of rcThisLap){
+          const rcFlag = (rc.flag || '').toUpperCase();
+          const rcMsg = rc.message || '';
+          if(rcFlag === 'YELLOW' || rcMsg.includes('YELLOW')){
+            newEntries.push({
+              lap:lapNum, ts:lapSortKey + 460, sortKey:lapSortKey + 460,
+              isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
+              category:'c-rc-warn', isRC:true,
+              text: `RACE CONTROL: ${rcMsg}`
+            });
+          } else if(rcFlag === 'SC' || rcMsg.includes('SAFETY CAR')){
+            newEntries.push({
+              lap:lapNum, ts:lapSortKey + 470, sortKey:lapSortKey + 470,
+              isoTime:rc.date||'', timeLabel:fmtTimeLabel(rc.date),
+              category:'c-rc-red', isRC:true,
+              text: `RACE CONTROL: ${rcMsg}`
+            });
+          }
+        }
+      }
+    } else {
+      // During flag active or suppression, just update rolling history without reporting
+      for(const lap of lapDrivers){
+        const dn = lap.driver_number;
+        const h = lastLapTimes.get(dn) || [];
+        h.push([lap.duration_sector_1, lap.duration_sector_2, lap.duration_sector_3]);
+        if(h.length > 5) h.shift();
+        lastLapTimes.set(dn, h);
+      }
+    }
+  }
+  
+  // Reset mass incident state after 5 laps of no incidents
+  if(massIncidentActive && lastKnownLapNum > massIncidentSuppressUntilLap){
+    massIncidentActive = false;
+  }
 
-            // Year changed: fetch GPs for that year
-            async function onYearChange() {
-                const year = elYear.value;
-                if (!year) {
-                    elGP.innerHTML = '<option value="">GP</option>';
-                    elGP.disabled = true;
-                    elSession.innerHTML = '<option value="">Session</option>';
-                    elSession.disabled = true;
-                    renderEmpty('Select a year');
-                    return;
-                }
-                state.year = year;
-                elGP.disabled = false;
-                elGP.innerHTML = '<option value="">Loading…</option>';
+  // Combine with race control messages
+  const rcEntries=allRCMessages.map(m=>{
+    let formattedText = m.message||'';
+    const flag = (m.flag||'').toUpperCase();
+    if(flag === 'RED'){
+      formattedText = `<strong class="red">🔴 RED FLAG</strong> — ${formattedText}`;
+    } else if(flag === 'YELLOW'){
+      formattedText = `<strong class="yellow">🟡 YELLOW FLAG</strong> — ${formattedText}`;
+    } else if(flag === 'SC'){
+      formattedText = `<strong class="yellow">🟡 SAFETY CAR</strong> — ${formattedText}`;
+    } else if(flag === 'VSC'){
+      formattedText = `<strong class="yellow">🟡 VIRTUAL SAFETY CAR</strong> — ${formattedText}`;
+    }
+    return {
+      ts:new Date(m.date).getTime(),
+      sortKey:new Date(m.date).getTime(),
+      isoTime:m.date||'',
+      timeLabel:fmtTimeLabel(m.date),
+      category:m.flag==='RED'?'c-rc-red':(m.flag==='YELLOW'||m.flag==='SC'||m.flag==='VSC')?'c-rc-warn':'c-rc',
+      text:formattedText,
+      isRC:true
+    };
+  });
 
-                try {
-                    // Fetch all sessions for this year
-                    const data = await fetchAPI(`/sessions?year=${year}`);
-                    // Group by meeting_key, get meeting_name and date_start
-                    const meetingMap = {};
-                    data.forEach(s => {
-                        const mk = s.meeting_key;
-                        if (mk && !meetingMap[mk]) {
-                            meetingMap[mk] = {
-                                meeting_key: mk,
-                                meeting_name: s.meeting_name || s.location || s.country || 'Unknown GP',
-                                date_start: s.date_start || '',
-                            };
-                        }
-                    });
-                    // Sort by date_start
-                    const sortedMeetings = Object.values(meetingMap)
-                        .sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
+  const allEntries=[...newEntries,...rcEntries,...pendingBufferEntries];
+  pendingBufferEntries = [];
+  
+  if(!allEntries.length)return;
 
-                    elGP.innerHTML = '<option value="">GP</option>' +
-                        sortedMeetings.map(m =>
-                            `<option value="${m.meeting_key}">${m.meeting_name}</option>`
-                        ).join('');
+  allEntries.sort((a,b)=>a.sortKey-b.sortKey);
+  
+  // Merge with existing feed entries, avoid duplicates
+  const existingKeys=new Set(feedEntries.map(e=>`${e.isoTime}-${e.text.substring(0,50)}`));
+  for(const e of allEntries){
+    const key=`${e.isoTime}-${e.text.substring(0,50)}`;
+    if(!existingKeys.has(key)){
+      feedEntries.push(e);
+      existingKeys.add(key);
+    }
+  }
+  
+  // Sort feed entries chronologically
+  feedEntries.sort((a,b)=>a.sortKey-b.sortKey);
+  
+  if(activeTab==='feed')renderFeed();
+}
 
-                    if (sortedMeetings.length) {
-                        elGP.value = sortedMeetings[0].meeting_key;
-                        await onGPChange();
-                    } else {
-                        elGP.innerHTML = '<option value="">No GPs</option>';
-                        elSession.innerHTML = '<option value="">Session</option>';
-                        elSession.disabled = true;
-                        renderEmpty('No Grands Prix found for ' + year);
-                    }
-                } catch (err) {
-                    console.warn('Failed to load GPs', err);
-                    elGP.innerHTML = '<option value="">Error</option>';
-                }
-            }
+function renderFeed(){
+  const scroll=document.getElementById('feedScroll');
+  if(!scroll)return; // FEED tab removed in favor of INSIGHTS; feed data still collected for use there
+  if(!feedEntries.length&&!allRCMessages.length){
+    scroll.innerHTML='<div class="feed-placeholder">FEED WILL POPULATE WHEN SESSION IS SELECTED</div>';
+    return;
+  }
 
-            // GP changed: fetch sessions for that meeting
-            async function onGPChange() {
-                const mk = elGP.value;
-                if (!mk) {
-                    elSession.innerHTML = '<option value="">Session</option>';
-                    elSession.disabled = true;
-                    renderEmpty('Select a GP');
-                    return;
-                }
-                state.gpKey = Number(mk);
-                elSession.disabled = false;
-                elSession.innerHTML = '<option value="">Loading…</option>';
+  let entries=[];
+  if(activeFeedTab==='all')entries=[...feedEntries];
+  else if(activeFeedTab==='track')entries=feedEntries.filter(e=>!e.isRC);
+  else if(activeFeedTab==='rc')entries=feedEntries.filter(e=>e.isRC);
 
-                try {
-                    const data = await fetchAPI(`/sessions?meeting_key=${mk}`);
-                    // Sort by date_start
-                    const sessions = data.sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
+  if(!entries.length){
+    scroll.innerHTML='<div class="feed-placeholder">NO DATA FOR THIS VIEW</div>';
+    return;
+  }
 
-                    if (sessions.length) {
-                        elSession.innerHTML = '<option value="">Session</option>' +
-                            sessions.map(s => {
-                                const label = s.session_name || s.name || 'Session';
-                                const type = s.session_type ? ` (${s.session_type})` : '';
-                                const date = s.date_start ? new Date(s.date_start).toLocaleDateString() : '';
-                                return `<option value="${s.session_key}">${label}${type}${date ? ' - '+date : ''}</option>`;
-                            }).join('');
+  const atBottom=scroll.scrollHeight-scroll.scrollTop<=scroll.clientHeight+100;
+  scroll.innerHTML=entries.map(e=>{
+    if(e.isLapMarker){
+      return`<div class="feed-lap-marker">${e.text}</div>`;
+    }
+    const category=e.category||(e.isRC?getRCCategoryFromFlag(e.flag):'c-info');
+    return`<div class="feed-entry ${category}">
+      <span class="feed-time">${e.timeLabel}</span>
+      <div class="feed-bar"></div>
+      <span class="feed-text">${e.text}</span>
+    </div>`;
+  }).join('');
 
-                        elSession.value = sessions[0].session_key;
-                        await onSessionChange();
-                    } else {
-                        elSession.innerHTML = '<option value="">No sessions</option>';
-                        renderEmpty('No sessions for this GP');
-                    }
-                } catch (err) {
-                    console.warn('Failed to load sessions', err);
-                    elSession.innerHTML = '<option value="">Error</option>';
-                }
-            }
+  if(atBottom)scroll.scrollTop=scroll.scrollHeight;
+}
 
-            // Session changed: load data
-            async function onSessionChange() {
-                const key = elSession.value;
-                if (!key) {
-                    state.sessionKey = null;
-                    renderEmpty('Select a session');
-                    return;
-                }
-                const sk = Number(key);
-                state.sessionKey = sk;
-                // Clear caches
-                state.cache.drivers = null;
-                state.cache.results = null;
-                state.cache.stints = null;
-                state.cache.weather = null;
-                state.cache.laps = {};
-                state.cache.carData = {};
-                state.detailDriver = null;
+function getRCCategoryFromFlag(flag){
+  if(!flag)return'c-rc';
+  const f=flag.toUpperCase();
+  if(f==='RED')return'c-rc-red';
+  if(f==='YELLOW'||f==='SC'||f==='VSC')return'c-rc-warn';
+  return'c-rc';
+}
 
-                showLoading('Loading session data…');
-                await loadCoreData(sk);
-                renderCurrentTab();
-            }
+function closeModal(id){document.getElementById(id).classList.remove('open')}
 
-            // Load drivers, results, stints, weather in parallel
-            async function loadCoreData(sessionKey) {
-                const cache = state.cache;
-                try {
-                    const [drivers, results, stints, weather] = await Promise.all([
-                        fetchAPI(`/drivers?session_key=${sessionKey}`).catch(() => []),
-                        fetchAPI(`/session_results?session_key=${sessionKey}`).catch(() => []),
-                        fetchAPI(`/stints?session_key=${sessionKey}`).catch(() => []),
-                        fetchAPI(`/weather?session_key=${sessionKey}`).catch(() => []),
-                    ]);
-                    cache.drivers = drivers;
-                    cache.results = results;
-                    cache.stints = stints;
-                    cache.weather = weather;
-                    console.log(`📊 Loaded: ${drivers.length} drivers, ${results.length} results, ${stints.length} stints, ${weather.length} weather`);
-                    if (!drivers.length && !results.length) {
-                        renderEmpty('No data available for this session (it may be a future session)');
-                    }
-                } catch (err) {
-                    console.error('Failed to load core data', err);
-                    renderEmpty('Error loading session data');
-                }
-            }
+async function showLapHistory(dn){
+  if(!sessionKey)return;
+  const meta=driverMeta.get(dn);if(!meta)return;
+  currentDriverDn=dn;
+  currentDriverTab='laps';
+  document.getElementById('lapModalTitle').textContent=`${meta.acronym} · ${meta.fullName}`;
+  document.getElementById('lapModalBody').innerHTML='<div class="placeholder" style="padding:20px">LOADING...</div>';
+  document.getElementById('lapModal').classList.add('open');
+  ['Laps','Stints','Braking','Speed'].forEach(t=>{
+    const btn=document.getElementById(`subtab${t}`);
+    if(btn)btn.classList.toggle('active',t.toLowerCase()==='laps');
+  });
 
-            // Lazy load laps
-            async function loadLapsForDriver(sessionKey, driverNumber) {
-                const cache = state.cache;
-                if (cache.laps[driverNumber]) return cache.laps[driverNumber];
-                try {
-                    const data = await fetchAPI(`/laps?session_key=${sessionKey}&driver_number=${driverNumber}`);
-                    cache.laps[driverNumber] = data;
-                    return data;
-                } catch (_) {
-                    cache.laps[driverNumber] = [];
-                    return [];
-                }
-            }
+  const[laps,stints]=await Promise.all([
+    api(`laps?session_key=${sessionKey}&driver_number=${dn}`),
+    api(`stints?session_key=${sessionKey}&driver_number=${dn}`)
+  ]);
+  laps.sort((a,b)=>a.lap_number-b.lap_number);
+  cachedDriverLaps=laps;
+  cachedDriverStints=stints;
+  renderDriverTab('laps');
+}
 
-            // Lazy load car data
-            async function loadCarDataForDriver(sessionKey, driverNumber) {
-                const cache = state.cache;
-                if (cache.carData[driverNumber]) return cache.carData[driverNumber];
-                try {
-                    const data = await fetchAPI(`/car_data?session_key=${sessionKey}&driver_number=${driverNumber}`);
-                    cache.carData[driverNumber] = data;
-                    return data;
-                } catch (_) {
-                    cache.carData[driverNumber] = [];
-                    return [];
-                }
-            }
+function switchDriverTab(tab){
+  currentDriverTab=tab;
+  ['Laps','Stints','Braking','Speed'].forEach(t=>{
+    const btn=document.getElementById(`subtab${t}`);
+    if(btn)btn.classList.toggle('active',t.toLowerCase()===tab);
+  });
+  renderDriverTab(tab);
+}
 
-            // Render based on current tab and detail state
-            function renderCurrentTab() {
-                if (state.detailDriver) {
-                    renderDriverDetail();
-                    return;
-                }
-                const tab = state.activeTab;
-                if (tab === 'order') renderOrder();
-                else if (tab === 'insights') renderInsights();
-                else if (tab === 'duels') renderDuels();
-                else renderEmpty('Unknown tab');
-            }
+function renderDriverTab(tab){
+  const body=document.getElementById('lapModalBody');
+  if(!cachedDriverLaps){body.innerHTML='<div class="placeholder" style="padding:20px">NO DATA</div>';return}
 
-            // Order tab
-            function renderOrder() {
-                const results = state.cache.results || [];
-                const drivers = state.cache.drivers || [];
-                if (!results.length) {
-                    renderEmpty('No results for this session');
-                    return;
-                }
-                const driverMap = {};
-                drivers.forEach(d => { driverMap[d.driver_number] = d; });
+  if(tab==='laps'){
+    let driverBest=Infinity;
+    for(const l of cachedDriverLaps)if(l.lap_duration&&l.lap_duration<driverBest)driverBest=l.lap_duration;
+    function getStint(n){return(cachedDriverStints||[]).find(s=>n>=s.lap_start&&n<=(s.lap_end||999))}
+    function tc(c){if(!c)return'';const u=c.toUpperCase();if(u.includes('SOFT'))return't-soft';if(u.includes('MED'))return't-med';if(u.includes('HARD'))return't-hard';if(u.includes('INTER'))return't-inter';if(u.includes('WET'))return't-wet';return''}
+    let rows='';
+    for(const lap of cachedDriverLaps){
+      const stint=getStint(lap.lap_number);
+      const compound=stint?.compound||'';
+      const isOB=lap.lap_duration===overallBestLap;
+      const isPB=lap.lap_duration===driverBest&&!isOB;
+      const lapCls=isOB?'ob':isPB?'pb':'lt';
+      rows+=`<tr><td class="td">${lap.lap_number}</td><td class="${lapCls}">${fmtTime(lap.lap_duration)}<\/td><td>${lap.duration_sector_1?lap.duration_sector_1.toFixed(3):'—'}<\/td><td>${lap.duration_sector_2?lap.duration_sector_2.toFixed(3):'—'}<\/td><td>${lap.duration_sector_3?lap.duration_sector_3.toFixed(3):'—'}<\/td><td class="${tc(compound)}">${tyreLetter(compound)}<\/td><\/tr>`;
+    }
+    body.innerHTML=`<table class="lap-table"><thead><tr><th>LAP</th><th>TIME</th><th>S1</th><th>S2</th><th>S3</th><th>C</th><\/tr><\/thead><tbody>${rows||'<tr><td colspan="6" style="color:var(--muted);padding:10px 0">No data<\/tr>'}<\/tbody><\/table>`;
+  }
+  else if(tab==='stints'){
+    const stints=cachedDriverStints||[];
+    if(!stints.length){body.innerHTML='<div class="placeholder" style="padding:20px">NO STINT DATA</div>';return}
+    stints.sort((a,b)=>a.lap_start-b.lap_start);
 
-                let html = '<div class="order-list">';
-                const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
-                sorted.forEach(r => {
-                    const dn = r.driver_number;
-                    const d = driverMap[dn] || {};
-                    const pos = r.position || '—';
-                    const name = safeName(d) || safeName(r) || `#${dn}`;
-                    const abbr = abbrName(d) || abbrName(r) || dn;
-                    const gap = r.time || r.gap_to_leader || '';
-                    const status = r.status || r.finish_status || '';
-                    const cls = statusClass(status);
-                    html += `<div class="order-row" data-driver="${dn}">
-                        <span class="pos">${pos}</span>
-                        <span class="name">${name}</span>
-                        <span class="abbr">${abbr}</span>
-                        <span class="gap">${gap}</span>
-                        <span class="status ${cls}">${status || '—'}</span>
-                    </div>`;
-                });
-                html += '</div>';
-                content.innerHTML = html;
+    const stintStats=computeStintStats(stints,cachedDriverLaps)
+      .map((s,i)=>({...stints[i],avg:s.avg_lap,deg:s.deg_per_lap,laps:s.laps,excludedOutliers:s.excluded_outlier_laps}))
+      .filter(s=>s.avg);
 
-                content.querySelectorAll('.order-row').forEach(row => {
-                    row.addEventListener('click', () => {
-                        const dn = row.dataset.driver;
-                        if (dn) {
-                            state.detailDriver = Number(dn);
-                            renderDriverDetail();
-                        }
-                    });
-                });
-            }
+    let bestCompound=null,bestDeg=Infinity;
+    for(const s of stintStats){if(s.deg<bestDeg&&s.compound){bestDeg=s.deg;bestCompound=s.compound}}
 
-            // Driver detail
-            async function renderDriverDetail() {
-                const dn = state.detailDriver;
-                if (!dn) { renderCurrentTab(); return; }
+    let html='';
+    for(const s of stintStats){
+      const col=tyreColor(s.compound||'');
+      const letter=tyreLetter(s.compound||'');
+      const degStr=s.deg>=0?`+${s.deg.toFixed(3)}`:`${s.deg.toFixed(3)}`;
+      const isBest=s.compound===bestCompound;
+      html+=`<div class="stint-card" style="border-left-color:${col}">
+        <div class="stint-head">
+          <span class="stint-compound" style="color:${col}">${letter} ${s.compound||'?'}</span>
+          <span class="stint-meta">Laps ${s.lap_start}–${s.lap_end||'?'} · ${s.laps} laps${s.excludedOutliers?` · ${s.excludedOutliers} excluded`:''}</span>
+          ${isBest?'<span style="font-family:var(--mono);font-size:8px;background:var(--green);color:#000;padding:2px 6px;border-radius:3px;margin-left:auto">BEST</span>':''}
+        </div>
+        <div class="stint-stats">
+          <div class="stint-stat"><span class="stint-stat-label">AVG PACE</span><span class="stint-stat-val">${fmtTime(s.avg)}</span></div>
+          <div class="stint-stat"><span class="stint-stat-label">DEG/LAP</span><span class="stint-stat-val" style="color:${s.deg>0.1?'#f87171':s.deg>0.05?'var(--yellow)':'var(--green)'}">${degStr}s</span></div>
+        </div>
+        ${s.excludedOutliers?`<div class="stint-meta" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--line)">Excluded ${s.excludedOutliers} lap${s.excludedOutliers>1?'s':''} from this stint's pace/deg math (pit-lane transit, red flag, or similar anomalous lap)</div>`:''}
+        ${isBest?`<div class="stint-verdict">${tyreLetter(s.compound)} holding best this session. Lowest degradation rate.</div>`:''}
+      </div>`;
+    }
 
-                const drivers = state.cache.drivers || [];
-                const d = drivers.find(drv => drv.driver_number === dn) || {};
-                const name = safeName(d) || `Driver #${dn}`;
+    if(stintStats.length>=2){
+      const sorted=[...stintStats].sort((a,b)=>a.avg-b.avg);
+      const best=sorted[0];
+      let compare='';
+      for(let i=1;i<sorted.length;i++){
+        const diff=(sorted[i].avg-best.avg).toFixed(3);
+        compare+=`<div class="analysis-row"><span class="analysis-label">${tyreLetter(best.compound||'')} vs ${tyreLetter(sorted[i].compound||'')}</span><span class="analysis-value" style="color:#f87171">+${diff}s/lap</span></div>`;
+      }
+      html+=`<div class="analysis-card" style="margin-top:4px"><div class="analysis-card-head"><span class="analysis-card-title">COMPOUND TIME COST</span></div><div class="analysis-card-body">${compare}</div></div>`;
+    }
+    body.innerHTML=html;
+  }
+  else if(tab==='braking'){
+    body.innerHTML=`<div class="braking-placeholder">
+      Braking profile data available post-session.<br><br>
+      Run the FastF1 Python script after the session ends to generate telemetry analysis.
+    </div>`;
+  }
+  else if(tab==='speed'){
+    body.innerHTML=`<div class="braking-placeholder">
+      Speed trace data available post-session.<br><br>
+      Top speed per straight and minimum corner speed generated from FastF1 telemetry.
+    </div>`;
+  }
+}
 
-                const laps = await loadLapsForDriver(state.sessionKey, dn);
-                const stints = (state.cache.stints || []).filter(s => s.driver_number === dn);
+document.getElementById('yearSelect').addEventListener('change',loadMeetings);
+document.getElementById('meetingSelect').addEventListener('change',loadSessions);
+document.getElementById('sessionSelect').addEventListener('change',()=>onSessionSelected());
 
-                const tyreMap = {};
-                stints.forEach(st => {
-                    const start = st.lap_start || 1;
-                    const end = st.lap_end || 999;
-                    const compound = st.compound || st.tyre_compound || '';
-                    for (let i = start; i <= end; i++) {
-                        tyreMap[i] = compound;
-                    }
-                });
+document.getElementById('lapModal').addEventListener('click',e=>{if(e.target===document.getElementById('lapModal'))closeModal('lapModal')});
 
-                let html = `<div class="detail-view">
-                    <div class="detail-header">
-                        <button class="back-btn" id="detailBack">← Back</button>
-                        <h2>${name} <span style="font-size:0.7rem;color:#6a7a88;">#${dn}</span></h2>
-                    </div>
-                    <div class="detail-laps">`;
-
-                if (laps.length) {
-                    const sorted = [...laps].sort((a, b) => (a.lap_number || 0) - (b.lap_number || 0));
-                    sorted.forEach(lap => {
-                        const ln = lap.lap_number || '—';
-                        const time = lap.lap_duration ? formatTime(lap.lap_duration * 1000) : '—';
-                        const compound = tyreMap[ln] || lap.tyre_compound || '';
-                        const tyreCls = getTyreClass(compound);
-                        const sector1 = lap.sector1_time ? formatTime(lap.sector1_time * 1000) : '';
-                        const sector2 = lap.sector2_time ? formatTime(lap.sector2_time * 1000) : '';
-                        const sector3 = lap.sector3_time ? formatTime(lap.sector3_time * 1000) : '';
-                        const sectors = [sector1, sector2, sector3].filter(Boolean).join(' | ');
-                        html += `<div class="lap-row">
-                            <span class="lap-num">Lap ${ln}</span>
-                            <span class="lap-time">${time}</span>
-                            <span class="tyre ${tyreCls}">${compound || '—'}</span>
-                            <span class="sector">${sectors || '—'}</span>
-                        </div>`;
-                    });
-                } else {
-                    html += `<p style="color:#6a7a88;padding:12px;">No lap data available</p>`;
-                }
-
-                html += `</div></div>`;
-                content.innerHTML = html;
-
-                document.getElementById('detailBack')?.addEventListener('click', () => {
-                    state.detailDriver = null;
-                    renderCurrentTab();
-                });
-            }
-
-            // Insights tab
-            function renderInsights() {
-                const results = state.cache.results || [];
-                const drivers = state.cache.drivers || [];
-                const stints = state.cache.stints || [];
-                const weather = state.cache.weather || [];
-
-                if (!results.length) {
-                    renderEmpty('No data for insights');
-                    return;
-                }
-
-                const driverMap = {};
-                drivers.forEach(d => { driverMap[d.driver_number] = d; });
-
-                const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
-                const winner = sorted[0];
-                const winnerName = safeName(driverMap[winner?.driver_number]) || '—';
-                const gapToSecond = sorted[1]?.time || sorted[1]?.gap_to_leader || '—';
-
-                const tyreCounts = {};
-                stints.forEach(s => {
-                    const dn = s.driver_number;
-                    const comp = s.compound || s.tyre_compound || 'unknown';
-                    if (!tyreCounts[dn]) tyreCounts[dn] = {};
-                    tyreCounts[dn][comp] = (tyreCounts[dn][comp] || 0) + 1;
-                });
-                let strategySummary = 'No stint data available';
-                const stratEntries = Object.entries(tyreCounts).slice(0, 6);
-                if (stratEntries.length) {
-                    strategySummary = stratEntries.map(([dn, counts]) => {
-                        const name = safeName(driverMap[Number(dn)]) || `#${dn}`;
-                        const parts = Object.entries(counts).map(([c, n]) => `${c} (${n})`).join(', ');
-                        return `<span style="display:block;">${name}: ${parts}</span>`;
-                    }).join('');
-                }
-
-                let weatherSummary = '—';
-                if (weather.length) {
-                    const w = weather[weather.length - 1];
-                    const temp = w.air_temperature || w.temperature || '';
-                    const cond = w.condition || w.weather || '';
-                    weatherSummary = `${cond} ${temp}°C`.trim();
-                }
-
-                const html = `
-                    <div class="insights-grid">
-                        <div class="insight-card">
-                            <h3>🏆 Winner</h3>
-                            <div class="value">${winnerName}</div>
-                            <div style="font-size:0.7rem;color:#6a7a88;">Gap to 2nd: ${gapToSecond}</div>
-                        </div>
-                        <div class="insight-card">
-                            <h3>🌤️ Weather</h3>
-                            <div class="value">${weatherSummary}</div>
-                        </div>
-                        <div class="insight-card" style="grid-column: 1 / -1;">
-                            <h3>🔧 Tyre Strategies</h3>
-                            <div class="list">${strategySummary}</div>
-                        </div>
-                        <div class="insight-card" style="grid-column: 1 / -1;">
-                            <h3>📊 Field</h3>
-                            <div class="list">${sorted.slice(0, 8).map((r, i) => {
-                                const dn = r.driver_number;
-                                const name = safeName(driverMap[dn]) || `#${dn}`;
-                                const pos = r.position || i+1;
-                                return `<span>${pos}. ${name} <span style="color:#6a7a88;">${r.time || r.gap_to_leader || ''}</span></span>`;
-                            }).join('<br>')}</div>
-                        </div>
-                    </div>
-                `;
-                content.innerHTML = html;
-            }
-
-            // Duels tab
-            function renderDuels() {
-                const drivers = state.cache.drivers || [];
-                if (!drivers.length) {
-                    renderEmpty('Load a session first');
-                    return;
-                }
-
-                const opts = drivers.map(d =>
-                    `<option value="${d.driver_number}">${safeName(d)} (${abbrName(d)})</option>`
-                ).join('');
-
-                let html = `
-                    <div class="duels-panel">
-                        <div class="duels-selectors">
-                            ${[0,1,2,3].map(i => `
-                                <div class="driver-pick">
-                                    <label>#${i+1}</label>
-                                    <select class="duel-driver-select" data-idx="${i}">
-                                        <option value="">—</option>
-                                        ${opts}
-                                    </select>
-                                </div>
-                            `).join('')}
-                            <button class="compare-btn" id="duelCompare">Compare</button>
-                        </div>
-                        <div class="duels-charts" id="duelChartsContainer"></div>
-                    </div>
-                `;
-                content.innerHTML = html;
-
-                const selects = content.querySelectorAll('.duel-driver-select');
-                selects.forEach((sel, i) => {
-                    if (state.duelDrivers[i]) sel.value = state.duelDrivers[i];
-                    sel.addEventListener('change', () => {
-                        state.duelDrivers[i] = sel.value ? Number(sel.value) : null;
-                    });
-                });
-
-                document.getElementById('duelCompare')?.addEventListener('click', async () => {
-                    const selected = state.duelDrivers.filter(d => d !== null);
-                    if (selected.length < 2) {
-                        alert('Select at least 2 drivers');
-                        return;
-                    }
-                    const container = document.getElementById('duelChartsContainer');
-                    container.innerHTML = '<div style="color:#6a7a88;padding:12px;">Loading telemetry…</div>';
-
-                    try {
-                        const promises = selected.map(dn => loadCarDataForDriver(state.sessionKey, dn));
-                        const results = await Promise.all(promises);
-                        const dataMap = {};
-                        selected.forEach((dn, i) => {
-                            dataMap[dn] = results[i] || [];
-                        });
-                        renderDuelCharts(dataMap, drivers);
-                    } catch (err) {
-                        console.warn('Failed to load car data', err);
-                        container.innerHTML = '<div style="color:#f87171;padding:12px;">Failed to load telemetry</div>';
-                    }
-                });
-            }
-
-            function renderDuelCharts(dataMap, drivers) {
-                const container = document.getElementById('duelChartsContainer');
-                if (!container) return;
-                container.innerHTML = '';
-
-                state.duelCharts.forEach(c => c.destroy());
-                state.duelCharts = [];
-
-                const driverNames = {};
-                drivers.forEach(d => { driverNames[d.driver_number] = safeName(d) || `#${d.driver_number}`; });
-
-                const metrics = [
-                    { key: 'speed', label: 'Speed (km/h)' },
-                    { key: 'rpm', label: 'RPM' },
-                    { key: 'throttle', label: 'Throttle (%)' },
-                    { key: 'brake', label: 'Brake (%)' },
-                ];
-
-                const colors = ['#e10600', '#f5a623', '#4ade80', '#60a5fa', '#a78bfa', '#f472b6'];
-
-                metrics.forEach((metric, mi) => {
-                    const box = document.createElement('div');
-                    box.className = 'chart-box';
-                    const title = document.createElement('h4');
-                    title.textContent = metric.label;
-                    box.appendChild(title);
-                    const canvas = document.createElement('canvas');
-                    canvas.id = `duelChart-${mi}`;
-                    box.appendChild(canvas);
-                    container.appendChild(box);
-
-                    const datasets = [];
-                    let idx = 0;
-                    for (const [dn, rawData] of Object.entries(dataMap)) {
-                        if (!rawData || !rawData.length) continue;
-                        const downsampled = downsampleTelemetry(rawData, 200);
-                        const points = downsampled.map(d => d[metric.key]).filter(v => v !== null && v !== undefined);
-                        if (!points.length) continue;
-                        const name = driverNames[Number(dn)] || `#${dn}`;
-                        datasets.push({
-                            label: name,
-                            data: points,
-                            borderColor: colors[idx % colors.length],
-                            backgroundColor: 'transparent',
-                            borderWidth: 1.5,
-                            pointRadius: 0,
-                            tension: 0.1,
-                        });
-                        idx++;
-                    }
-
-                    if (!datasets.length) {
-                        box.innerHTML += '<div style="color:#6a7a88;padding:4px 0;font-size:0.7rem;">No data</div>';
-                        return;
-                    }
-
-                    const ctx = canvas.getContext('2d');
-                    const chart = new Chart(ctx, {
-                        type: 'line',
-                        data: { datasets },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    labels: { color: '#8a9aa8', boxWidth: 10, padding: 8, font: { size: 9 } }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(ctx) {
-                                            return ctx.dataset.label + ': ' + ctx.parsed.y;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: { display: false },
-                                y: {
-                                    ticks: { color: '#6a7a88', font: { size: 8 } },
-                                    grid: { color: '#1f2a36' },
-                                }
-                            },
-                            elements: {
-                                line: { borderWidth: 1.5 },
-                                point: { radius: 0 }
-                            }
-                        }
-                    });
-                    state.duelCharts.push(chart);
-                    canvas.style.height = '100px';
-                });
-            }
-
-            // Tab switching
-            function switchTab(tab) {
-                state.activeTab = tab;
-                tabBtns.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.tab === tab);
-                });
-                state.detailDriver = null;
-                renderCurrentTab();
-            }
-
-            // Init
-            async function init() {
-                tabBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        switchTab(btn.dataset.tab);
-                    });
-                });
-
-                elYear.addEventListener('change', onYearChange);
-                elGP.addEventListener('change', onGPChange);
-                elSession.addEventListener('change', onSessionChange);
-
-                await loadYears();
-                if (elSession.value) {
-                    await onSessionChange();
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', init);
-        })();
-    </script>
+autoLoadCurrent();
+</script>
 </body>
 </html>
