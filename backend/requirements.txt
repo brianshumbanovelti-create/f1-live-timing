@@ -1,5 +1,0 @@
-flask
-flask-cors
-fastf1
-requests
-gunicorn
