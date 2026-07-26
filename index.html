@@ -585,17 +585,16 @@
                 sessionKey: null,
                 // data caches (keyed by sessionKey)
                 cache: {
-                    drivers: null, // array
-                    results: null, // array
-                    stints: null, // array
-                    weather: null, // array
-                    laps: {}, // driverNumber -> array
-                    carData: {}, // driverNumber -> array (raw, before downsampling)
+                    drivers: null,
+                    results: null,
+                    stints: null,
+                    weather: null,
+                    laps: {},
+                    carData: {},
                 },
                 // UI state
                 activeTab: 'order',
-                detailDriver: null, // driverNumber if in detail view
-                // duels
+                detailDriver: null,
                 duelDrivers: [null, null, null, null],
                 duelCharts: [],
                 isLoading: false,
@@ -610,12 +609,9 @@
             const tabBtns = document.querySelectorAll('.tab-btn');
 
             // ---------- HELPERS ----------
-            function getNumber(v) { const n = Number(v); return isNaN(n) ? null : n; }
-
             function safeName(d) { return d?.full_name || d?.name || 'Unknown'; }
-
-            function abbrName(d) { return d?.name_acronym || d?.abbreviation || d?.driver_number || '??'; }
-
+            function abbrName(d) { return d?.name_acronym || d?.abbreviation || '??'; }
+            
             function statusClass(status) {
                 if (!status) return '';
                 const s = String(status).toLowerCase();
@@ -651,67 +647,62 @@
                 for (let i = 0; i < data.length; i += step) {
                     result.push(data[i]);
                 }
-                // always include last point
                 if (result[result.length - 1] !== data[data.length - 1]) {
                     result.push(data[data.length - 1]);
                 }
                 return result;
             }
 
-            function showLoading() {
+            function showLoading(msg = 'Loading session data…') {
                 content.innerHTML = `
                     <div class="loading-state">
                         <div class="spinner"></div>
-                        <p>Loading session data…</p>
+                        <p>${msg}</p>
                     </div>
                 `;
             }
 
-            // ---------- API FETCH (with caching) ----------
+            function renderEmpty(msg = 'No data') {
+                content.innerHTML = `<div class="empty-state"><span>📋</span><p>${msg}</p></div>`;
+            }
+
+            // ---------- API FETCH ----------
             async function fetchAPI(endpoint) {
                 const url = API_BASE + endpoint;
-                console.log('Fetching:', url);
+                console.log('📡 Fetching:', url);
                 const res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                console.log('Data received:', data?.length || 'empty');
+                console.log(`✅ Received ${data?.length || 0} items`);
                 return data;
             }
 
             // ---------- LOAD YEARS ----------
             async function loadYears() {
                 try {
-                    // Get all available years from sessions (2018-2026)
-                    const data = await fetchAPI('/sessions?year_min=2018&year_max=2026');
+                    const data = await fetchAPI('/sessions');
                     const years = [...new Set(data.map(s => s.year).filter(Boolean))].sort((a, b) => b - a);
                     
-                    // Ensure 2025 and 2026 are included even if no data yet
+                    // Ensure 2025 and 2026 are included
                     const allYears = new Set([2026, 2025, ...years]);
                     const sortedYears = Array.from(allYears).sort((a, b) => b - a);
                     
                     elYear.innerHTML = '<option value="">Year</option>' +
                         sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
                     
-                    // Auto-select the most recent year with data, or 2026 if available
                     if (sortedYears.length) {
-                        // Prefer 2026 if it exists in the set
-                        if (sortedYears.includes(2026)) {
-                            elYear.value = '2026';
-                        } else {
-                            elYear.value = sortedYears[0];
-                        }
+                        elYear.value = sortedYears[0];
                         await onYearChange();
                     }
                 } catch (err) {
-                    console.warn('Failed to load years, using defaults', err);
-                    // fallback with 2025 and 2026
+                    console.warn('Failed to load years', err);
                     elYear.innerHTML = '<option value="">Year</option><option value="2026">2026</option><option value="2025">2025</option>';
                     elYear.value = '2026';
                     await onYearChange();
                 }
             }
 
-            // ---------- SELECTOR CHANGE HANDLERS ----------
+            // ---------- SELECTOR HANDLERS ----------
             async function onYearChange() {
                 const year = elYear.value;
                 if (!year) {
@@ -719,38 +710,58 @@
                     elGP.disabled = true;
                     elSession.innerHTML = '<option value="">Session</option>';
                     elSession.disabled = true;
-                    state.sessionKey = null;
                     renderEmpty('Select a year');
                     return;
                 }
                 state.year = year;
                 elGP.disabled = false;
-                elGP.innerHTML = '<option value="">Loading GPs…</option>';
+                elGP.innerHTML = '<option value="">Loading…</option>';
+                
                 try {
+                    // Get all sessions for this year
                     const data = await fetchAPI(`/sessions?year=${year}`);
-                    // Group by location/country for GP names
+                    
+                    // Group by meeting_name (this is the GP name in OpenF1)
                     const gpMap = {};
+                    const gpOrder = [];
                     data.forEach(s => {
-                        const name = s.location || s.country || s.name;
-                        if (name) gpMap[name] = true;
+                        const meetingName = s.meeting_name || s.location || s.country || s.name;
+                        if (meetingName && !gpMap[meetingName]) {
+                            gpMap[meetingName] = true;
+                            gpOrder.push(meetingName);
+                        }
                     });
-                    const gps = Object.keys(gpMap).sort();
+                    
+                    // Sort GPs by date (earliest first)
+                    const gpData = {};
+                    data.forEach(s => {
+                        const meetingName = s.meeting_name || s.location || s.country || s.name;
+                        if (meetingName && s.date_start) {
+                            if (!gpData[meetingName] || s.date_start < gpData[meetingName]) {
+                                gpData[meetingName] = s.date_start;
+                            }
+                        }
+                    });
+                    
+                    const sortedGPs = gpOrder.sort((a, b) => {
+                        return (gpData[a] || '').localeCompare(gpData[b] || '');
+                    });
                     
                     elGP.innerHTML = '<option value="">GP</option>' +
-                        gps.map(g => `<option value="${g}">${g}</option>`).join('');
+                        sortedGPs.map(g => `<option value="${g}">${g}</option>`).join('');
                     
-                    if (gps.length) {
-                        elGP.value = gps[0];
+                    if (sortedGPs.length) {
+                        elGP.value = sortedGPs[0];
                         await onGPChange();
                     } else {
-                        elGP.innerHTML = '<option value="">No GPs found</option>';
+                        elGP.innerHTML = '<option value="">No GPs</option>';
                         elSession.innerHTML = '<option value="">Session</option>';
                         elSession.disabled = true;
-                        renderEmpty('No Grands Prix found for this year');
+                        renderEmpty('No Grands Prix found');
                     }
                 } catch (err) {
                     console.warn('Failed to load GPs', err);
-                    elGP.innerHTML = '<option value="">Error loading GPs</option>';
+                    elGP.innerHTML = '<option value="">Error</option>';
                 }
             }
 
@@ -759,38 +770,39 @@
                 if (!gp) {
                     elSession.innerHTML = '<option value="">Session</option>';
                     elSession.disabled = true;
-                    state.sessionKey = null;
                     renderEmpty('Select a GP');
                     return;
                 }
                 state.gp = gp;
                 elSession.disabled = false;
-                elSession.innerHTML = '<option value="">Loading sessions…</option>';
+                elSession.innerHTML = '<option value="">Loading…</option>';
+                
                 try {
                     const data = await fetchAPI(`/sessions?year=${state.year}`);
+                    
+                    // Filter by meeting_name and sort by date
                     const sessions = data
-                        .filter(s => (s.location || s.country || s.name) === gp)
-                        .sort((a, b) => (a.session_key || 0) - (b.session_key || 0));
+                        .filter(s => (s.meeting_name || s.location || s.country || s.name) === gp)
+                        .sort((a, b) => (a.date_start || '').localeCompare(b.date_start || ''));
                     
                     if (sessions.length) {
-                        // Show session name with type
-                        elSession.innerHTML = '<option value="">Select session</option>' +
+                        elSession.innerHTML = '<option value="">Session</option>' +
                             sessions.map(s => {
                                 const label = s.session_name || s.name || 'Session';
                                 const type = s.session_type ? ` (${s.session_type})` : '';
-                                return `<option value="${s.session_key}">${label}${type}</option>`;
+                                const date = s.date_start ? new Date(s.date_start).toLocaleDateString() : '';
+                                return `<option value="${s.session_key}">${label}${type}${date ? ' - '+date : ''}</option>`;
                             }).join('');
                         
-                        // Auto-select the first session
                         elSession.value = sessions[0].session_key;
                         await onSessionChange();
                     } else {
-                        elSession.innerHTML = '<option value="">No sessions found</option>';
-                        renderEmpty('No sessions available for this GP');
+                        elSession.innerHTML = '<option value="">No sessions</option>';
+                        renderEmpty('No sessions available');
                     }
                 } catch (err) {
                     console.warn('Failed to load sessions', err);
-                    elSession.innerHTML = '<option value="">Error loading sessions</option>';
+                    elSession.innerHTML = '<option value="">Error</option>';
                 }
             }
 
@@ -798,18 +810,11 @@
                 const key = elSession.value;
                 if (!key) {
                     state.sessionKey = null;
-                    state.cache.drivers = null;
-                    state.cache.results = null;
-                    state.cache.stints = null;
-                    state.cache.weather = null;
-                    state.cache.laps = {};
-                    state.cache.carData = {};
                     renderEmpty('Select a session');
                     return;
                 }
                 const sk = Number(key);
                 state.sessionKey = sk;
-                // clear caches except session-specific
                 state.cache.drivers = null;
                 state.cache.results = null;
                 state.cache.stints = null;
@@ -818,8 +823,7 @@
                 state.cache.carData = {};
                 state.detailDriver = null;
 
-                // load core data
-                showLoading();
+                showLoading('Loading session data…');
                 await loadCoreData(sk);
                 renderCurrentTab();
             }
@@ -828,59 +832,31 @@
             async function loadCoreData(sessionKey) {
                 const cache = state.cache;
                 try {
-                    // Try loading drivers first - if this fails, session might not have data
-                    let drivers = [];
-                    let results = [];
-                    let stints = [];
-                    
-                    try {
-                        drivers = await fetchAPI(`/drivers?session_key=${sessionKey}`);
-                        console.log(`Loaded ${drivers.length} drivers`);
-                    } catch (e) {
-                        console.warn('Failed to load drivers:', e);
-                    }
-                    
-                    try {
-                        results = await fetchAPI(`/session_results?session_key=${sessionKey}`);
-                        console.log(`Loaded ${results.length} results`);
-                    } catch (e) {
-                        console.warn('Failed to load results:', e);
-                    }
-                    
-                    try {
-                        stints = await fetchAPI(`/stints?session_key=${sessionKey}`);
-                        console.log(`Loaded ${stints.length} stints`);
-                    } catch (e) {
-                        console.warn('Failed to load stints:', e);
-                    }
+                    // Load all data in parallel
+                    const [drivers, results, stints, weather] = await Promise.all([
+                        fetchAPI(`/drivers?session_key=${sessionKey}`).catch(() => []),
+                        fetchAPI(`/session_results?session_key=${sessionKey}`).catch(() => []),
+                        fetchAPI(`/stints?session_key=${sessionKey}`).catch(() => []),
+                        fetchAPI(`/weather?session_key=${sessionKey}`).catch(() => []),
+                    ]);
                     
                     cache.drivers = drivers;
                     cache.results = results;
                     cache.stints = stints;
+                    cache.weather = weather;
                     
-                    // If no data at all, show message
+                    console.log(`📊 Loaded: ${drivers.length} drivers, ${results.length} results, ${stints.length} stints, ${weather.length} weather records`);
+                    
                     if (!drivers.length && !results.length) {
                         renderEmpty('No data available for this session');
-                        return;
                     }
-                    
                 } catch (err) {
-                    console.warn('Failed to load core data', err);
-                    cache.drivers = [];
-                    cache.results = [];
-                    cache.stints = [];
+                    console.error('Failed to load core data', err);
                     renderEmpty('Error loading session data');
                 }
-                
-                // optional weather
-                try {
-                    const weather = await fetchAPI(`/weather?session_key=${sessionKey}`);
-                    cache.weather = weather;
-                    console.log(`Loaded ${weather.length} weather records`);
-                } catch (_) { cache.weather = null; }
             }
 
-            // ---------- LOAD LAPS (for a driver) ----------
+            // ---------- LOAD LAPS ----------
             async function loadLapsForDriver(sessionKey, driverNumber) {
                 const cache = state.cache;
                 if (cache.laps[driverNumber]) return cache.laps[driverNumber];
@@ -894,7 +870,7 @@
                 }
             }
 
-            // ---------- LOAD CAR DATA (for duels) ----------
+            // ---------- LOAD CAR DATA ----------
             async function loadCarDataForDriver(sessionKey, driverNumber) {
                 const cache = state.cache;
                 if (cache.carData[driverNumber]) return cache.carData[driverNumber];
@@ -908,11 +884,7 @@
                 }
             }
 
-            // ---------- RENDER ----------
-            function renderEmpty(msg = 'No data') {
-                content.innerHTML = `<div class="empty-state"><span>📋</span><p>${msg}</p></div>`;
-            }
-
+            // ---------- RENDER FUNCTIONS ----------
             function renderCurrentTab() {
                 if (state.detailDriver) {
                     renderDriverDetail();
@@ -929,17 +901,18 @@
             function renderOrder() {
                 const results = state.cache.results || [];
                 const drivers = state.cache.drivers || [];
+                
                 if (!results.length) {
-                    content.innerHTML = `<div class="empty-state"><span>🏁</span><p>No results for this session</p></div>`;
+                    renderEmpty('No results for this session');
                     return;
                 }
-                // map driver_number -> driver
+                
                 const driverMap = {};
                 drivers.forEach(d => { driverMap[d.driver_number] = d; });
 
                 let html = '<div class="order-list">';
-                // sort by position
                 const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
+                
                 sorted.forEach(r => {
                     const dn = r.driver_number;
                     const d = driverMap[dn] || {};
@@ -949,7 +922,8 @@
                     const gap = r.time || r.gap_to_leader || '';
                     const status = r.status || r.finish_status || '';
                     const cls = statusClass(status);
-                    html += `<div class="order-row" data-driver="${dn}" data-name="${name}">
+                    
+                    html += `<div class="order-row" data-driver="${dn}">
                         <span class="pos">${pos}</span>
                         <span class="name">${name}</span>
                         <span class="abbr">${abbr}</span>
@@ -960,7 +934,6 @@
                 html += '</div>';
                 content.innerHTML = html;
 
-                // click handlers
                 content.querySelectorAll('.order-row').forEach(row => {
                     row.addEventListener('click', () => {
                         const dn = row.dataset.driver;
@@ -981,12 +954,9 @@
                 const d = drivers.find(drv => drv.driver_number === dn) || {};
                 const name = safeName(d) || `Driver #${dn}`;
 
-                // load laps if not cached
                 const laps = await loadLapsForDriver(state.sessionKey, dn);
-
-                // stints for tyre mapping
                 const stints = (state.cache.stints || []).filter(s => s.driver_number === dn);
-                // build tyre map: lap_start -> compound
+                
                 const tyreMap = {};
                 stints.forEach(st => {
                     const start = st.lap_start || 1;
@@ -1000,7 +970,7 @@
                 let html = `<div class="detail-view">
                     <div class="detail-header">
                         <button class="back-btn" id="detailBack">← Back</button>
-                        <h2>${name}  <span style="font-size:0.7rem;color:#6a7a88;font-weight:400;">#${dn}</span></h2>
+                        <h2>${name} <span style="font-size:0.7rem;color:#6a7a88;">#${dn}</span></h2>
                     </div>
                     <div class="detail-laps">`;
 
@@ -1015,6 +985,7 @@
                         const sector2 = lap.sector2_time ? formatTime(lap.sector2_time * 1000) : '';
                         const sector3 = lap.sector3_time ? formatTime(lap.sector3_time * 1000) : '';
                         const sectors = [sector1, sector2, sector3].filter(Boolean).join(' | ');
+                        
                         html += `<div class="lap-row">
                             <span class="lap-num">Lap ${ln}</span>
                             <span class="lap-time">${time}</span>
@@ -1043,20 +1014,18 @@
                 const weather = state.cache.weather || [];
 
                 if (!results.length) {
-                    content.innerHTML = `<div class="empty-state"><span>🔍</span><p>No data for insights</p></div>`;
+                    renderEmpty('No data for insights');
                     return;
                 }
 
                 const driverMap = {};
                 drivers.forEach(d => { driverMap[d.driver_number] = d; });
 
-                // 1. winner & gaps
                 const sorted = [...results].sort((a, b) => (a.position || 999) - (b.position || 999));
                 const winner = sorted[0];
                 const winnerName = safeName(driverMap[winner?.driver_number]) || '—';
                 const gapToSecond = sorted[1]?.time || sorted[1]?.gap_to_leader || '—';
 
-                // 2. tyre strategies: count compounds per driver
                 const tyreCounts = {};
                 stints.forEach(s => {
                     const dn = s.driver_number;
@@ -1064,7 +1033,8 @@
                     if (!tyreCounts[dn]) tyreCounts[dn] = {};
                     tyreCounts[dn][comp] = (tyreCounts[dn][comp] || 0) + 1;
                 });
-                let strategySummary = '';
+                
+                let strategySummary = 'No stint data available';
                 const stratEntries = Object.entries(tyreCounts).slice(0, 6);
                 if (stratEntries.length) {
                     strategySummary = stratEntries.map(([dn, counts]) => {
@@ -1072,11 +1042,8 @@
                         const parts = Object.entries(counts).map(([c, n]) => `${c} (${n})`).join(', ');
                         return `<span style="display:block;">${name}: ${parts}</span>`;
                     }).join('');
-                } else {
-                    strategySummary = 'No stint data available';
                 }
 
-                // 3. weather
                 let weatherSummary = '—';
                 if (weather.length) {
                     const w = weather[weather.length - 1];
@@ -1085,7 +1052,6 @@
                     weatherSummary = `${cond} ${temp}°C`.trim();
                 }
 
-                // 4. position changes (if we have laps we could compute, but we'll skip for light)
                 const html = `
                     <div class="insights-grid">
                         <div class="insight-card">
@@ -1107,7 +1073,7 @@
                                 const dn = r.driver_number;
                                 const name = safeName(driverMap[dn]) || `#${dn}`;
                                 const pos = r.position || i+1;
-                                return `<span>${pos}. ${name}  <span style="color:#6a7a88;">${r.time || r.gap_to_leader || ''}</span></span>`;
+                                return `<span>${pos}. ${name} <span style="color:#6a7a88;">${r.time || r.gap_to_leader || ''}</span></span>`;
                             }).join('<br>')}</div>
                         </div>
                     </div>
@@ -1119,11 +1085,10 @@
             function renderDuels() {
                 const drivers = state.cache.drivers || [];
                 if (!drivers.length) {
-                    content.innerHTML = `<div class="empty-state"><span>⚔️</span><p>Load a session first</p></div>`;
+                    renderEmpty('Load a session first');
                     return;
                 }
 
-                // Build driver options
                 const opts = drivers.map(d =>
                     `<option value="${d.driver_number}">${safeName(d)} (${abbrName(d)})</option>`
                 ).join('');
@@ -1147,7 +1112,6 @@
                 `;
                 content.innerHTML = html;
 
-                // restore selections
                 const selects = content.querySelectorAll('.duel-driver-select');
                 selects.forEach((sel, i) => {
                     if (state.duelDrivers[i]) sel.value = state.duelDrivers[i];
@@ -1159,26 +1123,24 @@
                 document.getElementById('duelCompare')?.addEventListener('click', async () => {
                     const selected = state.duelDrivers.filter(d => d !== null);
                     if (selected.length < 2) {
-                        alert('Select at least 2 drivers to compare');
+                        alert('Select at least 2 drivers');
                         return;
                     }
-                    // fetch car data for each
+                    
                     const container = document.getElementById('duelChartsContainer');
                     container.innerHTML = '<div style="color:#6a7a88;padding:12px;">Loading telemetry…</div>';
 
                     try {
                         const promises = selected.map(dn => loadCarDataForDriver(state.sessionKey, dn));
                         const results = await Promise.all(promises);
-                        // map driverNumber -> data
                         const dataMap = {};
                         selected.forEach((dn, i) => {
                             dataMap[dn] = results[i] || [];
                         });
-                        // downsample and render charts
                         renderDuelCharts(dataMap, drivers);
                     } catch (err) {
                         console.warn('Failed to load car data', err);
-                        container.innerHTML = '<div style="color:#f87171;padding:12px;">Failed to load telemetry data</div>';
+                        container.innerHTML = '<div style="color:#f87171;padding:12px;">Failed to load telemetry</div>';
                     }
                 });
             }
@@ -1188,19 +1150,17 @@
                 if (!container) return;
                 container.innerHTML = '';
 
-                // destroy old charts
                 state.duelCharts.forEach(c => c.destroy());
                 state.duelCharts = [];
 
                 const driverNames = {};
                 drivers.forEach(d => { driverNames[d.driver_number] = safeName(d) || `#${d.driver_number}`; });
 
-                // metrics to plot
                 const metrics = [
-                    { key: 'speed', label: 'Speed (km/h)', color: '#e10600' },
-                    { key: 'rpm', label: 'RPM', color: '#f5a623' },
-                    { key: 'throttle', label: 'Throttle (%)', color: '#4ade80' },
-                    { key: 'brake', label: 'Brake (%)', color: '#60a5fa' },
+                    { key: 'speed', label: 'Speed (km/h)' },
+                    { key: 'rpm', label: 'RPM' },
+                    { key: 'throttle', label: 'Throttle (%)' },
+                    { key: 'brake', label: 'Brake (%)' },
                 ];
 
                 const colors = ['#e10600', '#f5a623', '#4ade80', '#60a5fa', '#a78bfa', '#f472b6'];
@@ -1261,9 +1221,7 @@
                                 }
                             },
                             scales: {
-                                x: {
-                                    display: false,
-                                },
+                                x: { display: false },
                                 y: {
                                     ticks: { color: '#6a7a88', font: { size: 8 } },
                                     grid: { color: '#1f2a36' },
@@ -1276,7 +1234,6 @@
                         }
                     });
                     state.duelCharts.push(chart);
-                    // force canvas height
                     canvas.style.height = '100px';
                 });
             }
@@ -1293,27 +1250,23 @@
 
             // ---------- INIT ----------
             async function init() {
-                // tab clicks
                 tabBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
                         switchTab(btn.dataset.tab);
                     });
                 });
 
-                // selectors
                 elYear.addEventListener('change', onYearChange);
                 elGP.addEventListener('change', onGPChange);
                 elSession.addEventListener('change', onSessionChange);
 
                 await loadYears();
 
-                // load initial session if pre-selected
                 if (elSession.value) {
                     await onSessionChange();
                 }
             }
 
-            // ---------- START ----------
             document.addEventListener('DOMContentLoaded', init);
 
         })();
