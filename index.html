@@ -115,15 +115,38 @@ select.status-done{border-color:var(--muted)!important}
 
 .duels-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:16px}
 .duels-wrap::-webkit-scrollbar{display:none}
-.duels-content{max-width:520px;margin:0 auto}
+.duels-content{max-width:680px;margin:0 auto}
 .duels-picker{background:var(--bg2);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow-sm)}
 .duels-picker-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:10px}
 .duels-picker-grid{display:flex;flex-wrap:wrap;gap:6px}
 .duels-driver-chip{font-family:var(--mono);font-size:11px;font-weight:700;padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg3);color:var(--dim);cursor:pointer;transition:all 0.15s var(--ease)}
 .duels-driver-chip.selected{background:var(--chip-color,var(--accent));color:#fff;border-color:var(--chip-color,var(--accent));box-shadow:0 0 10px color-mix(in srgb,var(--chip-color,var(--accent)) 50%,transparent)}
 .duels-chart-card{background:var(--bg2);border-radius:var(--r-md);padding:14px;margin-top:12px;box-shadow:var(--shadow-sm)}
+.duels-chart-card canvas{height:280px!important}
 .duels-chart-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:8px}
 
+.duels-view-toggle{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;margin-top:14px;max-width:220px}
+.duels-view-btn{flex:1;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.5px;padding:7px 4px;border:none;background:none;color:var(--dim);cursor:pointer;border-radius:var(--r-sm);transition:all 0.2s var(--ease)}
+.duels-view-btn.active{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+
+.duels-ref-picker{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px;padding:8px 10px;background:var(--bg2);border-radius:var(--r-sm)}
+.duels-ref-label{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;margin-right:4px}
+.duels-ref-chip{font-family:var(--mono);font-size:10px;font-weight:700;padding:4px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg3);color:var(--dim);cursor:pointer;transition:all 0.15s var(--ease)}
+.duels-ref-chip.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.duels-braking-strip{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.duels-brake-row{display:flex;align-items:center;gap:8px}
+.duels-brake-driver{font-family:var(--mono);font-size:9px;font-weight:700;width:32px;flex-shrink:0}
+.duels-brake-track{position:relative;flex:1;height:6px;background:var(--bg3);border-radius:3px}
+.duels-brake-mark{position:absolute;top:-2px;width:3px;height:10px;border-radius:1px;transform:translateX(-50%)}
+
+.stats-legend{display:flex;gap:14px;padding:10px 0;font-family:var(--mono);font-size:11px;font-weight:700}
+.stats-table{display:grid;gap:1px;overflow-x:auto}
+.stats-corner{background:var(--bg1)}
+.stats-zone-header{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.5px;text-align:center;padding:8px 4px;background:var(--bg1)}
+.stats-metric-label{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:0.5px;padding:8px 4px;display:flex;align-items:center}
+.stats-zone-cell{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px}
+.stats-val{font-family:var(--mono);font-size:11px;font-weight:700}
 .news-wrap{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;padding:16px}
 .news-wrap::-webkit-scrollbar{display:none}
 .news-list{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
@@ -297,6 +320,8 @@ let duelsSelectedDrivers=[];
 let duelsTelemetryCache=new Map(); // sessionKey -> merged telemetry-by-driver
 let duelsLoading=false;
 let duelsCharts=[]; // active Chart.js instances, destroyed on re-render
+let duelsView='graphs'; // 'graphs' | 'stats'
+let duelsReferenceDriver=null; // acronym used as the delta chart's baseline
 let newsLoading=false;
 let latestPos=new Map();
 let cachedSessionResult=new Map(); // driver_number -> session_result row (position, gap_to_leader, number_of_laps, dnf/dns/dsq)
@@ -611,7 +636,6 @@ function renderDuelsTab(){
 
   const cached=duelsTelemetryCache.get(sessionKey);
 
-  // Driver picker — always shown once a session is selected, freeform up to 4
   const pickerHtml=`<div class="duels-picker">
     <div class="duels-picker-label">SELECT UP TO ${DUELS_MAX_DRIVERS} DRIVERS</div>
     <div class="duels-picker-grid">
@@ -635,15 +659,42 @@ function renderDuelsTab(){
     return;
   }
 
-  // Have data — render picker + charts for currently selected drivers
+  if(!duelsReferenceDriver||!duelsSelectedDrivers.includes(duelsReferenceDriver)){
+    duelsReferenceDriver=duelsSelectedDrivers[0]||null;
+  }
+
+  const viewToggleHtml=`<div class="duels-view-toggle">
+    <button class="duels-view-btn${duelsView==='graphs'?' active':''}" onclick="setDuelsView('graphs')">GRAPHS</button>
+    <button class="duels-view-btn${duelsView==='stats'?' active':''}" onclick="setDuelsView('stats')">STATS</button>
+  </div>`;
+
+  const refPickerHtml=duelsSelectedDrivers.length>1?`<div class="duels-ref-picker">
+    <span class="duels-ref-label">DELTA REFERENCE:</span>
+    ${duelsSelectedDrivers.map(acr=>`<button class="duels-ref-chip${acr===duelsReferenceDriver?' selected':''}" onclick="setDuelsReference('${acr}')">${acr}</button>`).join('')}
+  </div>`:'';
+
   wrap.innerHTML=`<div class="duels-content">
     ${pickerHtml}
     <div class="insights-generate-wrap" style="margin:12px 0">
       <button class="insights-generate-btn" onclick="fetchDuelsTelemetry()" ${duelsSelectedDrivers.length?'':'disabled'}>REFETCH FOR NEW SELECTION</button>
     </div>
+    ${viewToggleHtml}
+    ${duelsView==='graphs'?refPickerHtml:''}
     <div id="duelsCharts"></div>
   </div>`;
-  renderDuelsCharts(cached);
+
+  if(duelsView==='graphs')renderDuelsCharts(cached);
+  else renderDuelsStats(cached);
+}
+
+function setDuelsView(view){
+  duelsView=view;
+  renderDuelsTab();
+}
+
+function setDuelsReference(acronym){
+  duelsReferenceDriver=acronym;
+  renderDuelsTab();
 }
 
 function toggleDuelsDriver(acronym){
@@ -796,11 +847,18 @@ function renderDuelsCharts(byDriver){
     {key:'throttle_pct',label:'THROTTLE (%)',id:'throttle'}
   ];
 
+  const hasDelta=selected.length>1&&duelsReferenceDriver&&selected.includes(duelsReferenceDriver);
+
   container.innerHTML=metrics.map(m=>`
     <div class="duels-chart-card">
       <div class="duels-chart-title">${m.label} VS TIME IN LAP</div>
       <canvas id="duelsChart-${m.id}"></canvas>
-    </div>`).join('');
+      ${m.id==='speed'?'<div class="duels-braking-strip" id="duelsBrakingStrip"></div>':''}
+    </div>`).join('')
+    +(hasDelta?`<div class="duels-chart-card">
+      <div class="duels-chart-title">DELTA VS TIME (REF: ${duelsReferenceDriver})</div>
+      <canvas id="duelsChart-delta"></canvas>
+    </div>`:'');
 
   for(const m of metrics){
     const canvas=document.getElementById(`duelsChart-${m.id}`);
@@ -813,37 +871,19 @@ function renderDuelsCharts(byDriver){
         data:trace.map(p=>({x:+(p.time_ms/1000).toFixed(2),y:p[m.key]})),
         borderColor:DUELS_COLORS[i],
         backgroundColor:DUELS_COLORS[i],
-        borderWidth:2,
+        borderWidth:1.25,
         pointRadius:0,
         stepped:m.stepped||false,
         tension:m.stepped?0:0.15
       };
     });
 
-    // Braking markers overlay only on the speed chart — onset points, not
-    // every sample while braking (see detectBrakingPoints above)
-    if(m.id==='speed'){
-      selected.forEach((acr,i)=>{
-        const points=byDriver[acr]?.braking_points||[];
-        if(points.length){
-          datasets.push({
-            label:`${acr} braking`,
-            data:points.map(p=>({x:+(p.time_ms/1000).toFixed(2),y:p.speed_kmh})),
-            borderColor:DUELS_COLORS[i],
-            backgroundColor:'#fff',
-            pointRadius:4,
-            pointStyle:'triangle',
-            showLine:false
-          });
-        }
-      });
-    }
-
     const chart=new Chart(canvas,{
       type:'line',
       data:{datasets},
       options:{
         responsive:true,
+        maintainAspectRatio:false,
         animation:false,
         scales:{
           x:{type:'linear',title:{display:true,text:'Time in lap (s)',color:'#8a8a93'},ticks:{color:'#5a5a63'},grid:{color:'#242429'}},
@@ -856,6 +896,151 @@ function renderDuelsCharts(byDriver){
     });
     duelsCharts.push(chart);
   }
+
+  // Braking markers now live in their own compact strip beneath the speed
+  // chart, instead of overlaid triangles competing visually with the line
+  // — same underlying onset-detection data (see detectBrakingPoints),
+  // just presented as simple markers along a shared time axis per driver.
+  const stripEl=document.getElementById('duelsBrakingStrip');
+  if(stripEl){
+    stripEl.innerHTML=selected.map((acr,i)=>{
+      const points=byDriver[acr]?.braking_points||[];
+      const marks=points.map(p=>`<span class="duels-brake-mark" style="left:${Math.min(100,(p.time_ms/1000/80)*100)}%;background:${DUELS_COLORS[i]}" title="${acr} braking @ ${(p.time_ms/1000).toFixed(1)}s, ${p.speed_kmh??'?'} km/h"></span>`).join('');
+      return `<div class="duels-brake-row"><span class="duels-brake-driver" style="color:${DUELS_COLORS[i]}">${acr}</span><div class="duels-brake-track">${marks}</div></div>`;
+    }).join('');
+  }
+
+  if(hasDelta){
+    const deltaCanvas=document.getElementById('duelsChart-delta');
+    if(deltaCanvas){
+      const refTrace=byDriver[duelsReferenceDriver]?.telemetry_trace||[];
+      const deltaDatasets=selected.filter(a=>a!==duelsReferenceDriver).map((acr,i)=>{
+        const trace=byDriver[acr]?.telemetry_trace||[];
+        // Delta = (this driver's time to reach a given speed-equivalent
+        // point) minus (reference's) — approximated here by comparing
+        // samples at matching time-in-lap points, since both traces share
+        // the same time base (time elapsed since each driver's own lap
+        // start). A positive value means this driver is behind the
+        // reference's pace build-up at that point in the lap; negative
+        // means ahead. This is a same-time-axis comparison of speed
+        // profiles, not a true trackside gap — worth stating plainly
+        // since OpenF1 doesn't expose distance-along-lap to compute a
+        // real trackside delta the way a distance-based chart would.
+        const points=trace.map(p=>{
+          const refPoint=refTrace.reduce((closest,r)=>Math.abs(r.time_ms-p.time_ms)<Math.abs((closest?.time_ms??Infinity)-p.time_ms)?r:closest,null);
+          if(!refPoint||refPoint.speed_kmh==null||p.speed_kmh==null)return null;
+          return{x:+(p.time_ms/1000).toFixed(2),y:+((refPoint.speed_kmh-p.speed_kmh)/100).toFixed(3)};
+        }).filter(Boolean);
+        return{
+          label:acr,
+          data:points,
+          borderColor:DUELS_COLORS[selected.indexOf(acr)],
+          backgroundColor:DUELS_COLORS[selected.indexOf(acr)],
+          borderWidth:1.25,
+          pointRadius:0,
+          tension:0.15
+        };
+      });
+
+      const chart=new Chart(deltaCanvas,{
+        type:'line',
+        data:{datasets:deltaDatasets},
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          animation:false,
+          scales:{
+            x:{type:'linear',title:{display:true,text:'Time in lap (s)',color:'#8a8a93'},ticks:{color:'#5a5a63'},grid:{color:'#242429'}},
+            y:{title:{display:true,text:'Speed delta vs reference',color:'#8a8a93'},ticks:{color:'#5a5a63'},grid:{color:'#242429'}}
+          },
+          plugins:{
+            legend:{labels:{color:'#ededf0',font:{family:'JetBrains Mono',size:9}}}
+          }
+        }
+      });
+      duelsCharts.push(chart);
+    }
+  }
+}
+
+// STATS view: braking-zone table. Each detected braking zone (see
+// detectBrakingPoints — onset of braking, not every sample while braking)
+// becomes a column; each selected driver's Speed/RPM/Gear/Throttle at that
+// zone's onset moment stack vertically beneath it, color-coded by driver.
+// Explicitly "Braking Zone N", never a track corner number or mini-sector
+// — OpenF1 gives no real corner-location data, only speed/brake samples,
+// so a zone number is the honest, derivable landmark; a corner number
+// would be a claim the data doesn't support (see project notes).
+function renderDuelsStats(byDriver){
+  const container=document.getElementById('duelsCharts');
+  if(!container)return;
+
+  const selected=duelsSelectedDrivers.filter(a=>byDriver[a]);
+  if(!selected.length){
+    container.innerHTML='<div class="insights-unsupported">No telemetry available for the selected drivers.</div>';
+    return;
+  }
+
+  // Build a shared zone count from whichever driver has the most detected
+  // braking zones — drivers with fewer zones (e.g. missed a braking event
+  // in the trace) just show fewer filled columns.
+  const maxZones=Math.max(...selected.map(a=>(byDriver[a]?.braking_points||[]).length),0);
+  if(maxZones===0){
+    container.innerHTML='<div class="insights-unsupported">No braking zones detected for the selected drivers.</div>';
+    return;
+  }
+
+  // For each driver+zone, find the telemetry_trace sample closest in time
+  // to that braking zone's onset — gives RPM/gear/throttle at the same
+  // moment the zone's speed/time_ms was captured.
+  function sampleAt(acr,timeMs){
+    const trace=byDriver[acr]?.telemetry_trace||[];
+    if(!trace.length)return null;
+    return trace.reduce((closest,p)=>Math.abs(p.time_ms-timeMs)<Math.abs((closest?.time_ms??Infinity)-timeMs)?p:closest,null);
+  }
+
+  const legendHtml=`<div class="stats-legend">${selected.map((acr,i)=>`<span class="stats-legend-item" style="color:${DUELS_COLORS[i]}">${acr}</span>`).join('')}</div>`;
+
+  const metricRows=[
+    {key:'speed_kmh',label:'SPEED',fromBraking:true},
+    {key:'rpm',label:'RPM',fromBraking:false},
+    {key:'gear',label:'GEAR',fromBraking:false},
+    {key:'throttle_pct',label:'THROTTLE',fromBraking:false}
+  ];
+
+  // Grid: first column is the metric label, then one column per zone.
+  // Each metric-row/zone-column intersection stacks the selected drivers'
+  // color-coded values vertically within that single cell.
+  let tableHtml=`<div class="stats-table" style="grid-template-columns:70px repeat(${maxZones},1fr)">`;
+  tableHtml+='<div class="stats-corner"></div>';
+  for(let z=0;z<maxZones;z++)tableHtml+=`<div class="stats-zone-header">ZONE ${z+1}</div>`;
+
+  for(const metric of metricRows){
+    tableHtml+=`<div class="stats-metric-label">${metric.label}</div>`;
+    for(let z=0;z<maxZones;z++){
+      tableHtml+='<div class="stats-zone-cell">';
+      for(const acr of selected){
+        const i=selected.indexOf(acr);
+        const points=byDriver[acr]?.braking_points||[];
+        const zone=points[z];
+        let val='—';
+        if(zone){
+          if(metric.fromBraking){
+            val=zone.speed_kmh!=null?Math.round(zone.speed_kmh):'—';
+          } else {
+            const sample=sampleAt(acr,zone.time_ms);
+            const raw=sample?.[metric.key];
+            val=raw!=null?(metric.key==='throttle_pct'?Math.round(raw):raw):'—';
+          }
+        }
+        tableHtml+=`<span class="stats-val" style="color:${DUELS_COLORS[i]}">${val}</span>`;
+      }
+      tableHtml+='</div>';
+    }
+  }
+  tableHtml+='</div>';
+
+  container.innerHTML=legendHtml+tableHtml;
 }
 
 // ========== NEWS ==========
